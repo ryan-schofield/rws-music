@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Main data processing and dbt service
+  data-pipeline:
+    build: .
+    container_name: music-tracker-pipeline
+    volumes:
+      - ./data:/app/data
+      - ./dbt:/app/dbt
+      - ./scripts:/app/scripts
+      - ./logs:/app/logs
+    environment:
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - LOG_LEVEL=INFO
+    networks:
+      - music-tracker
+    depends_on:
+      - metabase
+    restart: unless-stopped
+
+  # Metabase for reporting
+  metabase:
+    image: metabase/metabase:latest
+    container_name: music-tracker-metabase
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase-data:/metabase-data
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=metabase-db
+    networks:
+      - music-tracker
+    depends_on:
+      - metabase-db
+    restart: unless-stopped
+
+  # PostgreSQL for Metabase metadata
+  metabase-db:
+    image: postgres:15-alpine
+    container_name: music-tracker-metabase-db
+    environment:
+      - POSTGRES_DB=metabase
+      - POSTGRES_USER=metabase
+      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
+    volumes:
+      - metabase-db-data:/var/lib/postgresql/data
+    networks:
+      - music-tracker
+    restart: unless-stopped
+
+  # Prefect for orchestration
+  prefect-server:
+    image: prefecthq/prefect:latest
+    container_name: music-tracker-prefect
+    ports:
+      - "4200:4200"
+    environment:
+      - PREFECT_API_URL=http://localhost:4200/api
+    volumes:
+      - prefect-data:/opt/prefect
+    networks:
+      - music-tracker
+    restart: unless-stopped
+
+volumes:
+  metabase-data:
+  metabase-db-data:
+  prefect-data:
+
+networks:
+  music-tracker:
+    driver: bridge

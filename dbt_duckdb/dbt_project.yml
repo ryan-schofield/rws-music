@@ -1,0 +1,40 @@
+name: 'music_tracker'
+version: '1.0.0'
+config-version: 2
+
+profile: 'music-tracker'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  
+clean-targets:         
+  - "target"
+  # - "dbt_packages"
+
+models:
+  music_tracker:
+    +materialized: table
+    +meta:
+      log_to_stdout: true
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    stage:
+      +schema: stage
+      +materialized: view
+    dw:
+      +schema: dw
+      +materialized: table
+
+seeds:
+  +full_refresh: True
+  +schema: seed
+
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order: ["tsql_utils", "dbt_utils"]
