@@ -1,0 +1,5 @@
+.env
+.venv/
+logs/
+dbt/logs/
+.vscode/
