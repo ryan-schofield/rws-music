@@ -251,11 +251,11 @@ class SpotifyDataIngestion:
             # Save to file
             saved_file = self.save_raw_data(data)
 
-            # Update cursor with the oldest played_at
+            # Update cursor with max played_at + 1 to prevent duplicates
             if data:
-                oldest_played_at = data[-1]["played_at"]
-                dt = datetime.fromisoformat(oldest_played_at.replace("Z", "+00:00"))
-                new_after = str(int(dt.timestamp() * 1000))
+                max_played_at = data[0]["played_at"]
+                dt = datetime.fromisoformat(max_played_at.replace("Z", "+00:00"))
+                new_after = str(int(dt.timestamp() * 1000) + 1)
                 self.save_cursor(new_after)
 
             end_time = datetime.now(timezone.utc)
