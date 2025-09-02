@@ -1,5 +1,11 @@
+.vscode/
+.working/
+
 .env
 .venv/
-logs/
+
 dbt/logs/
-.vscode/
+dbt/target/
+dbt/dbt_packages/
+
+data/
