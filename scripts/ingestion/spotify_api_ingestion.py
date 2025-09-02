@@ -119,32 +119,6 @@ class SpotifyAPIClient:
 
         return self._make_request("/me/player/recently-played", params)
 
-    def get_track_details(self, track_ids: List[str]) -> Dict[str, Any]:
-        """Get detailed information for multiple tracks."""
-        if not track_ids:
-            return {"tracks": []}
-
-        # Spotify allows up to 50 tracks per request
-        track_ids_str = ",".join(track_ids[:50])
-        return self._make_request(f"/tracks?ids={track_ids_str}")
-
-    def get_artist_details(self, artist_ids: List[str]) -> Dict[str, Any]:
-        """Get detailed information for multiple artists."""
-        if not artist_ids:
-            return {"artists": []}
-
-        # Spotify allows up to 50 artists per request
-        artist_ids_str = ",".join(artist_ids[:50])
-        return self._make_request(f"/artists?ids={artist_ids_str}")
-
-    def get_album_details(self, album_ids: List[str]) -> Dict[str, Any]:
-        """Get detailed information for multiple albums."""
-        if not album_ids:
-            return {"albums": []}
-
-        # Spotify allows up to 20 albums per request
-        album_ids_str = ",".join(album_ids[:20])
-        return self._make_request(f"/albums?ids={album_ids_str}")
 
 
 class SpotifyDataIngestion:
@@ -152,7 +126,7 @@ class SpotifyDataIngestion:
 
     def __init__(self):
         self.data_dir = Path("dbt/data")
-        self.raw_data_dir = self.data_dir / "raw"
+        self.raw_data_dir = self.data_dir / "raw" / "recently_played" / "detail"
 
         # Ensure directories exist
         self.raw_data_dir.mkdir(parents=True, exist_ok=True)
@@ -177,7 +151,7 @@ class SpotifyDataIngestion:
             json.dump(cursor, f, indent=2)
 
     def fetch_recently_played(self, after: str = None) -> List[Dict[str, Any]]:
-        """Fetch recently played tracks from Spotify API."""
+        """Fetch recently played tracks from Spotify API and flatten to required format."""
         try:
             logger.info("Fetching recently played tracks from Spotify")
 
@@ -186,119 +160,64 @@ class SpotifyDataIngestion:
             items = response.get("items", [])
             logger.info(f"Retrieved {len(items)} tracks from Spotify")
 
-            return items
+            # Flatten items to required format
+            flattened_data = []
+            for item in items:
+                track = item.get("track", {})
+                if not track:
+                    continue
+
+                # Extract artist info (first artist)
+                artists = track.get("artists", [])
+                artist_id = artists[0].get("id") if artists else None
+                artist_name = artists[0].get("name") if artists else None
+
+                # Extract album info
+                album = track.get("album", {})
+                album_id = album.get("id")
+                album_uri = album.get("uri")
+                album_name = album.get("name")
+
+                # Extract track info
+                track_id = track.get("id")
+                track_uri = track.get("uri")
+                track_name = track.get("name")
+                track_isrc = track.get("external_ids", {}).get("isrc")
+                duration_ms = track.get("duration_ms")
+                popularity = track.get("popularity", 0)
+
+                # Context for play_source
+                context = item.get("context", {})
+                play_source = context.get("uri", "spotify") if context else "spotify"
+
+                # Create flattened dict
+                flattened_item = {
+                    "user_id": "fffv23",
+                    "track_id": track_id,
+                    "uri": track_uri,
+                    "track_isrc": track_isrc,
+                    "track_name": track_name,
+                    "album_id": album_id,
+                    "album_uri": album_uri,
+                    "album": album_name,
+                    "artist_id": artist_id,
+                    "artist_mbid": None,
+                    "artist": artist_name,
+                    "duration_ms": duration_ms,
+                    "played_at": item.get("played_at"),
+                    "popularity": popularity,
+                    "request_after": after,
+                    "play_source": play_source
+                }
+
+                flattened_data.append(flattened_item)
+
+            return flattened_data
 
         except Exception as e:
             logger.error(f"Error fetching recently played tracks: {e}")
             return []
 
-    def enrich_track_data(
-        self, tracks_data: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
-        """Enrich track data with additional information."""
-        if not tracks_data:
-            return []
-
-        logger.info("Enriching track data with additional details")
-
-        # Extract track, artist, and album IDs
-        track_ids = []
-        artist_ids = []
-        album_ids = []
-
-        for item in tracks_data:
-            track = item.get("track", {})
-            if track:
-                track_ids.append(track.get("id"))
-                album_ids.append(track.get("album", {}).get("id"))
-
-                for artist in track.get("artists", []):
-                    artist_ids.append(artist.get("id"))
-
-        # Remove duplicates and None values
-        track_ids = list(set(filter(None, track_ids)))
-        artist_ids = list(set(filter(None, artist_ids)))
-        album_ids = list(set(filter(None, album_ids)))
-
-        # Fetch additional details
-        track_details = {}
-        artist_details = {}
-        album_details = {}
-
-        try:
-            if track_ids:
-                tracks_response = self.spotify_client.get_track_details(track_ids)
-                for track in tracks_response.get("tracks", []):
-                    if track:
-                        track_details[track["id"]] = track
-
-            if artist_ids:
-                artists_response = self.spotify_client.get_artist_details(artist_ids)
-                for artist in artists_response.get("artists", []):
-                    if artist:
-                        artist_details[artist["id"]] = artist
-
-            if album_ids:
-                albums_response = self.spotify_client.get_album_details(album_ids)
-                for album in albums_response.get("albums", []):
-                    if album:
-                        album_details[album["id"]] = album
-
-        except Exception as e:
-            logger.warning(f"Error fetching additional details: {e}")
-
-        # Enrich the original data
-        enriched_data = []
-        for item in tracks_data:
-            try:
-                enriched_item = self._enrich_single_track(
-                    item, track_details, artist_details, album_details
-                )
-                enriched_data.append(enriched_item)
-            except Exception as e:
-                logger.warning(f"Error enriching track: {e}")
-                continue
-
-        logger.info(f"Enriched {len(enriched_data)} tracks")
-        return enriched_data
-
-    def _enrich_single_track(
-        self,
-        item: Dict[str, Any],
-        track_details: Dict[str, Any],
-        artist_details: Dict[str, Any],
-        album_details: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Enrich a single track item with additional data."""
-        track = item.get("track", {})
-        if not track:
-            return item
-
-        track_id = track.get("id")
-        album_id = track.get("album", {}).get("id")
-
-        # Add track popularity if available
-        if track_id and track_id in track_details:
-            track_detail = track_details[track_id]
-            track["popularity"] = track_detail.get("popularity", 0)
-
-        # Add album details if available
-        if album_id and album_id in album_details:
-            album_detail = album_details[album_id]
-            track["album"] = track.get("album", {})
-            track["album"]["popularity"] = album_detail.get("popularity", 0)
-            track["album"]["release_date"] = album_detail.get("release_date")
-
-        # Add artist details if available
-        for artist in track.get("artists", []):
-            artist_id = artist.get("id")
-            if artist_id and artist_id in artist_details:
-                artist_detail = artist_details[artist_id]
-                artist["popularity"] = artist_detail.get("popularity", 0)
-                artist["genres"] = artist_detail.get("genres", [])
-                artist["followers"] = artist_detail.get("followers", {}).get("total", 0)
-
-        return item
 
     def save_raw_data(self, data: List[Dict[str, Any]]) -> str:
         """Save raw data to JSON file for processing."""
@@ -306,18 +225,8 @@ class SpotifyDataIngestion:
         filename = f"spotify_recently_played_{timestamp}.json"
         filepath = self.raw_data_dir / filename
 
-        # Add metadata
-        data_with_metadata = {
-            "metadata": {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "record_count": len(data),
-                "source": "spotify_api",
-            },
-            "data": data,
-        }
-
         with open(filepath, "w") as f:
-            json.dump(data_with_metadata, f, default=str)
+            json.dump(data, f, default=str)
 
         logger.info(f"Saved {len(data)} records to {filepath}")
         return str(filepath)
@@ -332,22 +241,19 @@ class SpotifyDataIngestion:
             after = self.load_cursor()
 
             # Fetch data from Spotify
-            raw_data = self.fetch_recently_played(after=after)
-            if not raw_data:
+            data = self.fetch_recently_played(after=after)
+            if not data:
                 return {
                     "status": "no_data",
                     "message": "No data retrieved from Spotify",
                 }
 
-            # Enrich data
-            enriched_data = self.enrich_track_data(raw_data)
-
             # Save to file
-            saved_file = self.save_raw_data(enriched_data)
+            saved_file = self.save_raw_data(data)
 
             # Update cursor with the oldest played_at
-            if raw_data:
-                oldest_played_at = raw_data[-1]["played_at"]
+            if data:
+                oldest_played_at = data[-1]["played_at"]
                 dt = datetime.fromisoformat(oldest_played_at.replace("Z", "+00:00"))
                 new_after = str(int(dt.timestamp() * 1000))
                 self.save_cursor(new_after)
@@ -358,7 +264,7 @@ class SpotifyDataIngestion:
             result = {
                 "status": "success",
                 "duration_seconds": duration,
-                "records_ingested": len(enriched_data),
+                "records_ingested": len(data),
                 "saved_file": saved_file,
             }
 
