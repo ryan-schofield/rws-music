@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: lh
     meta:
-      external_location: "data/src/{name}/*.snappy.parquet"
+      external_location: "data/src/{name}/*.parquet"
     tables:
       - name: tracks_played
       - name: spotify_artists
