@@ -32,7 +32,7 @@ SELECT {{ dbt_utils.generate_surrogate_key(['a.artist_id', 'a.artist_name']) }} 
     , a.city
     , a.district
     , a.lat
-    , a.long
+    , a.longitude
 FROM {{ ref('artists') }} a
 LEFT JOIN {{ ref('mask_artists') }} m
     ON a.artist_id = CAST(m.artist_id AS VARCHAR)

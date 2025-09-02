@@ -1,40 +1,14 @@
 version: 2
 
 sources:
-  - name: raw
-    schema: main
-
-    quoting:
-      database: false
-      schema: false
-      identifier: false
-      
+  - name: lh
+    meta:
+      external_location: "data/src/{name}/*.snappy.parquet"
     tables:
       - name: tracks_played
-        external:
-          location: '../data/src/tracks_played/*.parquet'
-          format: parquet
       - name: spotify_artists
-        external:
-          location: '../data/src/spotify_artists/*.parquet'
-          format: parquet
       - name: spotify_artist_genre
-        external:
-          location: '../data/src/spotify_artist_genre/*.parquet'
-          format: parquet
       - name: mbz_artist_info
-        external:
-          location: '../data/src/mbz_artist_info/*.parquet'
-          format: parquet
       - name: spotify_albums
-        external:
-          location: '../data/src/spotify_albums/*.parquet'
-          format: parquet
       - name: mbz_area_hierarchy
-        external:
-          location: '../data/src/mbz_area_hierarchy/*.parquet'
-          format: parquet
       - name: cities_with_lat_long
-        external:
-          location: '../data/src/cities_with_lat_long/*.parquet'
-          format: parquet

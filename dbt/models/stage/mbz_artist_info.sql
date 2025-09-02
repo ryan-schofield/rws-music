@@ -21,12 +21,12 @@ SELECT
     , life_span_begin
     , life_span_end
     , life_span_ended
-    , [name]
+    , "name"
     , release_group_count
     , sort_name
     , source_file
     , tag_list
-    , [type]
+    , "type"
     , end_area_disambiguation
     , spotify_id
 FROM {{ source('lh', 'mbz_artist_info') }}

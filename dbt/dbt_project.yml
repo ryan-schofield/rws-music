@@ -19,8 +19,6 @@ clean-targets:
 models:
   music_tracker:
     +materialized: table
-    +meta:
-      log_to_stdout: true
     intermediate:
       +schema: intermediate
       +materialized: view
@@ -34,7 +32,3 @@ models:
 seeds:
   +full_refresh: True
   +schema: seed
-
-dispatch:
-  - macro_namespace: dbt_utils
-    search_order: ["tsql_utils", "dbt_utils"]

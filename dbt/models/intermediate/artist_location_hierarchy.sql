@@ -1,4 +1,4 @@
-SELECT 
+SELECT
     al.artist_id
     , al.artist_mbid
     , al.artist_name
@@ -12,7 +12,7 @@ SELECT
     , ah.city_name AS city
     , ah.district_name AS district
     , cl.lat
-    , cl.long
+    , cl.longitude
 FROM {{ ref('artist_location') }} al
 INNER JOIN {{ ref('area_hierarchy') }} ah
     ON al.area_id = ah.area_id

@@ -1,6 +1,6 @@
 SELECT {{ dbt_utils.generate_surrogate_key(['track_id', 'track_name', 'artist']) }} AS track_sid
     , track_name
-    , artist + ' - ' + track_name AS artist_track
+    , artist || ' - ' || track_name AS artist_track
     , track_popularity
     , CASE WHEN track_popularity >= 90 THEN 'Extremely Popular'
           WHEN track_popularity >= 70 THEN 'Very Popular'
@@ -18,11 +18,11 @@ SELECT {{ dbt_utils.generate_surrogate_key(['track_id', 'track_name', 'artist'])
           WHEN track_popularity < 10 THEN 1
           ELSE 0
         END AS track_popularity_sort
-    , IIF(track_popularity >= 50, 'Popular', 'Not Popular') AS is_popular
+    , CASE WHEN track_popularity >= 50 THEN 'Popular' ELSE 'Not Popular' END AS is_popular
     , track_duration_sec AS track_seconds
     , track_duration_min AS track_minutes
     , track_duration
-    , CASE 
+    , CASE
         WHEN track_duration_sec IS NULL
             THEN 'unknown'
         WHEN track_duration_sec < 30
@@ -37,7 +37,7 @@ SELECT {{ dbt_utils.generate_surrogate_key(['track_id', 'track_name', 'artist'])
             THEN 'long'
         ELSE 'possibly too long'
         END AS track_length
-    , CASE 
+    , CASE
         WHEN track_duration_sec IS NULL
             THEN 0
         WHEN track_duration_sec < 30

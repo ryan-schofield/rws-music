@@ -4,6 +4,7 @@
 .env
 .venv/
 
+dbt/data
 dbt/logs/
 dbt/target/
 dbt/dbt_packages/

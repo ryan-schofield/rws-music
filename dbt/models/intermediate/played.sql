@@ -1,13 +1,14 @@
-SELECT track_id 
-    , t.track_name 
+SELECT
+    track_id
+    , t.track_name
     , t.artist
     , t.artist_id
     , t.album_id
     , t.album
     , t.played_at
-    , t.played_at_local 
+    , t.played_at_local
     , CAST(t.played_at_local AS DATE) AS date_sid
-    , CAST(t.played_at_local AS TIME(0)) AS time_sid
+    , CAST(t.played_at_local AS TIME) AS time_sid
     , t.popularity
     , a.artist_popularity
     , t.duration_ms
