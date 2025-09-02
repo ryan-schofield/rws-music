@@ -2,6 +2,7 @@ SELECT {{ dbt_utils.generate_surrogate_key(['track_id', 'track_name', 'artist'])
     , {{ dbt_utils.generate_surrogate_key(['artist_id', 'artist']) }} AS artist_sid
     , {{ dbt_utils.generate_surrogate_key(['album_id', 'album', 'artist']) }} AS album_sid
     , artist AS artist_name
+    , request_cursor
     , date_sid
     , time_sid
     , popularity

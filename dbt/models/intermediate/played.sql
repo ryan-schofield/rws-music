@@ -5,6 +5,7 @@ SELECT
     , t.artist_id
     , t.album_id
     , t.album
+    , t.request_cursor
     , t.played_at
     , t.played_at_local
     , CAST(t.played_at_local AS DATE) AS date_sid

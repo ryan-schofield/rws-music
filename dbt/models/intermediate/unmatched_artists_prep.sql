@@ -1,3 +1,5 @@
+{{ config(materialized='view') }}
+
 WITH artist_delimited_cte AS (
     SELECT
         artist AS artist_name
@@ -16,10 +18,22 @@ WITH artist_delimited_cte AS (
     SELECT
         a.artist_name
         , a.artist_mbid
-        , TRIM(SPLIT_PART(a.artist_delimited, '|', 1)) AS potential_match
+        , TRIM(
+            CASE
+                WHEN POSITION('|' IN a.artist_delimited) > 0
+                THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
+                ELSE a.artist_name
+            END
+        ) AS potential_match
         , count_played
     FROM artist_delimited_cte a
-    WHERE SPLIT_PART(a.artist_delimited, '|', 1) != ''
+    WHERE TRIM(
+        CASE
+            WHEN POSITION('|' IN a.artist_delimited) > 0
+            THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
+            ELSE a.artist_name
+        END
+    ) != ''
 )
 
 SELECT
