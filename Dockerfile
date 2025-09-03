@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
@@ -24,6 +24,9 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p /app/data /app/logs /app/scripts
 
+# Add uv's virtual environment bin directory to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
@@ -32,5 +35,5 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD uv run python -c "import duckdb; print('Health check passed')" || exit 1
 
-# Default command
-CMD ["uv", "run", "python", "scripts/run_pipeline.py"]
+# Keep container running indefinitely for Prefect orchestration
+CMD ["tail", "-f", "/dev/null"]

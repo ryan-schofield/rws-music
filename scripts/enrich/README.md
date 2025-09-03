@@ -105,7 +105,7 @@ scripts/orchestrate/
 
 ### 1. **Technology Migration**
 - **From**: Apache Spark + Microsoft Fabric Lakehouse
-- **To**: Polars + Parquet files in [`dbt/data/src/`](../../../dbt/data/src/)
+- **To**: Polars + Parquet files in [`data/src/`](../../../data/src/)
 - **Benefits**: Faster performance, no Fabric dependencies, runs anywhere
 
 ### 2. **Modular Design**
@@ -114,9 +114,9 @@ scripts/orchestrate/
 - **Reusable Components**: Shared utilities for common operations
 
 ### 3. **Improved Data Flow**
-- **Input**: Reads from parquet files in `dbt/data/src/`
+- **Input**: Reads from parquet files in `data/src/`
 - **Processing**: Uses Polars for all data operations
-- **Output**: Writes optimized parquet files back to `dbt/data/src/`
+- **Output**: Writes optimized parquet files back to `data/src/`
 - **Integration**: Works seamlessly with existing dbt pipeline
 
 ## Usage Examples
@@ -162,7 +162,7 @@ from scripts.enrich import (
 )
 
 # Initialize data writer
-data_writer = ParquetDataWriter("dbt/data/src")
+data_writer = ParquetDataWriter("data/src")
 
 # Run individual processors
 spotify_processor = SpotifyProcessor(data_writer)
@@ -231,7 +231,7 @@ print('Spotify client initialized successfully')
 # Test data writer
 uv run python -c "
 from scripts.enrich.utils.data_writer import ParquetDataWriter
-writer = ParquetDataWriter('dbt/data/src')
+writer = ParquetDataWriter('data/src')
 print('Data writer initialized:', writer.base_path)
 print('Tables found:', [t for t in ['tracks_played', 'spotify_artists'] if writer.table_exists(t)])
 "
@@ -239,7 +239,7 @@ print('Tables found:', [t for t in ['tracks_played', 'spotify_artists'] if write
 # Test individual processor
 uv run python -c "
 from scripts.enrich import SpotifyProcessor, ParquetDataWriter
-processor = SpotifyProcessor(ParquetDataWriter('dbt/data/src'))
+processor = SpotifyProcessor(ParquetDataWriter('data/src'))
 print('Spotify processor ready')
 "
 ```
@@ -276,7 +276,7 @@ LOG_LEVEL=DEBUG uv run scripts/orchestrate/enrichment_pipeline.py --status-only
 
 2. **Update data paths**:
    - **From**: Fabric Lakehouse tables
-   - **To**: Parquet files in `dbt/data/src/`
+   - **To**: Parquet files in `data/src/`
 
 3. **Use consolidated APIs**:
    ```python
@@ -340,8 +340,8 @@ The enriched parquet files integrate seamlessly with the existing dbt pipeline:
 
 ```sql
 -- dbt models automatically read from the parquet files
-{{ source('lh', 'spotify_artists') }}  -- reads from dbt/data/src/spotify_artists/*.parquet
-{{ source('lh', 'mbz_artist_info') }}  -- reads from dbt/data/src/mbz_artist_info/*.parquet
+{{ source('lh', 'spotify_artists') }}  -- reads from data/src/spotify_artists/*.parquet
+{{ source('lh', 'mbz_artist_info') }}  -- reads from data/src/mbz_artist_info/*.parquet
 ```
 
 ## Troubleshooting
@@ -350,7 +350,7 @@ The enriched parquet files integrate seamlessly with the existing dbt pipeline:
 
 1. **API Credentials**: Ensure all API keys are configured in `.env` file
 2. **Data Dependencies**: Verify `tracks_played` table exists with required columns
-3. **Disk Space**: Parquet files require sufficient storage in `dbt/data/src/`
+3. **Disk Space**: Parquet files require sufficient storage in `data/src/`
 4. **Network**: MusicBrainz and OpenWeather APIs require internet connectivity
 5. **uv Environment**: Ensure `uv sync` has been run to install dependencies
 
@@ -366,7 +366,7 @@ uv run python -c "import polars, requests, musicbrainzngs; print('Dependencies O
 # Test data path accessibility
 uv run python -c "
 from pathlib import Path
-data_path = Path('dbt/data/src')
+data_path = Path('data/src')
 print(f'Data path exists: {data_path.exists()}')
 print(f'Contents: {list(data_path.iterdir()) if data_path.exists() else []}')
 "

@@ -134,7 +134,7 @@ def test_individual_tasks() -> Dict[str, Any]:
             print(f"    Spotify ingestion task failed: {e}")
 
         # Test data loading task (only if there are raw files)
-        raw_files = list(Path("dbt/data/raw/recently_played/detail").glob("*.json"))
+        raw_files = list(Path("data/raw/recently_played/detail").glob("*.json"))
         if raw_files:
             print("   Testing data loading task...")
             try:
@@ -203,8 +203,8 @@ def validate_environment() -> bool:
 
     # Check required directories
     required_dirs = [
-        "dbt/data/raw/recently_played/detail",
-        "dbt/data/src/tracks_played",
+        "data/raw/recently_played/detail",
+        "data/src/tracks_played",
         "dbt",
     ]
     for dir_path in required_dirs:

@@ -186,7 +186,10 @@ class MusicTrackerPipeline:
             ingestion_result = self.run_spotify_ingestion()
             pipeline_results["stages"]["ingestion"] = ingestion_result
 
-            if ingestion_result.get("status") != "success":
+            if ingestion_result.get("status") == "no_data":
+                logger.info("No new data ingested. Skipping further processing.")
+                return self._finalize_pipeline(pipeline_results, "success")
+            elif ingestion_result.get("status") != "success":
                 logger.error("Pipeline failed at ingestion stage")
                 return self._finalize_pipeline(pipeline_results, "failed")
 

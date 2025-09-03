@@ -48,7 +48,7 @@ class MusicBrainzProcessor:
         self.mbz_client = MusicBrainzClient(cache_dir=cache_dir)
 
         # Cache directory for storing raw JSON data
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("dbt/data/cache/mbz")
+        self.cache_dir = Path(cache_dir) if cache_dir else Path("data/cache/mbz")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Manual excludes from original notebook

@@ -28,6 +28,7 @@ sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
 from prefect.deployments import Deployment
+from prefect.client.schemas.schedules import CronSchedule
 from scripts.orchestrate.prefect_flows import spotify_ingestion_flow, daily_etl_flow
 from scripts.orchestrate.prefect_config import PrefectConfig
 
@@ -74,14 +75,18 @@ class FlowDeployer:
         print("\nDeploying Spotify ingestion flow...")
 
         try:
+            # Schedule to run every 10 minutes
+            spotify_schedule = CronSchedule(cron="*/10 * * * *", timezone="UTC")
+            
             deployment = Deployment.build_from_flow(
                 flow=spotify_ingestion_flow,
                 name="spotify-ingestion",
                 version="1.1.0",
-                description="Fetch recently played tracks from Spotify API",
+                description="Fetch recently played tracks from Spotify API every 10 minutes",
                 parameters={"limit": 50},
-                tags=["spotify", "ingestion", "automated"],
+                tags=["spotify", "ingestion", "automated", "scheduled"],
                 work_pool_name=None,  # Use default work pool
+                schedules=[spotify_schedule],
             )
 
             deployment_id = deployment.apply()
@@ -103,13 +108,17 @@ class FlowDeployer:
         print("\nDeploying daily ETL flow...")
 
         try:
+            # Schedule to run daily at 2:00 AM Mountain time
+            etl_schedule = CronSchedule(cron="0 2 * * *", timezone="America/Denver")
+            
             deployment = Deployment.build_from_flow(
                 flow=daily_etl_flow,
                 name="daily-etl",
                 version="1.1.0",
-                description="Daily ETL pipeline: Load → Enrich → Transform → Report",
-                tags=["etl", "daily", "processing", "automated"],
+                description="Daily ETL pipeline: Load → Enrich → Transform → Report (runs at 2:00 AM Mountain)",
+                tags=["etl", "daily", "processing", "automated", "scheduled"],
                 work_pool_name=None,  # Use default work pool
+                schedules=[etl_schedule],
             )
 
             deployment_id = deployment.apply()

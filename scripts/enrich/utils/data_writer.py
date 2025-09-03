@@ -3,7 +3,7 @@
 Data writer utilities for parquet file operations.
 
 This module replaces Spark DataFrame operations with Polars for writing
-enriched data to the dbt/data/src/ parquet files.
+enriched data to the data/src/ parquet files.
 """
 
 import logging
@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 
 class ParquetDataWriter:
     """
-    Handles writing enriched data to parquet files in dbt/data/src/.
+    Handles writing enriched data to parquet files in data/src/.
     Replaces Spark saveAsTable operations with optimized parquet writes.
     """
 
-    def __init__(self, base_path: str = "dbt/data/src"):
+    def __init__(self, base_path: str = "data/src"):
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 

@@ -51,7 +51,7 @@ class EnrichmentPipeline:
     3. Geographic enrichment (continent and coordinate data)
     """
 
-    def __init__(self, data_base_path: str = "dbt/data/src"):
+    def __init__(self, data_base_path: str = "data/src"):
         self.data_writer = ParquetDataWriter(data_base_path)
         self.start_time = datetime.now(timezone.utc)
 
@@ -345,7 +345,7 @@ def main():
         help="Show pipeline status only (no processing)",
     )
     parser.add_argument(
-        "--data-path", default="dbt/data/src", help="Base path for data files"
+        "--data-path", default="data/src", help="Base path for data files"
     )
 
     args = parser.parse_args()

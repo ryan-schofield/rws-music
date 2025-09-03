@@ -8,7 +8,7 @@ import polars as pl
 
 def main():
     # Define paths
-    base_path = Path("dbt/data")
+    base_path = Path("data")
     detail_path = base_path / "raw" / "recently_played" / "detail"
     src_tracks_path = base_path / "src" / "tracks_played"
     processed_path = base_path / "raw" / "recently_played" / "processed"

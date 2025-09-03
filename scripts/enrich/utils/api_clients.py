@@ -165,7 +165,7 @@ class MusicBrainzClient:
         self, user_agent: str = "fffv_tracks_history/0.1", cache_dir: str = None
     ):
         mbz.set_useragent(user_agent, "0.1")
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("dbt/data/cache/mbz")
+        self.cache_dir = Path(cache_dir) if cache_dir else Path("data/cache/mbz")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def get_artist_by_isrc(self, isrc: str) -> Optional[str]:

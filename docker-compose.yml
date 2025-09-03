@@ -76,6 +76,39 @@ services:
     restart: unless-stopped
     command: prefect server start --host 0.0.0.0 --port 4200
 
+  prefect-agent:
+    build: .
+    container_name: music-tracker-prefect-agent
+    environment:
+      - PREFECT_API_URL=http://prefect-server:4200/api
+      - PREFECT_AGENT_POOL_NAME=default-agent-pool
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - music-tracker
+    depends_on:
+      - prefect-server
+    restart: unless-stopped
+    command: >
+      bash -c "
+        echo 'Waiting for Prefect server to be ready...';
+        until curl -f http://prefect-server:4200/api/health > /dev/null 2>&1; do
+          echo 'Prefect server not ready, waiting...';
+          sleep 5;
+        done;
+        echo 'Prefect server is ready!';
+        sleep 5;
+        echo 'Deploying flows...';
+        uv run python scripts/orchestrate/deploy_flows.py || echo 'Flow deployment failed, continuing with agent...';
+        echo 'Starting Prefect agent...';
+        prefect agent start -p default-agent-pool
+      "
+
   # PostgreSQL for Prefect
   prefect-db:
     image: postgres:15-alpine

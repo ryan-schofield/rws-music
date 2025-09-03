@@ -102,10 +102,15 @@ class SpotifyAPIClient:
         try:
             response = requests.get(url, headers=headers, params=params)
             response.raise_for_status()
+            logger.debug(f"Spotify API response status: {response.status_code}")
+            logger.debug(f"Spotify API response body: {response.text}")
             return response.json()
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Spotify API request failed: {e}")
+            if e.response is not None:
+                logger.error(f"Response status code: {e.response.status_code}")
+                logger.error(f"Response body: {e.response.text}")
             raise
 
     def get_recently_played(self, after: str = None) -> Dict[str, Any]:
@@ -122,7 +127,7 @@ class SpotifyDataIngestion:
     """Handles ingestion of Spotify data."""
 
     def __init__(self):
-        self.data_dir = Path("dbt/data")
+        self.data_dir = Path("data")
         self.raw_data_dir = self.data_dir / "raw" / "recently_played" / "detail"
 
         # Ensure directories exist
@@ -133,7 +138,7 @@ class SpotifyDataIngestion:
 
     def load_cursor(self) -> str:
         """Load cursor from JSON file."""
-        cursor_path = Path("dbt/data/cursor/cursor.json")
+        cursor_path = Path("data/cursor/cursor.json")
         if cursor_path.exists():
             with open(cursor_path, "r") as f:
                 cursor = json.load(f)
@@ -142,7 +147,7 @@ class SpotifyDataIngestion:
 
     def save_cursor(self, after: str):
         """Save cursor to JSON file."""
-        cursor_path = Path("dbt/data/cursor/cursor.json")
+        cursor_path = Path("data/cursor/cursor.json")
         cursor = {"user_id": "fffv23", "after": after}
         with open(cursor_path, "w") as f:
             json.dump(cursor, f, indent=2)
@@ -239,9 +244,13 @@ class SpotifyDataIngestion:
             # Fetch data from Spotify
             data = self.fetch_recently_played(after=after)
             if not data:
+                logger.info(
+                    "No new tracks retrieved from Spotify. This is not an error."
+                )
                 return {
-                    "status": "no_data",
-                    "message": "No data retrieved from Spotify",
+                    "status": "success",
+                    "message": "No new data retrieved from Spotify",
+                    "records_ingested": 0,
                 }
 
             # Save to file
@@ -281,7 +290,7 @@ def main():
     print(json.dumps(result, indent=2, default=str))
 
     # Exit with appropriate code
-    if result.get("status") == "success":
+    if result.get("status") == "success" or result.get("status") == "no_data":
         exit(0)
     else:
         exit(1)

@@ -16,23 +16,20 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import subprocess
 
-from prefect import flow, task
+# Add the current directory to the Python path for imports
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+
+from prefect import flow, task, get_run_logger
 from prefect.context import get_run_context
 from prefect.states import Failed
 from dotenv import load_dotenv
 
 # Import monitoring
-from .monitoring import metrics_collector, monitor_flow, monitor_task, send_alert
+from monitoring import metrics_collector, monitor_flow, monitor_task, send_alert
 
 # Load environment variables
 load_dotenv()
-
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -57,6 +54,7 @@ def run_spotify_ingestion(limit: int = 50) -> Dict[str, Any]:
     Returns:
         Dict containing ingestion results
     """
+    logger = get_run_logger()
     logger.info("Starting Spotify ingestion task")
 
     try:
@@ -73,6 +71,12 @@ def run_spotify_ingestion(limit: int = 50) -> Dict[str, Any]:
         )
 
         if result.returncode == 0:
+            # Log any script stderr output to surface logs in Prefect
+            if result.stderr.strip():
+                logger.info(f"Spotify ingestion script logs:\n{result.stderr}")
+            # Log stdout output to show in Prefect UI
+            if result.stdout.strip():
+                logger.info(f"Spotify ingestion output:\n{result.stdout}")
             ingestion_result = json.loads(result.stdout)
             logger.info(
                 f"Spotify ingestion completed successfully: {ingestion_result.get('records_ingested', 0)} records"
@@ -106,6 +110,7 @@ def load_raw_data() -> Dict[str, Any]:
     Returns:
         Dict containing loading results
     """
+    logger = get_run_logger()
     logger.info("Starting raw data loading task")
 
     try:
@@ -123,6 +128,12 @@ def load_raw_data() -> Dict[str, Any]:
         )
 
         if result.returncode == 0:
+            # Log any script stderr output to surface logs in Prefect
+            if result.stderr.strip():
+                logger.info(f"Raw data loading script logs:\n{result.stderr}")
+            # Log stdout output to show in Prefect UI
+            if result.stdout.strip():
+                logger.info(f"Raw data loading output:\n{result.stdout}")
             logger.info("Raw data loading completed successfully")
             return {
                 "status": "success",
@@ -158,6 +169,7 @@ def run_enrichment_pipeline() -> Dict[str, Any]:
     Returns:
         Dict containing enrichment results
     """
+    logger = get_run_logger()
     logger.info("Starting enrichment pipeline task")
 
     try:
@@ -177,6 +189,12 @@ def run_enrichment_pipeline() -> Dict[str, Any]:
         )
 
         if result.returncode == 0:
+            # Log any script stderr output to surface logs in Prefect
+            if result.stderr.strip():
+                logger.info(f"Enrichment pipeline script logs:\n{result.stderr}")
+            # Log stdout output to show in Prefect UI
+            if result.stdout.strip():
+                logger.info(f"Enrichment pipeline output:\n{result.stdout}")
             enrichment_result = json.loads(result.stdout)
             logger.info("Enrichment pipeline completed successfully")
             return enrichment_result
@@ -208,6 +226,7 @@ def run_dbt_transformations() -> Dict[str, Any]:
     Returns:
         Dict containing dbt results
     """
+    logger = get_run_logger()
     logger.info("Starting dbt transformations task")
 
     try:
@@ -234,6 +253,10 @@ def run_dbt_transformations() -> Dict[str, Any]:
 
         if deps_result.returncode != 0:
             logger.warning(f"dbt deps failed: {deps_result.stderr}")
+        else:
+            # Log any script stderr output to surface logs in Prefect
+            if deps_result.stderr.strip():
+                logger.info(f"dbt deps script logs:\n{deps_result.stderr}")
 
         # Run dbt build
         logger.info("Running dbt build")
@@ -253,6 +276,12 @@ def run_dbt_transformations() -> Dict[str, Any]:
         )
 
         if build_result.returncode == 0:
+            # Log any script stderr output to surface logs in Prefect
+            if build_result.stderr.strip():
+                logger.info(f"dbt build script logs:\n{build_result.stderr}")
+            # Log stdout output to show in Prefect UI
+            if build_result.stdout.strip():
+                logger.info(f"dbt build output:\n{build_result.stdout}")
             logger.info("dbt transformations completed successfully")
             return {
                 "status": "success",
@@ -288,6 +317,7 @@ def update_reporting_data() -> Dict[str, Any]:
     Returns:
         Dict containing reporting update results
     """
+    logger = get_run_logger()
     logger.info("Starting reporting data update task")
 
     # Placeholder for Metabase integration
@@ -324,6 +354,8 @@ def spotify_ingestion_flow(limit: int = 50) -> Dict[str, Any]:
     Returns:
         Dict containing flow execution results
     """
+    logger = get_run_logger()
+
     with monitor_flow("spotify_ingestion", {"limit": limit}) as execution_id:
         logger.info(f"Starting Spotify ingestion flow (execution: {execution_id})")
 
@@ -384,6 +416,8 @@ def daily_etl_flow() -> Dict[str, Any]:
     Returns:
         Dict containing flow execution results
     """
+    logger = get_run_logger()
+
     with monitor_flow("daily_etl") as execution_id:
         logger.info(f"Starting daily ETL flow (execution: {execution_id})")
 
