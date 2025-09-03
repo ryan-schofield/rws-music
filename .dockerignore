@@ -1,0 +1,76 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache
+.coverage
+*.egg-info
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE and editor files
+.vscode/
+.working/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and runtime data
+logs/
+*.log
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Development tools and configs
+.kilocode/
+.python-version
+.sqlfluff
+requirements.txt
+
+# dbt artifacts (will be generated in container)
+dbt/logs/
+dbt/target/
+dbt/dbt_packages/
+dbt/.user.yml
+
+# Test files
+tests/
+*_test.py
+test_*.py
+
+# Temporary files
+tmp/
+temp/
+*.tmp

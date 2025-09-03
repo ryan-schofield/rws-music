@@ -9,9 +9,14 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv package manager
+RUN pip install uv
+
+# Copy uv dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install Python dependencies with uv
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY . .
@@ -25,7 +30,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import duckdb; print('Health check passed')" || exit 1
+    CMD uv run python -c "import duckdb; print('Health check passed')" || exit 1
 
 # Default command
-CMD ["python", "scripts/run_pipeline.py"]
+CMD ["uv", "run", "python", "scripts/run_pipeline.py"]

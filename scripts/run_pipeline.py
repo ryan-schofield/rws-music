@@ -25,8 +25,8 @@ load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ class MusicTrackerPipeline:
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
-        self.scripts_dir = self.project_root / 'scripts'
-        self.dbt_dir = self.project_root / 'dbt_duckdb'
+        self.scripts_dir = self.project_root / "scripts"
+        self.dbt_dir = self.project_root / "dbt"
 
         # Ensure we're in the right directory
         os.chdir(self.project_root)
@@ -49,15 +49,13 @@ class MusicTrackerPipeline:
         try:
             cmd = [
                 sys.executable,
-                str(self.scripts_dir / 'ingestion' / 'spotify_api_ingestion.py'),
-                '--limit', '50'
+                str(self.scripts_dir / "ingest" / "spotify_api_ingestion.py"),
+                "--limit",
+                "50",
             ]
 
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.project_root
+                cmd, capture_output=True, text=True, cwd=self.project_root
             )
 
             if result.returncode == 0:
@@ -69,32 +67,22 @@ class MusicTrackerPipeline:
                 return {
                     "status": "error",
                     "stage": "ingestion",
-                    "message": result.stderr
+                    "message": result.stderr,
                 }
 
         except Exception as e:
             logger.error(f"Error running Spotify ingestion: {e}")
-            return {
-                "status": "error",
-                "stage": "ingestion",
-                "message": str(e)
-            }
+            return {"status": "error", "stage": "ingestion", "message": str(e)}
 
     def run_data_processing(self) -> Dict[str, Any]:
         """Run data processing and merging."""
         logger.info("Starting data processing")
 
         try:
-            cmd = [
-                sys.executable,
-                str(self.scripts_dir / 'processing' / 'merge_spotify_recently_played.py')
-            ]
+            cmd = [sys.executable, str(self.scripts_dir / "load" / "append_tracks.py")]
 
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.project_root
+                cmd, capture_output=True, text=True, cwd=self.project_root
             )
 
             if result.returncode == 0:
@@ -106,16 +94,12 @@ class MusicTrackerPipeline:
                 return {
                     "status": "error",
                     "stage": "processing",
-                    "message": result.stderr
+                    "message": result.stderr,
                 }
 
         except Exception as e:
             logger.error(f"Error running data processing: {e}")
-            return {
-                "status": "error",
-                "stage": "processing",
-                "message": str(e)
-            }
+            return {"status": "error", "stage": "processing", "message": str(e)}
 
     def run_dbt_transformations(self) -> Dict[str, Any]:
         """Run dbt transformations."""
@@ -127,55 +111,43 @@ class MusicTrackerPipeline:
 
             # Run dbt build
             cmd = [
-                'dbt', 'build',
-                '--profiles-dir', str(self.dbt_dir),
-                '--project-dir', str(self.dbt_dir)
+                "dbt",
+                "build",
+                "--profiles-dir",
+                str(self.dbt_dir),
+                "--project-dir",
+                str(self.dbt_dir),
             ]
 
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.dbt_dir
+                cmd, capture_output=True, text=True, cwd=self.dbt_dir
             )
 
             if result.returncode == 0:
                 logger.info("dbt transformations completed successfully")
-                return {
-                    "status": "success",
-                    "stage": "dbt",
-                    "output": result.stdout
-                }
+                return {"status": "success", "stage": "dbt", "output": result.stdout}
             else:
                 logger.error(f"dbt transformations failed: {result.stderr}")
-                return {
-                    "status": "error",
-                    "stage": "dbt",
-                    "message": result.stderr
-                }
+                return {"status": "error", "stage": "dbt", "message": result.stderr}
 
         except Exception as e:
             logger.error(f"Error running dbt transformations: {e}")
-            return {
-                "status": "error",
-                "stage": "dbt",
-                "message": str(e)
-            }
+            return {"status": "error", "stage": "dbt", "message": str(e)}
 
     def _ensure_dbt_deps(self) -> None:
         """Ensure dbt dependencies are installed."""
         try:
             cmd = [
-                'dbt', 'deps',
-                '--profiles-dir', str(self.dbt_dir),
-                '--project-dir', str(self.dbt_dir)
+                "dbt",
+                "deps",
+                "--profiles-dir",
+                str(self.dbt_dir),
+                "--project-dir",
+                str(self.dbt_dir),
             ]
 
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.dbt_dir
+                cmd, capture_output=True, text=True, cwd=self.dbt_dir
             )
 
             if result.returncode != 0:
@@ -190,7 +162,7 @@ class MusicTrackerPipeline:
         return {
             "status": "success",
             "stage": "musicbrainz",
-            "message": "Not yet implemented"
+            "message": "Not yet implemented",
         }
 
     def update_reporting_data(self) -> Dict[str, Any]:
@@ -199,7 +171,7 @@ class MusicTrackerPipeline:
         return {
             "status": "success",
             "stage": "reporting",
-            "message": "Metabase integration pending"
+            "message": "Metabase integration pending",
         }
 
     def run_full_pipeline(self) -> Dict[str, Any]:
@@ -207,10 +179,7 @@ class MusicTrackerPipeline:
         start_time = datetime.now(timezone.utc)
         logger.info("Starting full music tracker pipeline")
 
-        pipeline_results = {
-            "pipeline_start": start_time.isoformat(),
-            "stages": {}
-        }
+        pipeline_results = {"pipeline_start": start_time.isoformat(), "stages": {}}
 
         try:
             # Stage 1: Data Ingestion
@@ -251,22 +220,23 @@ class MusicTrackerPipeline:
 
         except Exception as e:
             logger.error(f"Pipeline failed with exception: {e}")
-            pipeline_results["stages"]["error"] = {
-                "status": "error",
-                "message": str(e)
-            }
+            pipeline_results["stages"]["error"] = {"status": "error", "message": str(e)}
             return self._finalize_pipeline(pipeline_results, "failed")
 
-    def _finalize_pipeline(self, results: Dict[str, Any], status: str) -> Dict[str, Any]:
+    def _finalize_pipeline(
+        self, results: Dict[str, Any], status: str
+    ) -> Dict[str, Any]:
         """Finalize pipeline results."""
         end_time = datetime.now(timezone.utc)
         start_time = datetime.fromisoformat(results["pipeline_start"])
 
-        results.update({
-            "pipeline_end": end_time.isoformat(),
-            "duration_seconds": (end_time - start_time).total_seconds(),
-            "overall_status": status
-        })
+        results.update(
+            {
+                "pipeline_end": end_time.isoformat(),
+                "duration_seconds": (end_time - start_time).total_seconds(),
+                "overall_status": status,
+            }
+        )
 
         return results
 
@@ -277,7 +247,7 @@ class MusicTrackerPipeline:
         pipeline_results = {
             "pipeline_type": "incremental",
             "pipeline_start": datetime.now(timezone.utc).isoformat(),
-            "stages": {}
+            "stages": {},
         }
 
         try:
@@ -305,11 +275,17 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Music Tracker Data Pipeline')
-    parser.add_argument('--incremental', action='store_true',
-                       help='Run incremental pipeline (skip ingestion)')
-    parser.add_argument('--stage', choices=['ingestion', 'processing', 'dbt'],
-                       help='Run only specific stage')
+    parser = argparse.ArgumentParser(description="Music Tracker Data Pipeline")
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Run incremental pipeline (skip ingestion)",
+    )
+    parser.add_argument(
+        "--stage",
+        choices=["ingestion", "processing", "dbt"],
+        help="Run only specific stage",
+    )
 
     args = parser.parse_args()
 
@@ -317,11 +293,11 @@ def main():
 
     if args.stage:
         # Run specific stage
-        if args.stage == 'ingestion':
+        if args.stage == "ingestion":
             result = pipeline.run_spotify_ingestion()
-        elif args.stage == 'processing':
+        elif args.stage == "processing":
             result = pipeline.run_data_processing()
-        elif args.stage == 'dbt':
+        elif args.stage == "dbt":
             result = pipeline.run_dbt_transformations()
     else:
         # Run full or incremental pipeline

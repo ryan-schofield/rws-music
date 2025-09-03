@@ -2,7 +2,7 @@
 
 A modern, open-source music tracking and analytics platform that migrates from Microsoft Fabric to a cost-effective, Docker-based solution using DuckDB, Polars, and Metabase.
 
-## 🎯 Migration Overview
+## Migration Overview
 
 ### Original Microsoft Fabric Solution
 - **Data Extraction**: Fabric User Data Function + Kafka for Spotify tracks
@@ -24,31 +24,31 @@ A modern, open-source music tracking and analytics platform that migrates from M
 - **Cost**: $5-15/month
 
 ### Key Requirements
-- ✅ Keep dbt-core and existing transformation logic
-- ✅ Avoid Spark, use Polars for data processing
-- ✅ Use DuckDB as database
-- ✅ Use Metabase for reporting
-- ✅ Host on AWS Lightsail (low cost)
-- ✅ Make reports publicly available on existing domain
-- ✅ Maintain star schema structure
+-  Keep dbt-core and existing transformation logic
+-  Avoid Spark, use Polars for data processing
+-  Use DuckDB as database
+-  Use Metabase for reporting
+-  Host on AWS Lightsail (low cost)
+-  Make reports publicly available on existing domain
+-  Maintain star schema structure
 
-## 📋 Migration Plan & Progress
+## Migration Plan & Progress
 
-### Phase 1: Architecture & Core Components ✅ COMPLETED
+### Phase 1: Architecture & Core Components COMPLETED
 - [x] Design Docker-based architecture with DuckDB, Polars, and Metabase
 - [x] Create dbt-duckdb configuration and migrate dbt models
 - [x] Convert Spark notebooks to Polars-based Python scripts
 - [x] Implement data ingestion pipeline (Spotify API → DuckDB)
 - [x] Create orchestration with Prefect for scheduled tasks
 
-### Phase 2: Deployment & Testing 🔄 IN PROGRESS
+### Phase 2: Deployment & Testing IN PROGRESS
 - [ ] Set up Metabase for reporting with DuckDB connection
 - [ ] Configure public access for Metabase reports via domain
 - [ ] Test end-to-end data flow and reporting
 - [ ] Optimize performance and add error handling
 - [ ] Create deployment scripts for AWS Lightsail (with Terraform)
 
-## 🏗️ Architecture Decisions Made
+## Architecture Decisions Made
 
 ### Technology Stack Selection
 - **DuckDB**: Chosen over SQLite/PostgreSQL for analytical workloads and ~350k record dataset
@@ -69,36 +69,36 @@ A modern, open-source music tracking and analytics platform that migrates from M
 - **Open-Source**: Zero licensing fees for all components
 - **Scalable**: Easy to upgrade instance size if data grows
 
-## 📁 Current Project Structure
+## Current Project Structure
 
 ```
 rws-music/
-├── docker-compose.yml          # ✅ Multi-service orchestration (Metabase, Prefect, PostgreSQL)
-├── Dockerfile                  # ✅ Main application container with Polars/DuckDB/dbt
-├── requirements.txt            # ✅ All Python dependencies (Polars, DuckDB, Prefect, etc.)
-├── README.md                   # ✅ This documentation
-├── .env.example               # ✅ Environment configuration template
-├── .gitignore                 # 📝 Git ignore rules
-├── data/                      # 📁 Data storage (created at runtime)
-├── logs/                      # 📁 Application logs (created at runtime)
-├── dbt_duckdb/               # ✅ Migrated dbt project
-│   ├── models/               # ✅ All original dbt models preserved
-│   ├── profiles.yml          # ✅ Updated for DuckDB adapter
-│   ├── dbt_project.yml       # ✅ Updated project configuration
-│   ├── packages.yml          # ✅ Removed TSQL dependencies
-│   └── seeds/                # ✅ Original seed data preserved
-├── scripts/                  # ✅ Python application scripts
-│   ├── run_pipeline.py       # ✅ Main pipeline orchestrator
-│   ├── ingestion/            # ✅ Spotify API ingestion
+├── docker-compose.yml          #  Multi-service orchestration (Metabase, Prefect, PostgreSQL)
+├── Dockerfile                  #  Main application container with Polars/DuckDB/dbt
+├── requirements.txt            #  All Python dependencies (Polars, DuckDB, Prefect, etc.)
+├── README.md                   #  This documentation
+├── .env.example               # Environment configuration template
+├── .gitignore                 # Git ignore rules
+├── data/                      # Data storage (created at runtime)
+├── logs/                      # Application logs (created at runtime)
+├── dbt_duckdb/               # Migrated dbt project
+│   ├── models/               #  All original dbt models preserved
+│   ├── profiles.yml          #  Updated for DuckDB adapter
+│   ├── dbt_project.yml       #  Updated project configuration
+│   ├── packages.yml          #  Removed TSQL dependencies
+│   └── seeds/                #  Original seed data preserved
+├── scripts/                  #  Python application scripts
+│   ├── run_pipeline.py       #  Main pipeline orchestrator
+│   ├── ingestion/            #  Spotify API ingestion
 │   │   └── spotify_api_ingestion.py
-│   ├── processing/           # ✅ Polars data processing
+│   ├── processing/           #  Polars data processing
 │   │   └── merge_spotify_recently_played.py
-│   └── orchestration/        # ✅ Prefect workflow definitions
+│   └── orchestration/        #  Prefect workflow definitions
 │       └── prefect_flows.py
-└── terraform/                # 📝 AWS deployment scripts (pending)
+└── terraform/                # AWS deployment scripts (pending)
 ```
 
-## 🚀 Quick Start (Current State)
+## Quick Start (Current State)
 
 ### Prerequisites
 - Docker and Docker Compose installed
@@ -132,7 +132,7 @@ docker-compose exec data-pipeline python scripts/run_pipeline.py --stage dbt
 - **Prefect Server**: http://localhost:4200
 - **Pipeline Logs**: `docker-compose logs -f data-pipeline`
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables (.env)
 ```bash
@@ -156,15 +156,15 @@ LOG_LEVEL=INFO
 3. Copy Client ID and Client Secret to `.env`
 4. No redirect URIs needed (using Client Credentials flow)
 
-## 📊 Data Flow
+## Data Flow
 
 ### Current Implementation Status
-1. **✅ Spotify API Ingestion**: Fetches recently played tracks with full metadata enrichment
-2. **✅ Polars Processing**: Merges and deduplicates data using DataFrame operations
-3. **✅ DuckDB Storage**: Stores raw and processed data efficiently
-4. **✅ dbt Transformations**: Applies star schema transformations (same as original)
-5. **🔄 Metabase Reporting**: Needs connection setup and dashboard creation
-6. **✅ Prefect Orchestration**: Flows defined for scheduled execution
+1. ** Spotify API Ingestion**: Fetches recently played tracks with full metadata enrichment
+2. ** Polars Processing**: Merges and deduplicates data using DataFrame operations
+3. ** DuckDB Storage**: Stores raw and processed data efficiently
+4. ** dbt Transformations**: Applies star schema transformations (same as original)
+5. ** Metabase Reporting**: Needs connection setup and dashboard creation
+6. ** Prefect Orchestration**: Flows defined for scheduled execution
 
 ### Data Volume Handling
 - **Current Dataset**: ~350k track plays over 20 years
@@ -172,7 +172,7 @@ LOG_LEVEL=INFO
 - **Performance**: DuckDB + Polars handles this efficiently on 2GB instances
 - **Growth**: Scales well to millions of records
 
-## 🎯 Next Steps
+## Next Steps
 
 ### Immediate (This Session)
 1. **Test Local Setup**: Verify Docker containers start correctly
@@ -189,7 +189,7 @@ LOG_LEVEL=INFO
 2. **Performance Optimization**: Fine-tune for production workload
 3. **Monitoring**: Add health checks and alerting
 
-## 💰 Cost Savings Achieved
+## Cost Savings Achieved
 
 | Component | Fabric Cost | Open Source Cost | Savings |
 |-----------|-------------|------------------|---------|
@@ -201,7 +201,7 @@ LOG_LEVEL=INFO
 
 *95%+ cost reduction while maintaining all functionality*
 
-## 🔍 Important Notes
+## Important Notes
 
 ### Data Preservation
 - All existing dbt models, transformations, and business logic preserved
@@ -221,14 +221,14 @@ LOG_LEVEL=INFO
 - **Reversible**: Easy to rollback if needed
 - **Scalable**: Architecture supports future growth
 
-## 📞 Support & Documentation
+## Support & Documentation
 
 - **Local Testing**: Use the Quick Start section above
 - **Logs**: Check `logs/` directory and `docker-compose logs`
 - **Configuration**: Refer to `.env.example` for all settings
 - **Architecture**: See docker-compose.yml for service relationships
 
-## 🎉 Success Metrics
+## Success Metrics
 
 - [x] **Architecture Complete**: Docker-based solution designed
 - [x] **Core Components Built**: All major scripts and configurations created

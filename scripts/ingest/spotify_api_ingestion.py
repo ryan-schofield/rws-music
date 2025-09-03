@@ -118,7 +118,6 @@ class SpotifyAPIClient:
         return self._make_request("/me/player/recently-played", params)
 
 
-
 class SpotifyDataIngestion:
     """Handles ingestion of Spotify data."""
 
@@ -205,7 +204,7 @@ class SpotifyDataIngestion:
                     "played_at": item.get("played_at"),
                     "popularity": popularity,
                     "request_after": after,
-                    "play_source": play_source
+                    "play_source": play_source,
                 }
 
                 flattened_data.append(flattened_item)
@@ -215,7 +214,6 @@ class SpotifyDataIngestion:
         except Exception as e:
             logger.error(f"Error fetching recently played tracks: {e}")
             return []
-
 
     def save_raw_data(self, data: List[Dict[str, Any]]) -> str:
         """Save raw data to JSON file for processing."""
