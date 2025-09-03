@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """
-Spotify API data ingestion using Polars and DuckDB.
-
 This script handles fetching recently played tracks from Spotify API
-and storing them in DuckDB for further processing.
+and storing them for further processing.
 """
 
 import os
