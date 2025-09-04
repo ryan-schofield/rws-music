@@ -22,16 +22,14 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add project root to path
+# Add project root to path (more robust approach)
 project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
+import subprocess
 from dotenv import load_dotenv
-from prefect.deployments import run_deployment
-from prefect.client.schemas.schedules import CronSchedule
-from prefect.runner.storage import LocalStorage
-from scripts.orchestrate.prefect_flows import spotify_ingestion_flow, daily_etl_flow
-from scripts.orchestrate.prefect_config import PrefectConfig
+from scripts.orchestrate.flow_config import FlowConfig
 
 # Load environment variables
 load_dotenv()
@@ -42,6 +40,7 @@ class FlowDeployer:
 
     def __init__(self):
         self.deployed_flows = {}
+        self.config = FlowConfig.from_env()
 
     def validate_environment(self):
         """Validate environment before deployment."""
@@ -59,78 +58,101 @@ class FlowDeployer:
             print("This may be expected if the Prefect server is not running yet")
 
         # Validate configuration
-        validation = PrefectConfig.validate_configuration()
-        if validation["valid"]:
-            print("[OK] Configuration validation passed")
-        else:
-            print("[WARN] Configuration issues found:")
-            for missing in validation["missing"]:
-                print(f"  - Missing: {missing}")
+        print(f"[OK] Configuration loaded - Environment: {self.config.environment}")
+        print(f"     Data path: {self.config.data_base_path}")
+        print(
+            f"     Limits - Spotify: {self.config.spotify_artist_limit}, MBZ: {self.config.musicbrainz_fetch_limit}"
+        )
 
         return True
 
     def deploy_spotify_flow(self):
-        """Deploy the Spotify ingestion flow."""
-        print("\nDeploying Spotify ingestion flow...")
+        """Deploy the Spotify ingestion flow using CLI command."""
+        print("\nDeploying Spotify Ingestion Flow...")
 
         try:
-            # Schedule to run every 10 minutes
-            spotify_schedule = CronSchedule(cron="*/10 * * * *", timezone="UTC")
-
-            # Create deployment using v3 API
-            deployment = spotify_ingestion_flow.to_deployment(
-                name="spotify-ingestion",
-                version="1.1.0",
-                description="Fetch recently played tracks from Spotify API every 10 minutes",
-                parameters={"limit": 50},
-                tags=["spotify", "ingestion", "automated", "scheduled"],
-                work_pool_name="default-agent-pool",
-                schedules=[spotify_schedule],
+            # Use CLI command for proper module-based deployment
+            cmd = [
+                "prefect", "deploy",
+                "scripts.orchestrate.prefect_flows:spotify_ingestion_flow",
+                "-n", "spotify-ingestion",
+                "-p", "default-agent-pool",
+                "--cron", "*/10 * * * *",
+                "--timezone", "UTC"
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120
             )
 
-            deployment_id = deployment.apply()
-            self.deployed_flows["spotify"] = {
-                "name": "spotify-ingestion",
-                "id": deployment_id,
-                "status": "success",
-            }
-            print(f"[OK] Spotify flow deployed (ID: {deployment_id})")
-            return True
+            if result.returncode == 0:
+                print("[OK] Spotify Flow deployed successfully")
+                self.deployed_flows["spotify"] = {
+                    "name": "spotify-ingestion",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Spotify Flow: {error_msg}")
+                self.deployed_flows["spotify"] = {"status": "failed", "error": error_msg}
+                return False
 
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["spotify"] = {"status": "failed", "error": error_msg}
+            return False
         except Exception as e:
-            print(f"[ERROR] Failed to deploy Spotify flow: {e}")
+            print(f"[ERROR] Failed to deploy Spotify Flow: {e}")
             self.deployed_flows["spotify"] = {"status": "failed", "error": str(e)}
             return False
 
     def deploy_etl_flow(self):
-        """Deploy the daily ETL flow."""
-        print("\nDeploying daily ETL flow...")
+        """Deploy the daily ETL flow using CLI command."""
+        print("\nDeploying Daily ETL Flow...")
 
         try:
-            # Schedule to run daily at 2:00 AM Mountain time
-            etl_schedule = CronSchedule(cron="0 2 * * *", timezone="America/Denver")
-
-            # Create deployment using v3 API
-            deployment = daily_etl_flow.to_deployment(
-                name="daily-etl",
-                version="1.1.0",
-                description="Daily ETL pipeline: Load → Enrich → Transform → Report (runs at 2:00 AM Mountain)",
-                tags=["etl", "daily", "processing", "automated", "scheduled"],
-                work_pool_name="default-agent-pool",
-                schedules=[etl_schedule],
+            # Use CLI command for proper module-based deployment
+            cmd = [
+                "prefect", "deploy",
+                "scripts.orchestrate.prefect_flows:daily_etl_flow",
+                "-n", "daily-etl",
+                "-p", "default-agent-pool",
+                "--cron", "0 2 * * *",
+                "--timezone", "America/Denver"
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120
             )
 
-            deployment_id = deployment.apply()
-            self.deployed_flows["etl"] = {
-                "name": "daily-etl",
-                "id": deployment_id,
-                "status": "success",
-            }
-            print(f"[OK] ETL flow deployed (ID: {deployment_id})")
-            return True
+            if result.returncode == 0:
+                print("[OK] Daily ETL Flow deployed successfully")
+                self.deployed_flows["etl"] = {
+                    "name": "daily-etl",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Daily ETL Flow: {error_msg}")
+                self.deployed_flows["etl"] = {"status": "failed", "error": error_msg}
+                return False
 
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["etl"] = {"status": "failed", "error": error_msg}
+            return False
         except Exception as e:
-            print(f"[ERROR] Failed to deploy ETL flow: {e}")
+            print(f"[ERROR] Failed to deploy Daily ETL Flow: {e}")
             self.deployed_flows["etl"] = {"status": "failed", "error": str(e)}
             return False
 
@@ -165,7 +187,7 @@ class FlowDeployer:
         for flow_type, info in self.deployed_flows.items():
             if info["status"] == "success":
                 successful_flows.append(info)
-                print(f"[OK] {info['name']} (ID: {info['id']})")
+                print(f"[OK] {info['name']}")
             else:
                 failed_flows.append(info)
                 print(f"[ERROR] {flow_type}: {info.get('error', 'Unknown error')}")
@@ -209,8 +231,9 @@ def main():
     print("=" * 60)
     print("PREFECT FLOW DEPLOYMENT")
     print("=" * 60)
-    print(f"Project: {PrefectConfig.PROJECT_NAME}")
-    print(f"Environment: {PrefectConfig.ENVIRONMENT}")
+    config = FlowConfig.from_env()
+    print(f"Project: Music Tracker")
+    print(f"Environment: {config.environment}")
 
     # Validate environment if requested
     if args.validate:

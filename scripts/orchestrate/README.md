@@ -2,6 +2,14 @@
 
 This directory contains the Prefect workflow orchestration for the music tracking system.
 
+## Key Features
+
+- **Code Reduction** through DRY principles and base classes
+- **Performance Improvement** through concurrent execution
+- **Atomic Task Components** for better testability and reliability
+- **Modular Subflows** for improved organization
+- **Dynamic Configuration** for flexible environments
+
 ## Quick Start
 
 ### 1. Start Prefect Server
@@ -9,7 +17,7 @@ This directory contains the Prefect workflow orchestration for the music trackin
 docker-compose up -d prefect-server prefect-db
 ```
 
-### 2. Deploy Your Flows
+### 2. Deploy Flows
 ```bash
 # Deploy all flows with validation
 uv run python scripts/orchestrate/deploy_flows.py --validate
@@ -22,92 +30,203 @@ uv run python scripts/orchestrate/deploy_flows.py --etl-only
 ### 3. Access Prefect UI
 Open http://localhost:4200 to view and manage your flows.
 
-## Files Overview
+## Architecture Overview
 
-### Core Files
-- **`prefect_flows.py`** - Flow definitions for Spotify ingestion and ETL
-- **`deploy_flows.py`** - Production deployment script (use this!)
-- **`prefect_config.py`** - Configuration settings and validation
+### New File Structure
+```
+scripts/orchestrate/
+├── flow_config.py          # Centralized configuration management
+├── base_tasks.py           # Base classes eliminating code duplication
+├── atomic_tasks.py         # Discrete, testable task implementations
+├── subflows.py            # Concurrent execution subflows
+├── prefect_flows.py       # Main flow definitions
+├── deploy_flows.py        # Deployment script
+├── monitoring.py          # Monitoring and alerting
+└── README.md              # This documentation
+```
 
-### Supporting Files
-- **`enrichment_pipeline.py`** - Data enrichment orchestration
-- **`monitoring.py`** - Flow monitoring and alerts
-- **`test_flows.py`** - Flow testing utilities
+### Core Components
+
+#### 1. **Configuration Management** ([`flow_config.py`](scripts/orchestrate/flow_config.py))
+- Environment-aware configuration
+- Dynamic parameter management
+- Centralized limits and timeouts
+
+#### 2. **Base Infrastructure** ([`base_tasks.py`](scripts/orchestrate/base_tasks.py))
+- `BaseTask` - Common task patterns
+- `BaseProcessorTask` - Direct processor integration
+- `BaseEnrichmentTask` - Enrichment-specific functionality
+- `TaskResult` - Standardized result format
+
+#### 3. **Atomic Tasks** ([`atomic_tasks.py`](scripts/orchestrate/atomic_tasks.py))
+- Single-responsibility tasks
+- Direct processor usage (no subprocess duplication)
+- Comprehensive error handling
+- Granular retry strategies
+
+#### 4. **Concurrent Subflows** ([`subflows.py`](scripts/orchestrate/subflows.py))
+- `data_preparation_subflow` - Sequential data loading & validation
+- `spotify_enrichment_subflow` - Parallel artist & album enrichment
+- `musicbrainz_enrichment_subflow` - Optimized MBZ pipeline
+- `geographic_enrichment_subflow` - Geographic data processing
+- `enrichment_coordination_subflow` - Parallel enrichment orchestration
 
 ## Available Flows
 
 ### Spotify Ingestion Flow
 - **Name**: `spotify-ingestion`
-- **Purpose**: Fetches recently played tracks from Spotify API
-- **Parameters**: `limit` (default: 50 tracks)
-- **Tags**: spotify, ingestion, automated
+- **Purpose**: Spotify API ingestion with optimized error handling
+- **Parameters**:
+  - `limit` (int): Number of tracks to fetch (default: 50)
+  - `config` (FlowConfig): Configuration object (optional)
+- **Features**:
+  - Direct task usage (no subprocess)
+  - Configurable limits
+  - Comprehensive error reporting
 
-### Daily ETL Flow  
+### Daily ETL Flow
 - **Name**: `daily-etl`
-- **Purpose**: Complete data pipeline (Load → Enrich → Transform → Report)
-- **Tags**: etl, daily, processing, automated
+- **Purpose**: Concurrent ETL pipeline
+- **Parameters**:
+  - `config` (FlowConfig): Configuration object (optional)
+- **Architecture**:
+  ```
+  Data Preparation (Sequential)
+        ↓
+  Enrichment Coordination (Concurrent)
+    ├── Spotify Enrichment
+    ├── MusicBrainz Enrichment
+    └── Geographic Enrichment
+        ↓
+  Transformations (Sequential)
+  ```
+- **Performance**: Optimized through parallel execution
 
 ## Configuration
 
-Required environment variables:
+### Environment Variables
 ```bash
+# Spotify API (required)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret  
 SPOTIFY_REFRESH_TOKEN=your_spotify_refresh_token
-DUCKDB_PATH=./data/music_tracker.duckdb
+
+# Environment (optional)
+ENVIRONMENT=development  # development, testing, production
+DATA_BASE_PATH=data/src
+CACHE_DIR=data/cache
+
+# Processing Limits (optional)
+SPOTIFY_ARTIST_LIMIT=200
+MUSICBRAINZ_FETCH_LIMIT=50
+DEFAULT_TIMEOUT=300
 ```
+
+### Configuration Environments
+
+**Development** (default):
+- No processing limits
+- Standard timeouts
+- Full logging
+
+**Testing**:
+- Small limits for fast execution
+- Shorter timeouts
+- Minimal processing
+
+**Production**:  
+- Reasonable limits to prevent API rate limiting
+- Optimized timeouts
+- Production-grade error handling
 
 ## Usage Examples
 
-### Deploy and Run Flows
+### Deploy Flows
 ```bash
-# Deploy flows
+# Deploy both flows
 uv run python scripts/orchestrate/deploy_flows.py
 
-# Run flows via CLI
+# Validate configuration
+uv run python scripts/orchestrate/deploy_flows.py --validate
+```
+
+### Run Flows Manually
+```bash
+# Test flows directly
+uv run python scripts/orchestrate/prefect_flows.py --flow spotify --limit 10
+uv run python scripts/orchestrate/prefect_flows.py --flow etl --config-env testing
+
+# Via Prefect CLI
 prefect deployment run spotify-ingestion
 prefect deployment run daily-etl
 ```
 
 ### Test Configuration
 ```bash
-# Validate your setup
-uv run python scripts/orchestrate/prefect_config.py
+# Test configuration loading
+uv run python scripts/orchestrate/flow_config.py
 
-# Test flows individually
-uv run python scripts/orchestrate/test_flows.py
+# Test individual components
+uv run python -c "from scripts.orchestrate.flow_config import get_flow_config; print(get_flow_config().to_dict())"
 ```
+
+## Architecture Benefits
+
+### Current Implementation:
+- **Concurrent enrichment execution** (Spotify + MBZ + Geographic in parallel)
+- **Atomic task components** with base classes eliminating duplication
+- **Dynamic configuration** with environment-specific settings
+- **Modular subflows** handling single responsibilities
+
+### Performance Characteristics:
+- **Faster execution** through concurrency
+- **Reduced code duplication** through DRY principles
+- **Better reliability** through atomic tasks and granular retries
+- **Enhanced debugging** through task-level visibility
+
+## Getting Started
+
+### Initial Setup:
+1. **Configure environments** in your `.env` file
+2. **Deploy flows** using the deployment script
+3. **Monitor execution** in Prefect UI
+4. **Adjust configuration** as needed for your environment
 
 ## Troubleshooting
 
 ### Common Issues
 
-**"Cannot connect to Prefect server"**
-- Ensure Prefect server is running: `docker-compose up -d prefect-server`
-- Check server logs: `docker-compose logs prefect-server`
+**"Cannot import new flows"**
+- Ensure all processor classes are properly imported
+- Check that your Python path includes the project root
 
-**"Missing Spotify credentials"**
-- Set up your `.env` file with Spotify API credentials
-- Run with `--validate` to check configuration
+**"Configuration validation failed"**  
+- Verify environment variables in your `.env` file
+- Use `--validate` flag to check configuration
 
-**"Flow deployment failed"**
-- Check that all file paths are correct
-- Verify your flows can be imported: `python -c "from scripts.orchestrate.prefect_flows import *"`
+**"Subflow execution failed"**
+- Check individual task logs in Prefect UI
+- Tasks are atomic and can be debugged independently
 
-### Getting Help
+**"Performance not improved"**
+- Verify concurrent execution in flow run logs
+- Check that independent tasks are running in parallel
 
-1. Check flow execution in Prefect UI: http://localhost:4200
-2. View logs: `docker-compose logs prefect-server`
-3. Test configuration: `uv run python scripts/orchestrate/deploy_flows.py --validate`
+### Debugging Tips
+
+1. **Task-Level Logs**: Each atomic task provides detailed logging
+2. **Subflow Status**: Monitor subflow execution in Prefect UI
+3. **Configuration**: Test config with `flow_config.py`
+4. **Direct Execution**: Run flows directly for debugging
 
 ## Development Workflow
 
-1. **Modify flows** in `prefect_flows.py`
-2. **Test locally** with `test_flows.py`
-3. **Deploy** with `deploy_flows.py`
-4. **Monitor** in Prefect UI
-5. **Debug** using flow run logs
+1. **Modify components** in respective files (atomic_tasks.py, subflows.py, etc.)
+2. **Test configuration** with different environments
+3. **Deploy flows** with deployment script
+4. **Monitor performance** in Prefect UI
+5. **Review execution metrics** and adjust as needed
 
 ---
 
-For more details, see the main project [README.md](../../README.md).
+For more details, see the main project [README.md](../../README.md) and [PREFECT_RESTRUCTURE_SPEC.md](PREFECT_RESTRUCTURE_SPEC.md).

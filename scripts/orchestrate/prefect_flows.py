@@ -2,726 +2,103 @@
 """
 Prefect flows for the music tracking system.
 
-This module contains the orchestration flows for:
-1. Spotify data ingestion (runs every ~10 minutes)
-2. Daily ETL pipeline (load, enrich, transform)
+This module contains concurrent, modular flows with the following features:
+
+1. Code reduction through DRY principles
+2. Performance improvement through concurrency
+3. Atomic, testable components
+4. Proper error handling and retry strategies
+5. Dynamic configuration management
 """
 
-import os
 import sys
-import json
-import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Optional
-import subprocess
 
-# Add the current directory to the Python path for imports
-current_dir = Path(__file__).parent
-sys.path.insert(0, str(current_dir))
-
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 from prefect.context import get_run_context
 from prefect.states import Failed, Completed
-from dotenv import load_dotenv
 
-# Import monitoring
-from monitoring import metrics_collector, monitor_flow, monitor_task, send_alert
+# Add project root to path for imports (more robust approach)
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
-# Load environment variables
-load_dotenv()
-
-
-# ============================================================================
-# TASK DEFINITIONS
-# ============================================================================
-
-
-@task(
-    name="Run Spotify Ingestion",
-    description="Fetch recently played tracks from Spotify API",
-    retries=3,
-    retry_delay_seconds=60,
-    timeout_seconds=300,
+from scripts.orchestrate.flow_config import FlowConfig, get_flow_config
+from scripts.orchestrate.monitoring import metrics_collector, monitor_flow, send_alert
+from scripts.orchestrate.atomic_tasks import spotify_api_ingestion
+from scripts.orchestrate.subflows import (
+    data_preparation_subflow,
+    enrichment_coordination_subflow,
+    transformation_subflow,
 )
-def run_spotify_ingestion(limit: int = 50) -> Dict[str, Any]:
-    """
-    Run the Spotify API ingestion script.
 
-    Args:
-        limit: Maximum number of tracks to fetch
 
-    Returns:
-        Dict containing ingestion results
-    """
-    logger = get_run_logger()
-    logger.info("Starting Spotify ingestion task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = project_root / "scripts" / "ingest" / "spotify_api_ingestion.py"
-
-        # Build command
-        cmd = [sys.executable, str(script_path), "--limit", str(limit)]
-
-        # Run the ingestion script
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, cwd=project_root, timeout=300
-        )
-
-        if result.returncode == 0:
-            # Log any script stderr output to surface logs in Prefect
-            if result.stderr.strip():
-                logger.info(f"Spotify ingestion script logs:\n{result.stderr}")
-            # Log stdout output to show in Prefect UI
-            if result.stdout.strip():
-                logger.info(f"Spotify ingestion output:\n{result.stdout}")
-            ingestion_result = json.loads(result.stdout)
-            logger.info(
-                f"Spotify ingestion completed successfully: {ingestion_result.get('records_ingested', 0)} records"
-            )
-            return ingestion_result
-        else:
-            error_msg = f"Spotify ingestion failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "Spotify ingestion timed out after 5 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in Spotify ingestion task: {e}")
-        raise
-
-
-@task(
-    name="Load Raw Data",
-    description="Load raw JSON data into parquet files",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=600,
-)
-def load_raw_data() -> Dict[str, Any]:
-    """
-    Run the data loading script to process raw JSON files into parquet.
-
-    Returns:
-        Dict containing loading results
-    """
-    logger = get_run_logger()
-    logger.info("Starting raw data loading task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = project_root / "scripts" / "load" / "append_tracks.py"
-
-        # Run the loading script
-        result = subprocess.run(
-            [sys.executable, str(script_path)],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=600,
-        )
-
-        if result.returncode == 0:
-            # Log any script stderr output to surface logs in Prefect
-            if result.stderr.strip():
-                logger.info(f"Raw data loading script logs:\n{result.stderr}")
-            # Log stdout output to show in Prefect UI
-            if result.stdout.strip():
-                logger.info(f"Raw data loading output:\n{result.stdout}")
-            logger.info("Raw data loading completed successfully")
-            return {
-                "status": "success",
-                "message": "Data loading completed",
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-            }
-        else:
-            error_msg = f"Data loading failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "Data loading timed out after 10 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in data loading task: {e}")
-        raise
-
-
-@task(
-    name="Run Spotify Enrichment",
-    description="Run Spotify data enrichment (artists and albums)",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=900,
-)
-def run_spotify_enrichment() -> Dict[str, Any]:
-    """
-    Run Spotify enrichment as a standalone task.
-
-    Returns:
-        Dict containing Spotify enrichment results
-    """
-    logger = get_run_logger()
-    logger.info("Starting Spotify enrichment task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Run Spotify enrichment
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--processors", "spotify"],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=900,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"Spotify enrichment logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"Spotify enrichment output:\n{result.stdout}")
-            enrichment_result = json.loads(result.stdout)
-            logger.info("Spotify enrichment completed successfully")
-            return enrichment_result
-        else:
-            error_msg = f"Spotify enrichment failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "Spotify enrichment timed out after 15 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in Spotify enrichment task: {e}")
-        raise
-
-
-@task(
-    name="Run MusicBrainz Discovery",
-    description="Discover artists that need MusicBrainz enrichment",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=300,
-)
-def run_musicbrainz_discovery() -> Dict[str, Any]:
-    """
-    Run MusicBrainz artist discovery as a standalone task.
-
-    Returns:
-        Dict containing discovery results
-    """
-    logger = get_run_logger()
-    logger.info("Starting MusicBrainz discovery task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Run MusicBrainz discovery
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--processors", "musicbrainz", "--mbz-step", "discover"],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=300,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"MusicBrainz discovery logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"MusicBrainz discovery output:\n{result.stdout}")
-            discovery_result = json.loads(result.stdout)
-            logger.info("MusicBrainz discovery completed successfully")
-            return discovery_result
-        else:
-            error_msg = f"MusicBrainz discovery failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "MusicBrainz discovery timed out after 5 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in MusicBrainz discovery task: {e}")
-        raise
-
-
-@task(
-    name="Run MusicBrainz Fetch",
-    description="Fetch MusicBrainz data for discovered artists",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=900,
-)
-def run_musicbrainz_fetch(limit: Optional[int] = None) -> Dict[str, Any]:
-    """
-    Run MusicBrainz artist data fetching as a standalone task.
-
-    Args:
-        limit: Maximum number of artists to fetch
-
-    Returns:
-        Dict containing fetch results
-    """
-    logger = get_run_logger()
-    logger.info("Starting MusicBrainz fetch task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Build command with optional limit
-        cmd = [sys.executable, str(script_path), "--processors", "musicbrainz", "--mbz-step", "fetch"]
-        if limit is not None:
-            cmd.extend(["--limit", str(limit)])
-
-        # Run MusicBrainz fetch
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=900,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"MusicBrainz fetch logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"MusicBrainz fetch output:\n{result.stdout}")
-            fetch_result = json.loads(result.stdout)
-            logger.info("MusicBrainz fetch completed successfully")
-            return fetch_result
-        else:
-            error_msg = f"MusicBrainz fetch failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "MusicBrainz fetch timed out after 15 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in MusicBrainz fetch task: {e}")
-        raise
-
-
-@task(
-    name="Run MusicBrainz Parse",
-    description="Parse MusicBrainz JSON files into structured data",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=600,
-)
-def run_musicbrainz_parse() -> Dict[str, Any]:
-    """
-    Run MusicBrainz JSON parsing as a standalone task.
-
-    Returns:
-        Dict containing parse results
-    """
-    logger = get_run_logger()
-    logger.info("Starting MusicBrainz parse task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Run MusicBrainz parse
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--processors", "musicbrainz", "--mbz-step", "parse"],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=600,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"MusicBrainz parse logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"MusicBrainz parse output:\n{result.stdout}")
-            parse_result = json.loads(result.stdout)
-            logger.info("MusicBrainz parse completed successfully")
-            return parse_result
-        else:
-            error_msg = f"MusicBrainz parse failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "MusicBrainz parse timed out after 10 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in MusicBrainz parse task: {e}")
-        raise
-
-
-@task(
-    name="Run MusicBrainz Hierarchy",
-    description="Process MusicBrainz area hierarchy data",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=1200,
-)
-def run_musicbrainz_hierarchy(limit: Optional[int] = None) -> Dict[str, Any]:
-    """
-    Run MusicBrainz area hierarchy processing as a standalone task.
-
-    Args:
-        limit: Maximum number of areas to process
-
-    Returns:
-        Dict containing hierarchy results
-    """
-    logger = get_run_logger()
-    logger.info("Starting MusicBrainz hierarchy task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Build command with optional limit
-        cmd = [sys.executable, str(script_path), "--processors", "musicbrainz", "--mbz-step", "hierarchy"]
-        if limit is not None:
-            cmd.extend(["--limit", str(limit)])
-
-        # Run MusicBrainz hierarchy
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=1200,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"MusicBrainz hierarchy logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"MusicBrainz hierarchy output:\n{result.stdout}")
-            hierarchy_result = json.loads(result.stdout)
-            logger.info("MusicBrainz hierarchy completed successfully")
-            return hierarchy_result
-        else:
-            error_msg = f"MusicBrainz hierarchy failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "MusicBrainz hierarchy timed out after 20 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in MusicBrainz hierarchy task: {e}")
-        raise
-
-
-
-
-@task(
-    name="Run Geographic Enrichment",
-    description="Run geographic data enrichment (continents and coordinates)",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=600,
-)
-def run_geographic_enrichment() -> Dict[str, Any]:
-    """
-    Run Geographic enrichment as a standalone task.
-
-    Returns:
-        Dict containing Geographic enrichment results
-    """
-    logger = get_run_logger()
-    logger.info("Starting Geographic enrichment task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Run Geographic enrichment
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--processors", "geographic"],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=600,
-        )
-
-        if result.returncode == 0:
-            if result.stderr.strip():
-                logger.info(f"Geographic enrichment logs:\n{result.stderr}")
-            if result.stdout.strip():
-                logger.info(f"Geographic enrichment output:\n{result.stdout}")
-            enrichment_result = json.loads(result.stdout)
-            logger.info("Geographic enrichment completed successfully")
-            return enrichment_result
-        else:
-            error_msg = f"Geographic enrichment failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "Geographic enrichment timed out after 10 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in Geographic enrichment task: {e}")
-        raise
-
-
-@task(
-    name="Run Full Enrichment Pipeline",
-    description="Run complete data enrichment processes (Spotify, MusicBrainz, Geographic)",
-    retries=1,
-    retry_delay_seconds=60,
-    timeout_seconds=1800,
-)
-def run_enrichment_pipeline() -> Dict[str, Any]:
-    """
-    Run the full enrichment pipeline script.
-
-    Returns:
-        Dict containing enrichment results
-    """
-    logger = get_run_logger()
-    logger.info("Starting full enrichment pipeline task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        script_path = (
-            project_root / "scripts" / "orchestrate" / "enrichment_pipeline.py"
-        )
-
-        # Run the enrichment pipeline
-        result = subprocess.run(
-            [sys.executable, str(script_path)],
-            capture_output=True,
-            text=True,
-            cwd=project_root,
-            timeout=1800,
-        )
-
-        if result.returncode == 0:
-            # Log any script stderr output to surface logs in Prefect
-            if result.stderr.strip():
-                logger.info(f"Enrichment pipeline script logs:\n{result.stderr}")
-            # Log stdout output to show in Prefect UI
-            if result.stdout.strip():
-                logger.info(f"Enrichment pipeline output:\n{result.stdout}")
-            enrichment_result = json.loads(result.stdout)
-            logger.info("Enrichment pipeline completed successfully")
-            return enrichment_result
-        else:
-            error_msg = f"Enrichment pipeline failed: {result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "Enrichment pipeline timed out after 30 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in enrichment pipeline task: {e}")
-        raise
-
-
-@task(
-    name="Run DBT Transformations",
-    description="Run dbt transformations for star schema",
-    retries=2,
-    retry_delay_seconds=30,
-    timeout_seconds=1200,
-)
-def run_dbt_transformations() -> Dict[str, Any]:
-    """
-    Run dbt build to execute all transformations.
-
-    Returns:
-        Dict containing dbt results
-    """
-    logger = get_run_logger()
-    logger.info("Starting dbt transformations task")
-
-    try:
-        # Get the project root directory
-        project_root = Path(__file__).parent.parent.parent
-        dbt_dir = project_root / "dbt"
-
-        # Ensure dbt dependencies are installed
-        logger.info("Installing dbt dependencies")
-        deps_result = subprocess.run(
-            [
-                "dbt",
-                "deps",
-                "--profiles-dir",
-                str(dbt_dir),
-                "--project-dir",
-                str(dbt_dir),
-            ],
-            capture_output=True,
-            text=True,
-            cwd=dbt_dir,
-            timeout=300,
-        )
-
-        if deps_result.returncode != 0:
-            logger.warning(f"dbt deps failed: {deps_result.stderr}")
-        else:
-            # Log any script stderr output to surface logs in Prefect
-            if deps_result.stderr.strip():
-                logger.info(f"dbt deps script logs:\n{deps_result.stderr}")
-
-        # Run dbt build
-        logger.info("Running dbt build")
-        build_result = subprocess.run(
-            [
-                "dbt",
-                "build",
-                "--profiles-dir",
-                str(dbt_dir),
-                "--project-dir",
-                str(dbt_dir),
-            ],
-            capture_output=True,
-            text=True,
-            cwd=dbt_dir,
-            timeout=1200,
-        )
-
-        if build_result.returncode == 0:
-            # Log any script stderr output to surface logs in Prefect
-            if build_result.stderr.strip():
-                logger.info(f"dbt build script logs:\n{build_result.stderr}")
-            # Log stdout output to show in Prefect UI
-            if build_result.stdout.strip():
-                logger.info(f"dbt build output:\n{build_result.stdout}")
-            logger.info("dbt transformations completed successfully")
-            return {
-                "status": "success",
-                "message": "dbt build completed",
-                "stdout": build_result.stdout,
-                "stderr": build_result.stderr,
-            }
-        else:
-            error_msg = f"dbt build failed: {build_result.stderr}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-
-    except subprocess.TimeoutExpired:
-        error_msg = "dbt transformations timed out after 20 minutes"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-    except Exception as e:
-        logger.error(f"Error in dbt transformations task: {e}")
-        raise
-
-
-@task(
-    name="Update Reporting Data",
-    description="Update Metabase datasets and refresh reports",
-    retries=1,
-    retry_delay_seconds=30,
-    timeout_seconds=300,
-)
-def update_reporting_data() -> Dict[str, Any]:
-    """
-    Update reporting data for Metabase integration.
-
-    Returns:
-        Dict containing reporting update results
-    """
-    logger = get_run_logger()
-    logger.info("Starting reporting data update task")
-
-    # Placeholder for Metabase integration
-    # This would typically trigger Metabase dataset refreshes
-    logger.info("Reporting data update - placeholder for Metabase integration")
-
-    return {
-        "status": "success",
-        "message": "Reporting data update completed (placeholder)",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-
-
-# ============================================================================
-# FLOW DEFINITIONS
-# ============================================================================
+# SPOTIFY INGESTION FLOW
 
 
 @flow(
     name="Spotify Ingestion Flow",
-    description="Fetch recently played tracks from Spotify API every 10 minutes",
+    description="Spotify API ingestion with optimized error handling",
     version="1.0.0",
 )
-def spotify_ingestion_flow(limit: int = 50) -> Dict[str, Any]:
+def spotify_ingestion_flow(
+    limit: int = 50, config: Optional[FlowConfig] = None
+) -> Dict[str, Any]:
     """
-    Main flow for Spotify data ingestion.
-
-    This flow runs every ~10 minutes to fetch recently played tracks
-    from the Spotify API and store them as raw JSON files.
+    Spotify ingestion flow with the following features:
+    - Direct task usage (no subprocess duplication)
+    - Comprehensive error handling
+    - Consistent result format
+    - Configurable limits
 
     Args:
         limit: Maximum number of tracks to fetch per run
+        config: Flow configuration (uses default if None)
 
     Returns:
         Dict containing flow execution results
     """
     logger = get_run_logger()
+    config = config or get_flow_config()
+
+    # Override limit with config if not specified
+    if limit == 50 and config.spotify_artist_limit is not None:
+        limit = min(limit, config.spotify_artist_limit)
 
     with monitor_flow("spotify_ingestion", {"limit": limit}) as execution_id:
         logger.info(f"Starting Spotify ingestion flow (execution: {execution_id})")
 
         try:
-            # Run the ingestion task
-            with monitor_task(execution_id, "spotify_ingestion"):
-                ingestion_result = run_spotify_ingestion(limit=limit)
+            # Execute ingestion task
+            ingestion_result = spotify_api_ingestion(config, limit=limit)
 
-            # Calculate flow metrics
+            # Prepare flow result
             flow_result = {
                 "flow_name": "spotify_ingestion",
                 "execution_id": execution_id,
-                "status": "success",
-                "ingestion_result": ingestion_result,
+                "status": ingestion_result.get("status", "unknown"),
+                "task_results": {"spotify_api_ingestion": ingestion_result},
+                "summary": {
+                    "records_ingested": ingestion_result.get("metrics", {}).get(
+                        "records_ingested", 0
+                    ),
+                    "limit_used": limit,
+                },
             }
 
-            logger.info(f"Spotify ingestion flow completed successfully")
-            return flow_result
+            if ingestion_result.get("status") in ["success", "no_updates"]:
+                logger.info("Spotify ingestion flow completed successfully")
+                return flow_result
+            else:
+                logger.error(
+                    f"Spotify ingestion flow failed: {ingestion_result.get('message', 'Unknown error')}"
+                )
+                raise Failed(
+                    message=f"Spotify ingestion failed: {ingestion_result.get('message')}",
+                    result=flow_result,
+                )
 
         except Exception as e:
             error_msg = f"Spotify ingestion flow failed: {e}"
@@ -746,132 +123,256 @@ def spotify_ingestion_flow(limit: int = 50) -> Dict[str, Any]:
             )
 
 
+# DAILY ETL FLOW
+
+
 @flow(
     name="Daily ETL Flow",
-    description="Daily pipeline for loading, enriching, and transforming music data",
+    description="Daily pipeline with concurrent execution",
     version="1.0.0",
 )
-def daily_etl_flow() -> Dict[str, Any]:
+def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
     """
-    Main flow for daily ETL processing.
+    Daily ETL flow with optimal concurrency featuring:
+    - Concurrent execution of independent processes
+    - Modular subflows for better organization
+    - Code reduction through DRY principles
+    - Performance improvement through parallelization
+    - Comprehensive error handling and recovery
 
-    This flow runs daily and includes:
-    1. Loading raw data into parquet files
-    2. Running enrichment processes (Spotify, MusicBrainz, Geographic)
-    3. Running dbt transformations for star schema
-    4. Updating reporting data
+    Execution Pattern:
+    1. Sequential: Data Preparation (Load → Validate)
+    2. Concurrent: All Enrichment Subflows (Spotify + MusicBrainz + Geographic)
+    3. Sequential: Transformations (DBT → Reporting)
+
+    Args:
+        config: Flow configuration (uses default if None)
 
     Returns:
-        Dict containing flow execution results
+        Dict containing comprehensive flow execution results
     """
     logger = get_run_logger()
+    config = config or get_flow_config()
 
     with monitor_flow("daily_etl") as execution_id:
-        logger.info(f"Starting daily ETL flow (execution: {execution_id})")
+        logger.info(f"Starting Daily ETL Flow (execution: {execution_id})")
+        logger.info(f"Environment: {config.environment}")
+        logger.info(f"Configuration: {config.to_dict()}")
 
+        # Initialize flow results structure
         flow_results = {
             "flow_name": "daily_etl",
             "execution_id": execution_id,
+            "config": config.to_dict(),
             "stages": {},
+            "overall_status": "running",
+            "performance_metrics": {
+                "start_time": datetime.now(timezone.utc).isoformat(),
+                "concurrent_stages": 1,  # Enrichment coordination stage
+                "total_subflows": 0,
+                "total_tasks": 0,
+            },
         }
 
         try:
-            # Stage 1: Load raw data
-            logger.info("=== ETL Stage 1: Loading Raw Data ===")
-            with monitor_task(execution_id, "load_raw_data"):
-                load_result = load_raw_data()
-            flow_results["stages"]["load"] = load_result
+            # ================================================================
+            # STAGE 1: Data Preparation (Sequential)
+            # ================================================================
+            logger.info("=== STAGE 1: Data Preparation ===")
 
-            # Stage 2: Run enrichment processes individually for better control
-            logger.info("=== ETL Stage 2: Enrichment Processes ===")
+            data_prep_result = data_preparation_subflow(config)
+            flow_results["stages"]["data_preparation"] = data_prep_result
 
-            enrichment_results = {}
+            # Check if data preparation succeeded
+            if data_prep_result.get("overall_status") not in [
+                "success",
+                "partial_success",
+            ]:
+                logger.error("Data preparation failed - stopping pipeline")
+                return _finalize_flow(flow_results, "failed", config)
 
-            # Run Spotify enrichment
-            logger.info("--- Running Spotify Enrichment ---")
-            with monitor_task(execution_id, "spotify_enrichment"):
-                spotify_result = run_spotify_enrichment()
-            enrichment_results["spotify"] = spotify_result
+            logger.info("Data preparation completed successfully")
 
-            # Run MusicBrainz enrichment steps individually
-            logger.info("--- Running MusicBrainz Enrichment ---")
-            mbz_results = {}
+            # ================================================================
+            # STAGE 2: Enrichment Coordination (Concurrent)
+            # ================================================================
+            logger.info("=== STAGE 2: Enrichment Coordination (Concurrent) ===")
 
-            # MusicBrainz Discovery
-            logger.info("---- MBZ Discovery ----")
-            with monitor_task(execution_id, "mbz_discovery"):
-                mbz_results["discovery"] = run_musicbrainz_discovery()
+            enrichment_result = enrichment_coordination_subflow(config)
+            flow_results["stages"]["enrichment"] = enrichment_result
 
-            # MusicBrainz Fetch (with reasonable limit for production)
-            logger.info("---- MBZ Fetch ----")
-            with monitor_task(execution_id, "mbz_fetch"):
-                mbz_results["fetch"] = run_musicbrainz_fetch(limit=50)  # Limit to 50 artists in production
+            # Update performance metrics
+            enrichment_summary = enrichment_result.get("summary", {})
+            flow_results["performance_metrics"][
+                "total_subflows"
+            ] = enrichment_summary.get("subflows_completed", 0)
+            flow_results["performance_metrics"][
+                "total_tasks"
+            ] += enrichment_summary.get("total_tasks", 0)
 
-            # MusicBrainz Parse
-            logger.info("---- MBZ Parse ----")
-            with monitor_task(execution_id, "mbz_parse"):
-                mbz_results["parse"] = run_musicbrainz_parse()
+            # Enrichment can partially succeed - continue if any subflow succeeded
+            successful_subflows = enrichment_summary.get("subflows_successful", 0)
+            if successful_subflows == 0:
+                logger.error("All enrichment subflows failed - stopping pipeline")
+                return _finalize_flow(flow_results, "failed", config)
 
-            # MusicBrainz Hierarchy (with reasonable limit for production)
-            logger.info("---- MBZ Hierarchy ----")
-            with monitor_task(execution_id, "mbz_hierarchy"):
-                mbz_results["hierarchy"] = run_musicbrainz_hierarchy(limit=100)  # Limit to 100 areas in production
+            if successful_subflows < enrichment_summary.get("subflows_completed", 0):
+                logger.warning(
+                    f"Enrichment partially successful: {successful_subflows} subflows succeeded"
+                )
+            else:
+                logger.info("Enrichment coordination completed successfully")
 
-            enrichment_results["musicbrainz"] = mbz_results
+            # ================================================================
+            # STAGE 3: Data Transformations (Sequential)
+            # ================================================================
+            logger.info("=== STAGE 3: Data Transformations ===")
 
-            # Run Geographic enrichment
-            logger.info("--- Running Geographic Enrichment ---")
-            with monitor_task(execution_id, "geographic_enrichment"):
-                geo_result = run_geographic_enrichment()
-            enrichment_results["geographic"] = geo_result
+            transformation_result = transformation_subflow(config)
+            flow_results["stages"]["transformations"] = transformation_result
 
-            flow_results["stages"]["enrichment"] = enrichment_results
+            # Update performance metrics
+            trans_summary = transformation_result.get("summary", {})
+            flow_results["performance_metrics"]["total_tasks"] += trans_summary.get(
+                "tasks_completed", 0
+            )
 
-            # Stage 3: Run dbt transformations
-            logger.info("=== ETL Stage 3: Running DBT Transformations ===")
-            with monitor_task(execution_id, "dbt_transformations"):
-                dbt_result = run_dbt_transformations()
-            flow_results["stages"]["dbt"] = dbt_result
+            # Check transformation results
+            if transformation_result.get("overall_status") not in [
+                "success",
+                "partial_success",
+            ]:
+                logger.error("Transformations failed - pipeline completed with errors")
+                return _finalize_flow(flow_results, "partial_success", config)
 
-            # Stage 4: Update reporting data
-            logger.info("=== ETL Stage 4: Updating Reporting Data ===")
-            with monitor_task(execution_id, "update_reporting"):
-                reporting_result = update_reporting_data()
-            flow_results["stages"]["reporting"] = reporting_result
+            logger.info("Data transformations completed successfully")
 
-            flow_results["status"] = "success"
-            logger.info("Daily ETL flow completed successfully")
-            return flow_results
+            # ================================================================
+            # Pipeline Success
+            # ================================================================
+            logger.info("=== Daily ETL Pipeline Completed Successfully ===")
+
+            # Determine final status based on all stages
+            if (
+                data_prep_result.get("overall_status") == "success"
+                and enrichment_result.get("overall_status")
+                in ["success", "partial_success"]
+                and transformation_result.get("overall_status")
+                in ["success", "partial_success"]
+            ):
+                final_status = "success"
+            else:
+                final_status = "partial_success"
+
+            return _finalize_flow(flow_results, final_status, config)
 
         except Exception as e:
-            error_msg = f"Daily ETL flow failed: {e}"
-            logger.error(error_msg)
+            error_msg = f"Daily ETL flow failed with exception: {e}"
+            logger.error(error_msg, exc_info=True)
 
-            flow_results.update({"status": "failed", "error": str(e)})
-
-            # Send alert for ETL failures
+            # Send alert for critical pipeline failures
             send_alert(
-                f"Daily ETL flow failed: {str(e)}",
+                f"Daily ETL pipeline failed: {str(e)}",
                 level="error",
                 execution_id=execution_id,
                 flow_name="daily_etl",
-                stages_completed=list(flow_results["stages"].keys()),
+                stages_completed=list(flow_results.get("stages", {}).keys()),
             )
 
-            raise Failed(message=error_msg, result=flow_results)
+            flow_results["error"] = {
+                "type": type(e).__name__,
+                "message": str(e),
+            }
+
+            return _finalize_flow(flow_results, "failed", config)
 
 
-# ============================================================================
+def _finalize_flow(
+    flow_results: Dict[str, Any], final_status: str, config: FlowConfig
+) -> Dict[str, Any]:
+    """
+    Finalize the flow results with comprehensive metrics and status.
+
+    Args:
+        flow_results: Current flow results dictionary
+        final_status: Final status to set
+        config: Flow configuration
+
+    Returns:
+        Finalized flow results dictionary
+    """
+    logger = get_run_logger()
+
+    # Update final status and timing
+    end_time = datetime.now(timezone.utc)
+    start_time_str = flow_results["performance_metrics"]["start_time"]
+    start_time = datetime.fromisoformat(start_time_str)
+    duration = (end_time - start_time).total_seconds()
+
+    flow_results["overall_status"] = final_status
+    flow_results["performance_metrics"].update(
+        {
+            "end_time": end_time.isoformat(),
+            "duration_seconds": duration,
+        }
+    )
+
+    # Calculate comprehensive statistics
+    stages_completed = len(flow_results.get("stages", {}))
+    stages_successful = sum(
+        1
+        for stage_result in flow_results.get("stages", {}).values()
+        if stage_result.get("overall_status") in ["success", "partial_success"]
+    )
+
+    total_tasks_successful = 0
+    for stage_result in flow_results.get("stages", {}).values():
+        if "summary" in stage_result:
+            if "total_successful_tasks" in stage_result["summary"]:
+                total_tasks_successful += stage_result["summary"][
+                    "total_successful_tasks"
+                ]
+            elif "tasks_successful" in stage_result["summary"]:
+                total_tasks_successful += stage_result["summary"]["tasks_successful"]
+
+    flow_results["summary"] = {
+        "status": final_status,
+        "duration_seconds": duration,
+        "stages_completed": stages_completed,
+        "stages_successful": stages_successful,
+        "total_tasks": flow_results["performance_metrics"]["total_tasks"],
+        "total_tasks_successful": total_tasks_successful,
+    }
+
+    # Log final summary
+    logger.info(f"Daily ETL Flow Summary:")
+    logger.info(f"  Status: {final_status}")
+    logger.info(f"  Duration: {duration:.1f} seconds")
+    logger.info(f"  Stages: {stages_successful}/{stages_completed} successful")
+    logger.info(
+        f"  Tasks: {total_tasks_successful}/{flow_results['performance_metrics']['total_tasks']} successful"
+    )
+    logger.info(f"  Environment: {config.environment}")
+
+    if final_status == "success":
+        logger.info("Daily ETL pipeline completed successfully with full concurrency!")
+    elif final_status == "partial_success":
+        logger.warning("Daily ETL pipeline completed with some issues")
+    else:
+        logger.error("Daily ETL pipeline failed")
+
+    return flow_results
+
+
 # UTILITY FUNCTIONS
-# ============================================================================
 
 
 def get_flow_run_info() -> Dict[str, Any]:
     """
-    Get information about the current flow run context.
+    Get comprehensive information about the current flow run context.
 
     Returns:
-        Dict containing flow run information
+        Dict containing comprehensive flow run information
     """
     try:
         context = get_run_context()
@@ -879,10 +380,14 @@ def get_flow_run_info() -> Dict[str, Any]:
             "flow_run_id": context.flow_run.id,
             "flow_run_name": context.flow_run.name,
             "flow_name": context.flow.name,
-            "start_time": context.flow_run.start_time.isoformat()
-            if context.flow_run.start_time
-            else None,
+            "flow_version": getattr(context.flow, "version", "unknown"),
+            "start_time": (
+                context.flow_run.start_time.isoformat()
+                if context.flow_run.start_time
+                else None
+            ),
             "parameters": context.flow_run.parameters,
+            "state": str(context.flow_run.state) if context.flow_run.state else None,
         }
     except Exception:
         # Not running in a flow context
@@ -890,23 +395,26 @@ def get_flow_run_info() -> Dict[str, Any]:
             "flow_run_id": None,
             "flow_run_name": None,
             "flow_name": None,
+            "flow_version": None,
             "start_time": None,
             "parameters": {},
+            "state": None,
         }
 
 
+# MAIN EXECUTION (For Testing)
+
+
 if __name__ == "__main__":
-    # Allow running flows directly for testing
     import argparse
+    import json
 
     parser = argparse.ArgumentParser(description="Prefect Flows for Music Tracker")
     parser.add_argument(
-        "--flow", choices=["spotify", "etl", "mbz"], required=True, help="Which flow to run"
-    )
-    parser.add_argument(
-        "--mbz-step",
-        choices=["discover", "fetch", "parse", "hierarchy"],
-        help="Specific MusicBrainz step to run (requires --flow mbz)"
+        "--flow",
+        choices=["spotify", "etl"],
+        required=True,
+        help="Which flow to run",
     )
     parser.add_argument(
         "--limit",
@@ -914,34 +422,50 @@ if __name__ == "__main__":
         default=50,
         help="Limit for processing (default: 50)",
     )
+    parser.add_argument(
+        "--config-env",
+        choices=["development", "testing", "production"],
+        default="development",
+        help="Configuration environment (default: development)",
+    )
 
     args = parser.parse_args()
 
-    if args.flow == "spotify":
-        result = spotify_ingestion_flow(limit=args.limit)
+    # Set environment for configuration
+    import os
+
+    os.environ["ENVIRONMENT"] = args.config_env
+
+    # Get configuration
+    config = get_flow_config()
+
+    print(f"Running {args.flow} flow in {config.environment} environment...")
+    print(f"Configuration: {json.dumps(config.to_dict(), indent=2, default=str)}")
+
+    try:
+        if args.flow == "spotify":
+            result = spotify_ingestion_flow(limit=args.limit, config=config)
+        elif args.flow == "etl":
+            result = daily_etl_flow(config=config)
+
+        # Print results
+        print("\n" + "=" * 80)
+        print("FLOW EXECUTION RESULTS")
+        print("=" * 80)
         print(json.dumps(result, indent=2, default=str))
-    elif args.flow == "etl":
-        result = daily_etl_flow()
-        print(json.dumps(result, indent=2, default=str))
-    elif args.flow == "mbz":
-        if not args.mbz_step:
-            print("Error: --mbz-step is required when using --flow mbz")
-            print("Available steps: discover, fetch, parse, hierarchy")
+
+        # Exit with appropriate code
+        status = result.get("overall_status", "unknown")
+        if status in ["success", "partial_success"]:
+            print(f"\nFlow completed with status: {status}")
+            exit(0)
+        else:
+            print(f"\nFlow failed with status: {status}")
             exit(1)
 
-        if args.mbz_step == "discover":
-            result = run_musicbrainz_discovery()
-            print(json.dumps(result, indent=2, default=str))
-        elif args.mbz_step == "fetch":
-            result = run_musicbrainz_fetch(limit=args.limit)
-            print(json.dumps(result, indent=2, default=str))
-        elif args.mbz_step == "parse":
-            result = run_musicbrainz_parse()
-            print(json.dumps(result, indent=2, default=str))
-        elif args.mbz_step == "hierarchy":
-            result = run_musicbrainz_hierarchy(limit=args.limit)
-            print(json.dumps(result, indent=2, default=str))
-        else:
-            print(f"Error: Unknown mbz-step '{args.mbz_step}'")
-            print("Available steps: discover, fetch, parse, hierarchy")
-            exit(1)
+    except KeyboardInterrupt:
+        print("\nFlow interrupted by user")
+        exit(2)
+    except Exception as e:
+        print(f"\nFlow failed with exception: {e}")
+        exit(1)
