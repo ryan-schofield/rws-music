@@ -15,44 +15,48 @@ services:
       - LOG_LEVEL=INFO
     networks:
       - music-tracker
-    # depends_on:
-    #   - metabase  # Commented out since Metabase is disabled
+    depends_on:
+      - metabase
     restart: unless-stopped
 
-  # # Metabase for reporting (COMMENTED OUT)
-  # metabase:
-  #   image: metabase/metabase:latest
-  #   container_name: music-tracker-metabase
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - metabase-data:/metabase-data
-  #   environment:
-  #     - MB_DB_TYPE=postgres
-  #     - MB_DB_DBNAME=metabase
-  #     - MB_DB_PORT=5432
-  #     - MB_DB_USER=metabase
-  #     - MB_DB_PASS=${METABASE_DB_PASSWORD}
-  #     - MB_DB_HOST=metabase-db
-  #   networks:
-  #     - music-tracker
-  #   depends_on:
-  #     - metabase-db
-  #   restart: unless-stopped
+  # Metabase for reporting
+  metabase:
+    build:
+      context: .
+      dockerfile: metabase.Dockerfile
+    container_name: music-tracker-metabase
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase-data:/home
+      - ./data:/data
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=metabase-db
+      - MB_PLUGINS_DIR=/home/plugins/
+    networks:
+      - music-tracker
+    depends_on:
+      - metabase-db
+    restart: unless-stopped
 
-  # # PostgreSQL for Metabase metadata (COMMENTED OUT)
-  # metabase-db:
-  #   image: postgres:15-alpine
-  #   container_name: music-tracker-metabase-db
-  #   environment:
-  #     - POSTGRES_DB=metabase
-  #     - POSTGRES_USER=metabase
-  #     - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
-  #   volumes:
-  #     - metabase-db-data:/var/lib/postgresql/data
-  #   networks:
-  #     - music-tracker
-  #   restart: unless-stopped
+  # PostgreSQL for Metabase metadata
+  metabase-db:
+    image: postgres:15-alpine
+    container_name: music-tracker-metabase-db
+    environment:
+      - POSTGRES_DB=metabase
+      - POSTGRES_USER=metabase
+      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
+    volumes:
+      - metabase-db-data:/var/lib/postgresql/data
+    networks:
+      - music-tracker
+    restart: unless-stopped
 
   # Prefect for orchestration
   prefect-server:

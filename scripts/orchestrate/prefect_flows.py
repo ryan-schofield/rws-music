@@ -133,17 +133,7 @@ def spotify_ingestion_flow(
 )
 def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
     """
-    Daily ETL flow with optimal concurrency featuring:
-    - Concurrent execution of independent processes
-    - Modular subflows for better organization
-    - Code reduction through DRY principles
-    - Performance improvement through parallelization
-    - Comprehensive error handling and recovery
-
-    Execution Pattern:
-    1. Sequential: Data Preparation (Load → Validate)
-    2. Concurrent: All Enrichment Subflows (Spotify + MusicBrainz + Geographic)
-    3. Sequential: Transformations (DBT → Reporting)
+    Daily ETL flow
 
     Args:
         config: Flow configuration (uses default if None)
@@ -175,9 +165,7 @@ def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
         }
 
         try:
-            # ================================================================
             # STAGE 1: Data Preparation (Sequential)
-            # ================================================================
             logger.info("=== STAGE 1: Data Preparation ===")
 
             data_prep_result = data_preparation_subflow(config)
@@ -193,9 +181,7 @@ def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
 
             logger.info("Data preparation completed successfully")
 
-            # ================================================================
             # STAGE 2: Enrichment Coordination (Concurrent)
-            # ================================================================
             logger.info("=== STAGE 2: Enrichment Coordination (Concurrent) ===")
 
             enrichment_result = enrichment_coordination_subflow(config)
@@ -223,9 +209,7 @@ def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
             else:
                 logger.info("Enrichment coordination completed successfully")
 
-            # ================================================================
             # STAGE 3: Data Transformations (Sequential)
-            # ================================================================
             logger.info("=== STAGE 3: Data Transformations ===")
 
             transformation_result = transformation_subflow(config)
@@ -247,9 +231,7 @@ def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
 
             logger.info("Data transformations completed successfully")
 
-            # ================================================================
             # Pipeline Success
-            # ================================================================
             logger.info("=== Daily ETL Pipeline Completed Successfully ===")
 
             # Determine final status based on all stages
