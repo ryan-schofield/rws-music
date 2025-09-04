@@ -340,15 +340,23 @@ class DBTTransformationTask(BaseTask):
 
             dbt_dir = self.config.dbt_dir
 
+            # Log the dbt directory and cwd for debugging
+            self.logger.info(f"DBT directory: {dbt_dir}")
+            self.logger.info(f"Current working directory will be: {dbt_dir}")
+
             # Ensure dbt dependencies
             deps_cmd = [
+                "uv",
+                "run",
                 "dbt",
                 "deps",
                 "--profiles-dir",
-                str(dbt_dir),
+                ".",
                 "--project-dir",
-                str(dbt_dir),
+                ".",
             ]
+
+            self.logger.info(f"Running dbt deps command: {' '.join(deps_cmd)}")
 
             deps_result = subprocess.run(
                 deps_cmd,
@@ -363,13 +371,17 @@ class DBTTransformationTask(BaseTask):
 
             # Run dbt build
             build_cmd = [
+                "uv",
+                "run",
                 "dbt",
                 "build",
                 "--profiles-dir",
-                str(dbt_dir),
+                ".",
                 "--project-dir",
-                str(dbt_dir),
+                ".",
             ]
+
+            self.logger.info(f"Running dbt build command: {' '.join(build_cmd)}")
 
             build_result = subprocess.run(
                 build_cmd,
