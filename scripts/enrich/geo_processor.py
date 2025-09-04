@@ -45,7 +45,13 @@ class GeographicProcessor:
         self, data_writer: ParquetDataWriter = None, openweather_api_key: str = None
     ):
         self.data_writer = data_writer or ParquetDataWriter()
-        self.geo_client = OpenWeatherGeoClient(openweather_api_key)
+        try:
+            self.geo_client = OpenWeatherGeoClient(openweather_api_key)
+            self.has_api_key = True
+        except ValueError:
+            logger.warning("OpenWeather API key not found - coordinate enrichment will be skipped")
+            self.geo_client = None
+            self.has_api_key = False
 
         # Country name mappings from original notebook
         self.name_mappings = {
@@ -141,20 +147,37 @@ class GeographicProcessor:
             return {"status": "error", "message": "mbz_area_hierarchy table not found"}
 
         # Find countries that need continent information
-        countries_needing_enrichment = (
-            area_df.select(
-                pl.coalesce([pl.col("country_name"), pl.col("island_name")]).alias(
-                    "country_name"
+        # Check if continent column exists, if not, assume all need enrichment
+        if "continent" in area_df.columns:
+            countries_needing_enrichment = (
+                area_df.filter(
+                    (pl.col("country_name").is_not_null() | pl.col("island_name").is_not_null())
+                    & ((pl.col("continent").is_null()) | (pl.col("continent") == "Unknown"))
                 )
+                .select(
+                    pl.coalesce([pl.col("country_name"), pl.col("island_name")]).alias(
+                        "country_name"
+                    )
+                )
+                .unique()
+                .to_series()
+                .to_list()
             )
-            .filter(
-                (pl.col("country_name").is_not_null())
-                & ((pl.col("continent").is_null()) | (pl.col("continent") == "Unknown"))
+        else:
+            # If continent column doesn't exist, all countries need enrichment
+            countries_needing_enrichment = (
+                area_df.filter(
+                    pl.col("country_name").is_not_null() | pl.col("island_name").is_not_null()
+                )
+                .select(
+                    pl.coalesce([pl.col("country_name"), pl.col("island_name")]).alias(
+                        "country_name"
+                    )
+                )
+                .unique()
+                .to_series()
+                .to_list()
             )
-            .unique()
-            .to_series()
-            .to_list()
-        )
 
         if not countries_needing_enrichment:
             logger.info("No countries need continent enrichment")
@@ -215,14 +238,17 @@ class GeographicProcessor:
         if area_df is None:
             return {"status": "error", "message": "mbz_area_hierarchy table not found"}
 
-        # Create state codes lookup (simplified - would need actual state_codes table)
-        # For now, we'll create parameters without state codes
-        updated_df = area_df.with_columns(
+        # Create params column, but only for records that have a city/municipality name
+        city_expr = pl.coalesce([pl.col("city_name"), pl.col("municipality_name")])
+
+        # Filter out records where city name would be empty
+        filtered_df = area_df.filter(city_expr.is_not_null())
+
+        # Create params for valid records
+        updated_df = filtered_df.with_columns(
             pl.concat_str(
                 [
-                    pl.coalesce(
-                        [pl.col("city_name"), pl.col("municipality_name")]
-                    ).fill_null(""),
+                    city_expr,
                     pl.lit(","),
                     pl.col("country_code").fill_null(""),
                 ]
@@ -240,12 +266,20 @@ class GeographicProcessor:
             "records_updated": write_result.get("records_written", 0),
         }
 
-    def enrich_coordinates(self) -> Dict[str, Any]:
+    def enrich_coordinates(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Add latitude/longitude coordinates using OpenWeather API.
         Replaces the coordinate lookup logic from geo_add_lat_long.py
+
+        Args:
+            limit: Maximum number of locations to process
         """
         logger.info("Starting coordinate enrichment")
+
+        # Check if API key is available
+        if not self.has_api_key:
+            logger.info("OpenWeather API key not available - skipping coordinate enrichment")
+            return {"status": "skipped", "message": "OpenWeather API key not available"}
 
         # Read area hierarchy data
         area_df = self.data_writer.read_table("mbz_area_hierarchy")
@@ -274,29 +308,44 @@ class GeographicProcessor:
             logger.info("No new locations need coordinate enrichment")
             return {"status": "no_updates", "message": "No new locations to process"}
 
+        # Apply limit if specified
+        if limit is not None and len(new_params) > limit:
+            new_params = new_params[:limit]
+            logger.info(f"Limited to {limit} locations for testing")
+
         logger.info(f"Looking up coordinates for {len(new_params)} locations")
 
-        # Parse parameters into structured data
-        params_df = parse_location_params(new_params)
+        # Parse parameters into structured data (simplified version)
+        recs = []
+        for p in new_params:
+            if not p:
+                continue
+
+            d = {}
+            split_vals = p.split(",")
+            d["city_name"] = split_vals[0] if len(split_vals) > 0 else ""
+            d["state_code"] = ""
+            d["country_code"] = split_vals[-1] if len(split_vals) > 1 else ""
+            d["params"] = p
+
+            if len(split_vals) == 3:
+                d["state_code"] = split_vals[1]
+            recs.append(d)
+
+        logger.info(f"Parsed {len(recs)} location parameters")
 
         # Get coordinates from OpenWeather API
-        coordinate_results = self.geo_client.get_coordinates_batch(new_params)
+        for rec in recs:
+            q = rec.get("params")
+            if not q:
+                continue
 
-        # Create records with coordinate information
-        enriched_records = []
-        for _, row in params_df.iter_rows(named=True):
-            params = row["params"]
-            coords = coordinate_results.get(params)
+            coords = self.geo_client.get_coordinates(q)
+            if coords:
+                rec["lat"] = str(coords.get("lat"))
+                rec["long"] = str(coords.get("long"))
 
-            record = {
-                "city_name": row["city_name"],
-                "state_code": row["state_code"],
-                "country_code": row["country_code"],
-                "params": params,
-                "lat": str(coords["lat"]) if coords and coords.get("lat") else None,
-                "long": str(coords["long"]) if coords and coords.get("long") else None,
-            }
-            enriched_records.append(record)
+        enriched_records = recs
 
         # Create DataFrame and write to cities_with_lat_long
         if enriched_records:
@@ -323,9 +372,12 @@ class GeographicProcessor:
         else:
             return {"status": "no_updates", "message": "No coordinate data to write"}
 
-    def run_full_enrichment(self) -> Dict[str, Any]:
+    def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Run the complete geographic enrichment pipeline.
+
+        Args:
+            limit: Maximum number of records to process for testing
         """
         logger.info("Starting full geographic enrichment")
 
@@ -352,7 +404,7 @@ class GeographicProcessor:
                 results["overall_status"] = "partial_failure"
 
             # Step 3: Lookup coordinates
-            coords_result = self.enrich_coordinates()
+            coords_result = self.enrich_coordinates(limit=limit)
             results["coordinate_enrichment"] = coords_result
 
             if coords_result["status"] not in ["success", "no_updates"]:

@@ -51,9 +51,10 @@ class EnrichmentPipeline:
     3. Geographic enrichment (continent and coordinate data)
     """
 
-    def __init__(self, data_base_path: str = "data/src"):
+    def __init__(self, data_base_path: str = "data/src", limit: Optional[int] = None):
         self.data_writer = ParquetDataWriter(data_base_path)
         self.start_time = datetime.now(timezone.utc)
+        self.limit = limit
 
         # Initialize processors
         self.spotify_processor = SpotifyProcessor(self.data_writer)
@@ -100,20 +101,23 @@ class EnrichmentPipeline:
         logger.info("=== Starting Spotify Enrichment ===")
 
         try:
-            result = self.spotify_processor.run_full_enrichment()
+            result = self.spotify_processor.run_full_enrichment(limit=self.limit)
 
             if result["overall_status"] == "success":
                 self.pipeline_state["processors_completed"].append("spotify")
                 logger.info("Spotify enrichment completed successfully")
+                return result
             else:
                 self.pipeline_state["processors_failed"].append("spotify")
+                error_msg = f"Spotify enrichment failed with status: {result['overall_status']}"
+                logger.error(error_msg)
+
                 if not skip_on_error:
                     logger.error("Spotify enrichment failed - stopping pipeline")
-                    return result
+                    raise Exception(error_msg)
                 else:
                     logger.warning("Spotify enrichment failed - continuing pipeline")
-
-            return result
+                    return result
 
         except Exception as e:
             error_msg = f"Spotify enrichment failed with exception: {e}"
@@ -133,22 +137,23 @@ class EnrichmentPipeline:
         logger.info("=== Starting MusicBrainz Enrichment ===")
 
         try:
-            result = self.musicbrainz_processor.run_full_enrichment()
+            result = self.musicbrainz_processor.run_full_enrichment(limit=self.limit)
 
             if result["overall_status"] in ["success", "partial_failure"]:
                 self.pipeline_state["processors_completed"].append("musicbrainz")
                 logger.info("MusicBrainz enrichment completed")
+                return result
             else:
                 self.pipeline_state["processors_failed"].append("musicbrainz")
+                error_msg = f"MusicBrainz enrichment failed with status: {result['overall_status']}"
+                logger.error(error_msg)
+
                 if not skip_on_error:
                     logger.error("MusicBrainz enrichment failed - stopping pipeline")
-                    return result
+                    raise Exception(error_msg)
                 else:
-                    logger.warning(
-                        "MusicBrainz enrichment failed - continuing pipeline"
-                    )
-
-            return result
+                    logger.warning("MusicBrainz enrichment failed - continuing pipeline")
+                    return result
 
         except Exception as e:
             error_msg = f"MusicBrainz enrichment failed with exception: {e}"
@@ -168,20 +173,23 @@ class EnrichmentPipeline:
         logger.info("=== Starting Geographic Enrichment ===")
 
         try:
-            result = self.geo_processor.run_full_enrichment()
+            result = self.geo_processor.run_full_enrichment(limit=self.limit)
 
             if result["overall_status"] in ["success", "partial_failure"]:
                 self.pipeline_state["processors_completed"].append("geographic")
                 logger.info("Geographic enrichment completed")
+                return result
             else:
                 self.pipeline_state["processors_failed"].append("geographic")
+                error_msg = f"Geographic enrichment failed with status: {result['overall_status']}"
+                logger.error(error_msg)
+
                 if not skip_on_error:
                     logger.error("Geographic enrichment failed - stopping pipeline")
-                    return result
+                    raise Exception(error_msg)
                 else:
                     logger.warning("Geographic enrichment failed - continuing pipeline")
-
-            return result
+                    return result
 
         except Exception as e:
             error_msg = f"Geographic enrichment failed with exception: {e}"
@@ -193,6 +201,108 @@ class EnrichmentPipeline:
                 raise
 
             return {"overall_status": "error", "error_message": error_msg}
+
+    def run_spotify_enrichment_task(self) -> Dict[str, Any]:
+        """
+        Run Spotify enrichment as a standalone task.
+        """
+        logger.info("Running Spotify enrichment task")
+        return self.run_spotify_enrichment(skip_on_error=True)
+
+    def run_musicbrainz_enrichment_task(self) -> Dict[str, Any]:
+        """
+        Run MusicBrainz enrichment as a standalone task.
+        """
+        logger.info("Running MusicBrainz enrichment task")
+        return self.run_musicbrainz_enrichment(skip_on_error=True)
+
+    def run_geographic_enrichment_task(self) -> Dict[str, Any]:
+        """
+        Run Geographic enrichment as a standalone task.
+        """
+        logger.info("Running Geographic enrichment task")
+        return self.run_geographic_enrichment(skip_on_error=True)
+
+    def run_mbz_discover_task(self) -> Dict[str, Any]:
+        """
+        Run MusicBrainz artist discovery as a standalone task.
+        """
+        logger.info("Running MusicBrainz artist discovery task")
+        try:
+            result = self.musicbrainz_processor.discover_missing_artists()
+            return {
+                "overall_status": result.get("status", "unknown"),
+                "step": "discover",
+                "result": result
+            }
+        except Exception as e:
+            logger.error(f"MusicBrainz discovery failed: {e}")
+            return {"overall_status": "error", "error_message": str(e)}
+
+    def run_mbz_fetch_task(self, limit: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Run MusicBrainz artist fetching as a standalone task.
+        """
+        logger.info("Running MusicBrainz artist fetching task")
+        try:
+            # First discover artists
+            discovery_result = self.musicbrainz_processor.discover_missing_artists()
+            if discovery_result["status"] != "success":
+                return {
+                    "overall_status": "error",
+                    "step": "fetch",
+                    "error_message": "Artist discovery failed"
+                }
+
+            missing_artists_df = discovery_result["missing_artists"]
+
+            # Apply limit if specified
+            if limit is not None and len(missing_artists_df) > limit:
+                missing_artists_df = missing_artists_df.head(limit)
+                logger.info(f"Limited to {limit} artists for fetching")
+
+            result = self.musicbrainz_processor.fetch_artist_data(missing_artists_df)
+            return {
+                "overall_status": result.get("status", "unknown"),
+                "step": "fetch",
+                "artists_to_fetch": len(missing_artists_df),
+                "result": result
+            }
+        except Exception as e:
+            logger.error(f"MusicBrainz fetching failed: {e}")
+            return {"overall_status": "error", "error_message": str(e)}
+
+    def run_mbz_parse_task(self) -> Dict[str, Any]:
+        """
+        Run MusicBrainz JSON parsing as a standalone task.
+        """
+        logger.info("Running MusicBrainz JSON parsing task")
+        try:
+            result = self.musicbrainz_processor.parse_artist_json_files()
+            return {
+                "overall_status": result.get("status", "unknown"),
+                "step": "parse",
+                "result": result
+            }
+        except Exception as e:
+            logger.error(f"MusicBrainz parsing failed: {e}")
+            return {"overall_status": "error", "error_message": str(e)}
+
+    def run_mbz_hierarchy_task(self, limit: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Run MusicBrainz area hierarchy processing as a standalone task.
+        """
+        logger.info("Running MusicBrainz area hierarchy task")
+        try:
+            result = self.musicbrainz_processor.process_area_hierarchy(limit=limit)
+            return {
+                "overall_status": result.get("status", "unknown"),
+                "step": "hierarchy",
+                "result": result
+            }
+        except Exception as e:
+            logger.error(f"MusicBrainz hierarchy processing failed: {e}")
+            return {"overall_status": "error", "error_message": str(e)}
 
     def run_full_pipeline(
         self, skip_on_error: bool = False, processors: Optional[List[str]] = None
@@ -332,7 +442,8 @@ def main():
         "--processors",
         nargs="+",
         choices=["spotify", "musicbrainz", "geographic"],
-        help="Specific processors to run (default: all)",
+        required=True,
+        help="Specific processors to run",
     )
     parser.add_argument(
         "--skip-on-error",
@@ -347,11 +458,21 @@ def main():
     parser.add_argument(
         "--data-path", default="data/src", help="Base path for data files"
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Maximum number of records to process for testing (applied to each processor)"
+    )
+    parser.add_argument(
+        "--mbz-step",
+        choices=["discover", "fetch", "parse", "hierarchy"],
+        help="Specific MusicBrainz step to run (requires --processors musicbrainz)"
+    )
 
     args = parser.parse_args()
 
     # Initialize pipeline
-    pipeline = EnrichmentPipeline(args.data_path)
+    pipeline = EnrichmentPipeline(args.data_path, limit=args.limit)
 
     if args.status_only:
         # Show status only
@@ -361,9 +482,43 @@ def main():
 
     # Run pipeline
     try:
-        result = pipeline.run_full_pipeline(
-            skip_on_error=args.skip_on_error, processors=args.processors
-        )
+        if len(args.processors) == 1:
+            # Run single processor
+            processor = args.processors[0]
+            if processor == "spotify":
+                result = pipeline.run_spotify_enrichment_task()
+            elif processor == "musicbrainz":
+                # Handle MusicBrainz step-specific execution
+                if args.mbz_step:
+                    if args.mbz_step == "discover":
+                        result = pipeline.run_mbz_discover_task()
+                    elif args.mbz_step == "fetch":
+                        result = pipeline.run_mbz_fetch_task(limit=args.limit)
+                    elif args.mbz_step == "parse":
+                        result = pipeline.run_mbz_parse_task()
+                    elif args.mbz_step == "hierarchy":
+                        result = pipeline.run_mbz_hierarchy_task(limit=args.limit)
+                else:
+                    result = pipeline.run_musicbrainz_enrichment_task()
+            elif processor == "geographic":
+                result = pipeline.run_geographic_enrichment_task()
+
+            # Wrap result for consistent output
+            result = {
+                "pipeline_info": pipeline.pipeline_state,
+                "processor_results": {processor: result},
+                "summary": {
+                    "status": result.get("overall_status", "unknown"),
+                    "duration_seconds": pipeline.pipeline_state.get("duration_seconds", 0),
+                    "processors_completed": [processor] if result.get("overall_status") in ["success", "partial_failure"] else [],
+                    "processors_failed": [] if result.get("overall_status") in ["success", "partial_failure"] else [processor],
+                }
+            }
+        else:
+            # Run multiple specific processors
+            result = pipeline.run_full_pipeline(
+                skip_on_error=args.skip_on_error, processors=args.processors
+            )
 
         # Print results
         print(json.dumps(result, indent=2, default=str))

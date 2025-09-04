@@ -83,6 +83,8 @@ class ParquetDataWriter:
         if existing_files:
             # Read existing data
             existing_df = pl.read_parquet(existing_files)
+            # Align new data schema with existing data
+            df = self._align_dataframe_schema(df, existing_df)
             # Combine with new data
             combined_df = pl.concat([existing_df, df], how="vertical")
         else:
@@ -130,6 +132,9 @@ class ParquetDataWriter:
         # Read existing data
         existing_df = pl.read_parquet(existing_files)
 
+        # Handle schema compatibility - cast new data to match existing schema
+        df = self._align_dataframe_schema(df, existing_df)
+
         # Perform merge/upsert
         if merge_keys:
             # Remove existing records that match on merge keys
@@ -167,6 +172,92 @@ class ParquetDataWriter:
             "total_records": records_total,
             "file_path": str(output_file),
         }
+
+    def _align_dataframe_schema(
+        self, new_df: pl.DataFrame, existing_df: pl.DataFrame
+    ) -> pl.DataFrame:
+        """
+        Align new DataFrame schema to match existing DataFrame schema.
+        Handles type conversions to prevent merge conflicts.
+        """
+        aligned_df = new_df.clone()
+        conversions_made = []
+
+        for col in new_df.columns:
+            if col in existing_df.columns:
+                new_dtype = new_df.schema[col]
+                existing_dtype = existing_df.schema[col]
+
+                # Handle integer type mismatches
+                if (new_dtype in [pl.Int64, pl.Int32] and
+                    existing_dtype in [pl.Int64, pl.Int32]):
+
+                    # If existing is Int32 but new is Int64, cast to Int32
+                    if existing_dtype == pl.Int32 and new_dtype == pl.Int64:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).cast(pl.Int32).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Int64 -> Int32")
+                    # If existing is Int64 but new is Int32, cast to Int64
+                    elif existing_dtype == pl.Int64 and new_dtype == pl.Int32:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).cast(pl.Int64).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Int32 -> Int64")
+
+                # Handle float type mismatches
+                elif (new_dtype in [pl.Float64, pl.Float32] and
+                      existing_dtype in [pl.Float64, pl.Float32]):
+
+                    if existing_dtype == pl.Float32 and new_dtype == pl.Float64:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).cast(pl.Float32).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Float64 -> Float32")
+                    elif existing_dtype == pl.Float64 and new_dtype == pl.Float32:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).cast(pl.Float64).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Float32 -> Float64")
+
+                # Handle datetime type mismatches (timezone issues)
+                elif (isinstance(new_dtype, pl.Datetime) and isinstance(existing_dtype, pl.Datetime)):
+                    # If existing has timezone but new doesn't, add timezone to new
+                    if existing_dtype.time_zone is not None and new_dtype.time_zone is None:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).dt.replace_time_zone(existing_dtype.time_zone).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Datetime(None) -> Datetime({existing_dtype.time_zone})")
+                    # If new has timezone but existing doesn't, remove timezone from new
+                    elif existing_dtype.time_zone is None and new_dtype.time_zone is not None:
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).dt.replace_time_zone(None).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Datetime({new_dtype.time_zone}) -> Datetime(None)")
+                    # If both have timezones but different ones, convert to existing timezone
+                    elif (existing_dtype.time_zone is not None and new_dtype.time_zone is not None
+                          and existing_dtype.time_zone != new_dtype.time_zone):
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col).dt.convert_time_zone(existing_dtype.time_zone).alias(col)
+                        )
+                        conversions_made.append(f"{col}: Datetime({new_dtype.time_zone}) -> Datetime({existing_dtype.time_zone})")
+
+                # Handle string type mismatches
+                elif (new_dtype == pl.Utf8 and existing_dtype == pl.Categorical):
+                    aligned_df = aligned_df.with_columns(
+                        pl.col(col).cast(pl.Categorical).alias(col)
+                    )
+                    conversions_made.append(f"{col}: Utf8 -> Categorical")
+                elif (new_dtype == pl.Categorical and existing_dtype == pl.Utf8):
+                    aligned_df = aligned_df.with_columns(
+                        pl.col(col).cast(pl.Utf8).alias(col)
+                    )
+                    conversions_made.append(f"{col}: Categorical -> Utf8")
+
+        if conversions_made:
+            logger.info(f"Schema alignment conversions: {', '.join(conversions_made)}")
+
+        return aligned_df
 
     def _infer_merge_keys(self, table_name: str) -> List[str]:
         """Infer merge keys based on table name."""

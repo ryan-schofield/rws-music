@@ -27,8 +27,9 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
-from prefect.deployments import Deployment
+from prefect.deployments import run_deployment
 from prefect.client.schemas.schedules import CronSchedule
+from prefect.runner.storage import LocalStorage
 from scripts.orchestrate.prefect_flows import spotify_ingestion_flow, daily_etl_flow
 from scripts.orchestrate.prefect_config import PrefectConfig
 
@@ -46,18 +47,16 @@ class FlowDeployer:
         """Validate environment before deployment."""
         print("Validating environment...")
 
-        # Check Prefect API connection
+        # Check Prefect API connection (skip if server not running)
         try:
             from prefect import get_client
 
+            # Try to create a client - this will work even if server is not running
             client = get_client()
-            print("[OK] Connected to Prefect server")
+            print("[OK] Prefect client initialized successfully")
         except Exception as e:
-            print(f"[ERROR] Cannot connect to Prefect server: {e}")
-            print(
-                "Make sure Prefect server is running: docker-compose up -d prefect-server"
-            )
-            return False
+            print(f"[WARN] Cannot initialize Prefect client: {e}")
+            print("This may be expected if the Prefect server is not running yet")
 
         # Validate configuration
         validation = PrefectConfig.validate_configuration()
@@ -77,15 +76,15 @@ class FlowDeployer:
         try:
             # Schedule to run every 10 minutes
             spotify_schedule = CronSchedule(cron="*/10 * * * *", timezone="UTC")
-            
-            deployment = Deployment.build_from_flow(
-                flow=spotify_ingestion_flow,
+
+            # Create deployment using v3 API
+            deployment = spotify_ingestion_flow.to_deployment(
                 name="spotify-ingestion",
                 version="1.1.0",
                 description="Fetch recently played tracks from Spotify API every 10 minutes",
                 parameters={"limit": 50},
                 tags=["spotify", "ingestion", "automated", "scheduled"],
-                work_pool_name=None,  # Use default work pool
+                work_pool_name="default-agent-pool",
                 schedules=[spotify_schedule],
             )
 
@@ -110,14 +109,14 @@ class FlowDeployer:
         try:
             # Schedule to run daily at 2:00 AM Mountain time
             etl_schedule = CronSchedule(cron="0 2 * * *", timezone="America/Denver")
-            
-            deployment = Deployment.build_from_flow(
-                flow=daily_etl_flow,
+
+            # Create deployment using v3 API
+            deployment = daily_etl_flow.to_deployment(
                 name="daily-etl",
                 version="1.1.0",
                 description="Daily ETL pipeline: Load → Enrich → Transform → Report (runs at 2:00 AM Mountain)",
                 tags=["etl", "daily", "processing", "automated", "scheduled"],
-                work_pool_name=None,  # Use default work pool
+                work_pool_name="default-agent-pool",
                 schedules=[etl_schedule],
             )
 

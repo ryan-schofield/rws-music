@@ -166,7 +166,7 @@ def flatten_json_column(
     try:
         # Convert JSON strings to structured data
         df_with_parsed = df.with_columns(
-            pl.col(json_col).str.json_extract().alias(f"_parsed_{json_col}")
+            pl.col(json_col).str.json_decode().alias(f"_parsed_{json_col}")
         )
 
         # Get the first non-null parsed value to determine structure
@@ -216,7 +216,7 @@ def explode_genre_array(df: pl.DataFrame, array_col: str = "genres") -> pl.DataF
 
     # Convert string representation of array to actual array if needed
     if df.schema[array_col] == pl.Utf8:
-        df = df.with_columns(pl.col(array_col).str.json_extract().alias(array_col))
+        df = df.with_columns(pl.col(array_col).str.json_decode().alias(array_col))
 
     # Explode the array column
     return df.explode(array_col)
@@ -256,7 +256,7 @@ def create_artist_genre_table(df: pl.DataFrame) -> pl.DataFrame:
     # Parse tag_list JSON and explode
     try:
         tags_expanded = df.with_columns(
-            pl.col("tag_list").str.json_extract().alias("parsed_tags")
+            pl.col("tag_list").str.json_decode().alias("parsed_tags")
         ).explode("parsed_tags")
 
         # Extract tag information

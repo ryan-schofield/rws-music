@@ -45,10 +45,13 @@ class SpotifyProcessor:
         self.tracker = EnrichmentTracker(self.data_writer)
         self.spotify_client = SpotifyAPIClient(client_id, client_secret, refresh_token)
 
-    def enrich_artists(self) -> Dict[str, Any]:
+    def enrich_artists(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Enrich missing artist data from Spotify API.
         Based on spotify_add_new_artists.py logic.
+
+        Args:
+            limit: Maximum number of artists to process
         """
         logger.info("Starting Spotify artist enrichment")
 
@@ -61,6 +64,11 @@ class SpotifyProcessor:
                 "message": "No missing artists found",
                 "artists_processed": 0,
             }
+
+        # Apply limit if specified
+        if limit is not None and len(missing_artists_df) > limit:
+            missing_artists_df = missing_artists_df.head(limit)
+            logger.info(f"Limited to {limit} artists for testing")
 
         logger.info(
             f"Found {len(missing_artists_df)} artists needing Spotify enrichment"
@@ -136,10 +144,13 @@ class SpotifyProcessor:
             logger.error(f"Error enriching artists: {e}")
             return {"status": "error", "message": str(e), "artists_processed": 0}
 
-    def enrich_albums(self) -> Dict[str, Any]:
+    def enrich_albums(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Enrich missing album data from Spotify API.
         Based on spotify_add_new_albums.py logic.
+
+        Args:
+            limit: Maximum number of albums to process
         """
         logger.info("Starting Spotify album enrichment")
 
@@ -152,6 +163,11 @@ class SpotifyProcessor:
                 "message": "No missing albums found",
                 "albums_processed": 0,
             }
+
+        # Apply limit if specified
+        if limit is not None and len(missing_albums_df) > limit:
+            missing_albums_df = missing_albums_df.head(limit)
+            logger.info(f"Limited to {limit} albums for testing")
 
         logger.info(f"Found {len(missing_albums_df)} albums needing Spotify enrichment")
 
@@ -374,9 +390,12 @@ class SpotifyProcessor:
             logger.error(f"Error updating artist MBIDs: {e}")
             return {"status": "error", "message": str(e)}
 
-    def run_full_enrichment(self) -> Dict[str, Any]:
+    def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Run the complete Spotify enrichment pipeline.
+
+        Args:
+            limit: Maximum number of records to process for testing
         """
         logger.info("Starting full Spotify enrichment")
 
@@ -389,14 +408,14 @@ class SpotifyProcessor:
 
         try:
             # Step 1: Enrich artist data
-            artist_result = self.enrich_artists()
+            artist_result = self.enrich_artists(limit=limit)
             results["artist_enrichment"] = artist_result
 
             if artist_result["status"] not in ["success", "no_updates"]:
                 results["overall_status"] = "partial_failure"
 
             # Step 2: Enrich album data
-            album_result = self.enrich_albums()
+            album_result = self.enrich_albums(limit=limit)
             results["album_enrichment"] = album_result
 
             if album_result["status"] not in ["success", "no_updates"]:

@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.10-slim-bullseye
 
 # Set working directory
 WORKDIR /app
@@ -7,6 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     git \
+    && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv package manager

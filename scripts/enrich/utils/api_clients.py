@@ -275,9 +275,23 @@ class OpenWeatherGeoClient:
             response.raise_for_status()
 
             content = response.json()
-            if content:
+
+            # Check if this is an error response
+            if isinstance(content, dict) and "cod" in content and content["cod"] != 200:
+                logger.warning(f"OpenWeather API error for '{query}': {content.get('message', 'Unknown error')}")
+                return None
+
+            if content and isinstance(content, list) and len(content) > 0:
                 first = content[0]
-                return {"lat": first.get("lat"), "long": first.get("lon")}
+                if isinstance(first, dict) and "lat" in first and "lon" in first:
+                    return {"lat": first["lat"], "long": first["lon"]}
+                else:
+                    logger.warning(f"Unexpected response format for '{query}': {first}")
+            else:
+                logger.warning(f"No results found for '{query}'")
+
+        except requests.exceptions.HTTPError as e:
+            logger.warning(f"HTTP error for '{query}': {e}")
         except Exception as e:
             logger.warning(f"Could not get coordinates for '{query}': {e}")
 
@@ -291,9 +305,13 @@ class OpenWeatherGeoClient:
             if not query:
                 continue
 
-            coords = self.get_coordinates(query)
-            if coords:
-                results[query] = coords
+            try:
+                coords = self.get_coordinates(query)
+                if coords:
+                    results[query] = coords
+            except Exception as e:
+                logger.warning(f"Failed to get coordinates for '{query}': {e}")
+                continue
 
             # Rate limiting - OpenWeather allows 60 calls per minute
             sleep(1.1)
