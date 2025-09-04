@@ -6,15 +6,26 @@ This script deploys all music tracking flows to your Prefect server.
 Ensure your Prefect server is running before executing this script.
 
 Usage:
-    # Basic deployment
+    # Basic deployment (deploys all flows and subflows)
     uv run python scripts/orchestrate/deploy_flows.py
-    
+
     # With validation
     uv run python scripts/orchestrate/deploy_flows.py --validate
-    
-    # Deploy specific flows  
+
+    # Deploy specific flows
     uv run python scripts/orchestrate/deploy_flows.py --spotify-only
     uv run python scripts/orchestrate/deploy_flows.py --etl-only
+
+    # Deploy individual subflows
+    uv run python scripts/orchestrate/deploy_flows.py --data-prep-only
+    uv run python scripts/orchestrate/deploy_flows.py --enrichment-only
+    uv run python scripts/orchestrate/deploy_flows.py --transformation-only
+
+    # Deploy all subflows independently
+    uv run python scripts/orchestrate/deploy_flows.py --subflows-only
+
+    # Deploy only main flows (no subflows)
+    uv run python scripts/orchestrate/deploy_flows.py --main-flows-only
 """
 
 import os
@@ -73,20 +84,20 @@ class FlowDeployer:
         try:
             # Use CLI command for proper module-based deployment
             cmd = [
-                "prefect", "deploy",
+                "prefect",
+                "deploy",
                 "scripts.orchestrate.prefect_flows:spotify_ingestion_flow",
-                "-n", "spotify-ingestion",
-                "-p", "default-agent-pool",
-                "--cron", "*/10 * * * *",
-                "--timezone", "UTC"
+                "-n",
+                "spotify-ingestion",
+                "-p",
+                "default-agent-pool",
+                "--cron",
+                "*/10 * * * *",
+                "--timezone",
+                "UTC",
             ]
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120
-            )
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
             if result.returncode == 0:
                 print("[OK] Spotify Flow deployed successfully")
@@ -98,7 +109,10 @@ class FlowDeployer:
             else:
                 error_msg = result.stderr or result.stdout or "Unknown deployment error"
                 print(f"[ERROR] Failed to deploy Spotify Flow: {error_msg}")
-                self.deployed_flows["spotify"] = {"status": "failed", "error": error_msg}
+                self.deployed_flows["spotify"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
                 return False
 
         except subprocess.TimeoutExpired:
@@ -118,20 +132,20 @@ class FlowDeployer:
         try:
             # Use CLI command for proper module-based deployment
             cmd = [
-                "prefect", "deploy",
+                "prefect",
+                "deploy",
                 "scripts.orchestrate.prefect_flows:daily_etl_flow",
-                "-n", "daily-etl",
-                "-p", "default-agent-pool",
-                "--cron", "0 2 * * *",
-                "--timezone", "America/Denver"
+                "-n",
+                "daily-etl",
+                "-p",
+                "default-agent-pool",
+                "--cron",
+                "0 2 * * *",
+                "--timezone",
+                "America/Denver",
             ]
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120
-            )
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
             if result.returncode == 0:
                 print("[OK] Daily ETL Flow deployed successfully")
@@ -156,22 +170,226 @@ class FlowDeployer:
             self.deployed_flows["etl"] = {"status": "failed", "error": str(e)}
             return False
 
-    def deploy_all(self, spotify_only=False, etl_only=False):
-        """Deploy all flows."""
+    def deploy_data_preparation_subflow(self):
+        """Deploy the data preparation subflow using CLI command."""
+        print("\nDeploying Data Preparation Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:data_preparation_subflow",
+                "-n",
+                "data-preparation-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] Data Preparation Subflow deployed successfully")
+                self.deployed_flows["data_preparation"] = {
+                    "name": "data-preparation-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Data Preparation Subflow: {error_msg}")
+                self.deployed_flows["data_preparation"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["data_preparation"] = {
+                "status": "failed",
+                "error": error_msg,
+            }
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy Data Preparation Subflow: {e}")
+            self.deployed_flows["data_preparation"] = {
+                "status": "failed",
+                "error": str(e),
+            }
+            return False
+
+    def deploy_enrichment_coordination_subflow(self):
+        """Deploy the enrichment coordination subflow using CLI command."""
+        print("\nDeploying Enrichment Coordination Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:enrichment_coordination_subflow",
+                "-n",
+                "enrichment-coordination-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] Enrichment Coordination Subflow deployed successfully")
+                self.deployed_flows["enrichment"] = {
+                    "name": "enrichment-coordination-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(
+                    f"[ERROR] Failed to deploy Enrichment Coordination Subflow: {error_msg}"
+                )
+                self.deployed_flows["enrichment"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["enrichment"] = {"status": "failed", "error": error_msg}
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy Enrichment Coordination Subflow: {e}")
+            self.deployed_flows["enrichment"] = {"status": "failed", "error": str(e)}
+            return False
+
+    def deploy_transformation_subflow(self):
+        """Deploy the transformation subflow using CLI command."""
+        print("\nDeploying Transformation Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:transformation_subflow",
+                "-n",
+                "transformation-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] Transformation Subflow deployed successfully")
+                self.deployed_flows["transformation"] = {
+                    "name": "transformation-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Transformation Subflow: {error_msg}")
+                self.deployed_flows["transformation"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["transformation"] = {
+                "status": "failed",
+                "error": error_msg,
+            }
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy Transformation Subflow: {e}")
+            self.deployed_flows["transformation"] = {
+                "status": "failed",
+                "error": str(e),
+            }
+            return False
+
+    def deploy_all(self, **options):
+        """Deploy flows based on options."""
         success_count = 0
 
-        if not spotify_only and not etl_only:
-            # Deploy both flows
-            if self.deploy_spotify_flow():
-                success_count += 1
-            if self.deploy_etl_flow():
-                success_count += 1
-        elif spotify_only:
-            if self.deploy_spotify_flow():
-                success_count += 1
-        elif etl_only:
-            if self.deploy_etl_flow():
-                success_count += 1
+        # Extract options
+        spotify_only = options.get("spotify_only", False)
+        etl_only = options.get("etl_only", False)
+        data_prep_only = options.get("data_prep_only", False)
+        enrichment_only = options.get("enrichment_only", False)
+        transformation_only = options.get("transformation_only", False)
+        subflows_only = options.get("subflows_only", False)
+        main_flows_only = options.get("main_flows_only", False)
+
+        # Determine what to deploy
+        has_specific_option = any(
+            [
+                spotify_only,
+                etl_only,
+                data_prep_only,
+                enrichment_only,
+                transformation_only,
+                subflows_only,
+                main_flows_only,
+            ]
+        )
+
+        # Default behavior: deploy everything if no specific options
+        deploy_main_flows = (
+            not has_specific_option or spotify_only or etl_only or main_flows_only
+        )
+        deploy_subflows = (
+            not has_specific_option
+            or subflows_only
+            or data_prep_only
+            or enrichment_only
+            or transformation_only
+        )
+
+        # Deploy main flows
+        if deploy_main_flows:
+            if not spotify_only and not etl_only:
+                # Deploy both main flows (default or main_flows_only)
+                if self.deploy_spotify_flow():
+                    success_count += 1
+                if self.deploy_etl_flow():
+                    success_count += 1
+            elif spotify_only:
+                if self.deploy_spotify_flow():
+                    success_count += 1
+            elif etl_only:
+                if self.deploy_etl_flow():
+                    success_count += 1
+
+        # Deploy subflows
+        if deploy_subflows:
+            if not any([data_prep_only, enrichment_only, transformation_only]):
+                # Deploy all subflows (default or subflows_only)
+                if self.deploy_data_preparation_subflow():
+                    success_count += 1
+                if self.deploy_enrichment_coordination_subflow():
+                    success_count += 1
+                if self.deploy_transformation_subflow():
+                    success_count += 1
+            else:
+                # Deploy specific subflows
+                if data_prep_only:
+                    if self.deploy_data_preparation_subflow():
+                        success_count += 1
+                if enrichment_only:
+                    if self.deploy_enrichment_coordination_subflow():
+                        success_count += 1
+                if transformation_only:
+                    if self.deploy_transformation_subflow():
+                        success_count += 1
 
         return success_count
 
@@ -203,6 +421,28 @@ class FlowDeployer:
             print("3. Click 'Run' on any deployment to test")
             print("4. Monitor execution in 'Flow Runs' tab")
 
+            # Group deployments by type
+            main_flows = [
+                f
+                for f in successful_flows
+                if f["name"] in ["spotify-ingestion", "daily-etl"]
+            ]
+            subflows = [f for f in successful_flows if f["name"].endswith("-subflow")]
+
+            if main_flows:
+                print(f"\nMain Flows Deployed: {len(main_flows)}")
+                for flow in main_flows:
+                    print(f"  - {flow['name']}")
+
+            if subflows:
+                print(f"\nSubflows Deployed: {len(subflows)}")
+                for flow in subflows:
+                    print(f"  - {flow['name']}")
+                print("\nSubflows can be run manually for testing and debugging!")
+                print(
+                    "Note: Subflows have no automatic schedule - they are triggered by parent flows."
+                )
+
         return len(failed_flows) == 0
 
 
@@ -216,14 +456,58 @@ def main():
     parser.add_argument(
         "--validate", action="store_true", help="Validate environment before deployment"
     )
+
+    # Main flow options
     parser.add_argument(
         "--spotify-only", action="store_true", help="Deploy only Spotify ingestion flow"
     )
     parser.add_argument(
         "--etl-only", action="store_true", help="Deploy only daily ETL flow"
     )
+    parser.add_argument(
+        "--main-flows-only",
+        action="store_true",
+        help="Deploy only main flows (no subflows)",
+    )
+
+    # Subflow options
+    parser.add_argument(
+        "--data-prep-only",
+        action="store_true",
+        help="Deploy only data preparation subflow",
+    )
+    parser.add_argument(
+        "--enrichment-only",
+        action="store_true",
+        help="Deploy only enrichment coordination subflow",
+    )
+    parser.add_argument(
+        "--transformation-only",
+        action="store_true",
+        help="Deploy only transformation subflow",
+    )
+    parser.add_argument(
+        "--subflows-only",
+        action="store_true",
+        help="Deploy all subflows (data prep, enrichment, transformation)",
+    )
 
     args = parser.parse_args()
+
+    # Validate mutually exclusive options
+    deployment_options = [
+        args.spotify_only,
+        args.etl_only,
+        args.main_flows_only,
+        args.data_prep_only,
+        args.enrichment_only,
+        args.transformation_only,
+        args.subflows_only,
+    ]
+
+    if sum(deployment_options) > 1:
+        print("ERROR: Only one deployment option can be specified at a time")
+        sys.exit(1)
 
     # Initialize deployer
     deployer = FlowDeployer()
@@ -235,6 +519,15 @@ def main():
     print(f"Project: Music Tracker")
     print(f"Environment: {config.environment}")
 
+    # Show what will be deployed
+    if not any(deployment_options):
+        print("Default: Deploying all flows and subflows")
+    elif args.main_flows_only:
+        print("Deploying main flows only")
+    elif args.subflows_only:
+        print("Deploying subflows only")
+    # ...other specific options already logged by individual methods
+
     # Validate environment if requested
     if args.validate:
         if not deployer.validate_environment():
@@ -242,7 +535,13 @@ def main():
 
     # Deploy flows
     success_count = deployer.deploy_all(
-        spotify_only=args.spotify_only, etl_only=args.etl_only
+        spotify_only=args.spotify_only,
+        etl_only=args.etl_only,
+        main_flows_only=args.main_flows_only,
+        data_prep_only=args.data_prep_only,
+        enrichment_only=args.enrichment_only,
+        transformation_only=args.transformation_only,
+        subflows_only=args.subflows_only,
     )
 
     # Print summary
