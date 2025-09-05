@@ -118,18 +118,29 @@ class BaseProcessorTask(BaseTask):
     def execute(self, **kwargs) -> TaskResult:
         """Execute using processor class."""
         try:
+            self.logger.info("Starting processor task execution")
+
             # Validate prerequisites first
+            self.logger.info("Validating prerequisites")
             prereq_result = self._validate_prerequisites()
+            self.logger.info(f"Prerequisite validation result: {prereq_result.status}")
+
             if prereq_result.is_failure():
+                self.logger.error(f"Prerequisite validation failed: {prereq_result.message}")
                 return prereq_result
 
             # Execute the processor method
+            self.logger.info("Executing processor method")
             result = self._execute_processor(**kwargs)
+            self.logger.info(f"Processor method result: {result.get('status', 'unknown')}")
 
             # Convert processor result to TaskResult
-            return self._convert_processor_result(result)
+            task_result = self._convert_processor_result(result)
+            self.logger.info(f"Task result: {task_result.status}")
+            return task_result
 
         except Exception as e:
+            self.logger.error(f"Processor execution failed with exception: {e}", exc_info=True)
             return self._handle_error(e, f"Processor execution failed")
 
     @abstractmethod
@@ -201,19 +212,26 @@ def create_processor_task(
         logger = get_run_logger()
 
         try:
+            logger.info(f"Starting {task_name} task wrapper")
+
             # Create task instance
+            logger.info(f"Creating {task_class.__name__} instance")
             task_instance = task_class(config, processor_class)
+            logger.info("Task instance created successfully")
 
             # Execute task
+            logger.info("Executing task")
             result = task_instance.execute(**kwargs)
+            logger.info(f"Task execution completed with status: {result.status}")
 
             # Log result
             if result.is_success():
                 logger.info(f"{task_name} completed: {result.message}")
+                return result.to_dict()
             else:
                 logger.error(f"{task_name} failed: {result.message}")
-
-            return result.to_dict()
+                # Return Failed state to properly fail the Prefect task
+                return Failed(message=f"{task_name} failed: {result.message}")
 
         except Exception as e:
             error_msg = f"{task_name} failed with exception: {str(e)}"

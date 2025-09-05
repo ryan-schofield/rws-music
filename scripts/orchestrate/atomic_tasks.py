@@ -320,6 +320,43 @@ class MusicBrainzHierarchyTask(BaseEnrichmentTask):
 class GeographicEnrichmentTask(BaseEnrichmentTask):
     """Task for geographic data enrichment."""
 
+    def _validate_prerequisites(self) -> TaskResult:
+        """Validate that mbz_area_hierarchy table exists for geographic enrichment."""
+        try:
+            self.logger.info("Validating prerequisites for geographic enrichment")
+            self.logger.info("Checking if mbz_area_hierarchy table exists")
+
+            table_exists = self.data_writer.table_exists("mbz_area_hierarchy")
+            self.logger.info(f"mbz_area_hierarchy table exists: {table_exists}")
+
+            if not table_exists:
+                return TaskResult(
+                    status="error",
+                    message="mbz_area_hierarchy table not found - cannot perform geographic enrichment",
+                )
+
+            self.logger.info("Getting table info for mbz_area_hierarchy")
+            area_info = self.data_writer.get_table_info("mbz_area_hierarchy")
+            record_count = area_info.get("record_count", 0)
+            self.logger.info(f"mbz_area_hierarchy record count: {record_count}")
+
+            if record_count == 0:
+                return TaskResult(
+                    status="error",
+                    message="mbz_area_hierarchy table is empty - cannot perform geographic enrichment",
+                )
+
+            return TaskResult(
+                status="success",
+                message=f"Prerequisites validated - {record_count} area records available",
+            )
+        except Exception as e:
+            self.logger.error(f"Error during prerequisite validation: {e}", exc_info=True)
+            return TaskResult(
+                status="error",
+                message=f"Prerequisite validation failed: {str(e)}",
+            )
+
     def _execute_processor(self, **kwargs) -> Dict[str, Any]:
         """Execute geographic enrichment."""
         return self.processor.run_full_enrichment()
@@ -569,6 +606,7 @@ geographic_enrichment = create_enrichment_task(
     task_name="Geographic Data Enrichment",
     description="Process geographic coordinate and continent data",
     timeout_seconds=600,
+    retries=0,  # Disable retries to ensure immediate failure on error
 )
 
 

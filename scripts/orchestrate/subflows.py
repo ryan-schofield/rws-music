@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from prefect import flow, get_run_logger
+from prefect.states import Failed
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
@@ -39,11 +40,20 @@ from scripts.orchestrate.atomic_tasks import (
 )
 
 
-def check_task_success(task_result: Dict[str, Any], task_name: str) -> bool:
+def check_task_success(task_result, task_name: str) -> bool:
     """Check if a task completed successfully."""
-    status = task_result.get("status", "unknown")
-    success_statuses = ["success", "no_updates", "partial_success"]
-    return status in success_statuses
+    # Handle Prefect Failed states
+    if hasattr(task_result, 'is_failed') and task_result.is_failed():
+        return False
+
+    # Handle dictionary results
+    if isinstance(task_result, dict):
+        status = task_result.get("status", "unknown")
+        success_statuses = ["success", "no_updates", "partial_success"]
+        return status in success_statuses
+
+    # Default to success for unknown result types
+    return True
 
 
 def log_subflow_summary(logger, subflow_name: str, results: Dict[str, Any]) -> None:
@@ -345,7 +355,22 @@ def geographic_enrichment_subflow(
         logger.info("Geographic enrichment completed successfully")
     else:
         overall_status = "failed"
-        logger.error("Geographic enrichment failed")
+        # Handle Failed state
+        if hasattr(geographic_result, 'is_failed') and geographic_result.is_failed():
+            error_msg = getattr(geographic_result, 'message', 'Task failed')
+            logger.error(f"Geographic enrichment failed: {error_msg}")
+        # Handle dictionary result
+        elif isinstance(geographic_result, dict):
+            error_msg = geographic_result.get("message", "Unknown error")
+            logger.error(f"Geographic enrichment failed: {error_msg}")
+            if "error_message" in geographic_result:
+                logger.error(f"Detailed error: {geographic_result['error_message']}")
+        else:
+            error_msg = "Unknown error"
+            logger.error(f"Geographic enrichment failed: {error_msg}")
+
+        # Return Failed state to fail the subflow
+        return Failed(message=f"Geographic enrichment failed: {error_msg}")
 
     return {
         "subflow_name": "geographic_enrichment",
