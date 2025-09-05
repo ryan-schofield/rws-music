@@ -8,9 +8,8 @@ services:
       - ./dbt:/app/dbt
       - ./scripts:/app/scripts
       - ./logs:/app/logs
+    env_file: .env
     environment:
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
       - DUCKDB_PATH=/app/data/music_tracker.duckdb
       - LOG_LEVEL=INFO
     networks:
@@ -30,6 +29,7 @@ services:
     volumes:
       - metabase-data:/home
       - ./data:/data
+    env_file: .env
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_DBNAME=metabase
@@ -48,6 +48,7 @@ services:
   metabase-db:
     image: postgres:15-alpine
     container_name: music-tracker-metabase-db
+    env_file: .env
     environment:
       - POSTGRES_DB=metabase
       - POSTGRES_USER=metabase
@@ -64,6 +65,7 @@ services:
     container_name: music-tracker-prefect
     ports:
       - "4200:4200"
+    env_file: .env
     environment:
       - PREFECT_API_URL=http://localhost:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
@@ -82,6 +84,7 @@ services:
   prefect-worker:
     build: .
     container_name: music-tracker-prefect-worker
+    env_file: .env
     environment:
       - PREFECT_API_URL=http://prefect-server:4200/api
       - PREFECT_WORK_POOL_NAME=default-agent-pool
@@ -114,6 +117,7 @@ services:
   prefect-deployer:
     build: .
     container_name: music-tracker-prefect-deployer
+    env_file: .env
     environment:
       - PREFECT_API_URL=http://prefect-server:4200/api
       - PREFECT_WORK_POOL_NAME=default-agent-pool
@@ -149,6 +153,7 @@ services:
   prefect-db:
     image: postgres:15-alpine
     container_name: music-tracker-prefect-db
+    env_file: .env
     environment:
       - POSTGRES_DB=prefect
       - POSTGRES_USER=prefect

@@ -20,6 +20,9 @@ Usage:
     uv run python scripts/orchestrate/deploy_flows.py --data-prep-only
     uv run python scripts/orchestrate/deploy_flows.py --enrichment-only
     uv run python scripts/orchestrate/deploy_flows.py --transformation-only
+    uv run python scripts/orchestrate/deploy_flows.py --spotify-enrichment-only
+    uv run python scripts/orchestrate/deploy_flows.py --musicbrainz-enrichment-only
+    uv run python scripts/orchestrate/deploy_flows.py --geographic-enrichment-only
 
     # Deploy all subflows independently
     uv run python scripts/orchestrate/deploy_flows.py --subflows-only
@@ -316,6 +319,156 @@ class FlowDeployer:
             }
             return False
 
+    def deploy_spotify_enrichment_subflow(self):
+        """Deploy the Spotify enrichment subflow using CLI command."""
+        print("\nDeploying Spotify Enrichment Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:spotify_enrichment_subflow",
+                "-n",
+                "spotify-enrichment-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] Spotify Enrichment Subflow deployed successfully")
+                self.deployed_flows["spotify_enrichment"] = {
+                    "name": "spotify-enrichment-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Spotify Enrichment Subflow: {error_msg}")
+                self.deployed_flows["spotify_enrichment"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["spotify_enrichment"] = {
+                "status": "failed",
+                "error": error_msg,
+            }
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy Spotify Enrichment Subflow: {e}")
+            self.deployed_flows["spotify_enrichment"] = {
+                "status": "failed",
+                "error": str(e),
+            }
+            return False
+
+    def deploy_musicbrainz_enrichment_subflow(self):
+        """Deploy the MusicBrainz enrichment subflow using CLI command."""
+        print("\nDeploying MusicBrainz Enrichment Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:musicbrainz_enrichment_subflow",
+                "-n",
+                "musicbrainz-enrichment-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] MusicBrainz Enrichment Subflow deployed successfully")
+                self.deployed_flows["musicbrainz_enrichment"] = {
+                    "name": "musicbrainz-enrichment-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy MusicBrainz Enrichment Subflow: {error_msg}")
+                self.deployed_flows["musicbrainz_enrichment"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["musicbrainz_enrichment"] = {
+                "status": "failed",
+                "error": error_msg,
+            }
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy MusicBrainz Enrichment Subflow: {e}")
+            self.deployed_flows["musicbrainz_enrichment"] = {
+                "status": "failed",
+                "error": str(e),
+            }
+            return False
+
+    def deploy_geographic_enrichment_subflow(self):
+        """Deploy the geographic enrichment subflow using CLI command."""
+        print("\nDeploying Geographic Enrichment Subflow...")
+
+        try:
+            cmd = [
+                "prefect",
+                "deploy",
+                "scripts.orchestrate.subflows:geographic_enrichment_subflow",
+                "-n",
+                "geographic-enrichment-subflow",
+                "-p",
+                "default-agent-pool",
+                # Note: No cron schedule - subflows are called by parent flows only
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+            if result.returncode == 0:
+                print("[OK] Geographic Enrichment Subflow deployed successfully")
+                self.deployed_flows["geographic_enrichment"] = {
+                    "name": "geographic-enrichment-subflow",
+                    "status": "success",
+                }
+                return True
+            else:
+                error_msg = result.stderr or result.stdout or "Unknown deployment error"
+                print(f"[ERROR] Failed to deploy Geographic Enrichment Subflow: {error_msg}")
+                self.deployed_flows["geographic_enrichment"] = {
+                    "status": "failed",
+                    "error": error_msg,
+                }
+                return False
+
+        except subprocess.TimeoutExpired:
+            error_msg = "Deployment timed out after 120 seconds"
+            print(f"[ERROR] {error_msg}")
+            self.deployed_flows["geographic_enrichment"] = {
+                "status": "failed",
+                "error": error_msg,
+            }
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to deploy Geographic Enrichment Subflow: {e}")
+            self.deployed_flows["geographic_enrichment"] = {
+                "status": "failed",
+                "error": str(e),
+            }
+            return False
+
     def deploy_all(self, **options):
         """Deploy flows based on options."""
         success_count = 0
@@ -328,6 +481,9 @@ class FlowDeployer:
         transformation_only = options.get("transformation_only", False)
         subflows_only = options.get("subflows_only", False)
         main_flows_only = options.get("main_flows_only", False)
+        spotify_enrichment_only = options.get("spotify_enrichment_only", False)
+        musicbrainz_enrichment_only = options.get("musicbrainz_enrichment_only", False)
+        geographic_enrichment_only = options.get("geographic_enrichment_only", False)
 
         # Determine what to deploy
         has_specific_option = any(
@@ -339,6 +495,9 @@ class FlowDeployer:
                 transformation_only,
                 subflows_only,
                 main_flows_only,
+                spotify_enrichment_only,
+                musicbrainz_enrichment_only,
+                geographic_enrichment_only,
             ]
         )
 
@@ -371,13 +530,19 @@ class FlowDeployer:
 
         # Deploy subflows
         if deploy_subflows:
-            if not any([data_prep_only, enrichment_only, transformation_only]):
+            if not any([data_prep_only, enrichment_only, transformation_only, spotify_enrichment_only, musicbrainz_enrichment_only, geographic_enrichment_only]):
                 # Deploy all subflows (default or subflows_only)
                 if self.deploy_data_preparation_subflow():
                     success_count += 1
                 if self.deploy_enrichment_coordination_subflow():
                     success_count += 1
                 if self.deploy_transformation_subflow():
+                    success_count += 1
+                if self.deploy_spotify_enrichment_subflow():
+                    success_count += 1
+                if self.deploy_musicbrainz_enrichment_subflow():
+                    success_count += 1
+                if self.deploy_geographic_enrichment_subflow():
                     success_count += 1
             else:
                 # Deploy specific subflows
@@ -389,6 +554,15 @@ class FlowDeployer:
                         success_count += 1
                 if transformation_only:
                     if self.deploy_transformation_subflow():
+                        success_count += 1
+                if spotify_enrichment_only:
+                    if self.deploy_spotify_enrichment_subflow():
+                        success_count += 1
+                if musicbrainz_enrichment_only:
+                    if self.deploy_musicbrainz_enrichment_subflow():
+                        success_count += 1
+                if geographic_enrichment_only:
+                    if self.deploy_geographic_enrichment_subflow():
                         success_count += 1
 
         return success_count
@@ -487,9 +661,24 @@ def main():
         help="Deploy only transformation subflow",
     )
     parser.add_argument(
+        "--spotify-enrichment-only",
+        action="store_true",
+        help="Deploy only Spotify enrichment subflow",
+    )
+    parser.add_argument(
+        "--musicbrainz-enrichment-only",
+        action="store_true",
+        help="Deploy only MusicBrainz enrichment subflow",
+    )
+    parser.add_argument(
+        "--geographic-enrichment-only",
+        action="store_true",
+        help="Deploy only geographic enrichment subflow",
+    )
+    parser.add_argument(
         "--subflows-only",
         action="store_true",
-        help="Deploy all subflows (data prep, enrichment, transformation)",
+        help="Deploy all subflows (data prep, enrichment, transformation, spotify, musicbrainz, geographic)",
     )
 
     args = parser.parse_args()
@@ -503,6 +692,9 @@ def main():
         args.enrichment_only,
         args.transformation_only,
         args.subflows_only,
+        args.spotify_enrichment_only,
+        args.musicbrainz_enrichment_only,
+        args.geographic_enrichment_only,
     ]
 
     if sum(deployment_options) > 1:
@@ -542,6 +734,9 @@ def main():
         enrichment_only=args.enrichment_only,
         transformation_only=args.transformation_only,
         subflows_only=args.subflows_only,
+        spotify_enrichment_only=args.spotify_enrichment_only,
+        musicbrainz_enrichment_only=args.musicbrainz_enrichment_only,
+        geographic_enrichment_only=args.geographic_enrichment_only,
     )
 
     # Print summary
