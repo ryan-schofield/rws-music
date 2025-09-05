@@ -351,7 +351,9 @@ class GeographicEnrichmentTask(BaseEnrichmentTask):
                 message=f"Prerequisites validated - {record_count} area records available",
             )
         except Exception as e:
-            self.logger.error(f"Error during prerequisite validation: {e}", exc_info=True)
+            self.logger.error(
+                f"Error during prerequisite validation: {e}", exc_info=True
+            )
             return TaskResult(
                 status="error",
                 message=f"Prerequisite validation failed: {str(e)}",
@@ -404,7 +406,11 @@ class DBTTransformationTask(BaseTask):
             )
 
             if deps_result.returncode != 0:
-                self.logger.warning(f"dbt deps failed: {deps_result.stderr}")
+                self.logger.warning("dbt deps failed")
+                if deps_result.stderr.strip():
+                    for line in deps_result.stderr.strip().split("\n"):
+                        if line.strip():
+                            self.logger.warning(f"DBT Deps: {line}")
 
             # Run dbt build
             build_cmd = [
@@ -430,6 +436,19 @@ class DBTTransformationTask(BaseTask):
 
             if build_result.returncode == 0:
                 self.logger.info("DBT transformations completed successfully")
+
+                # Log dbt stdout if present
+                if build_result.stdout.strip():
+                    for line in build_result.stdout.strip().split("\n"):
+                        if line.strip():
+                            self.logger.info(f"DBT: {line}")
+
+                # Log any stderr warnings even on success
+                if build_result.stderr.strip():
+                    for line in build_result.stderr.strip().split("\n"):
+                        if line.strip():
+                            self.logger.warning(f"DBT Warning: {line}")
+
                 return TaskResult(
                     status="success",
                     message="DBT transformations completed successfully",
@@ -437,6 +456,20 @@ class DBTTransformationTask(BaseTask):
                     metrics=metrics.finalize(),
                 )
             else:
+                self.logger.error("DBT build failed")
+
+                # Log stdout if present (may contain useful context)
+                if build_result.stdout.strip():
+                    for line in build_result.stdout.strip().split("\n"):
+                        if line.strip():
+                            self.logger.info(f"DBT Output: {line}")
+
+                # Log stderr errors
+                if build_result.stderr.strip():
+                    for line in build_result.stderr.strip().split("\n"):
+                        if line.strip():
+                            self.logger.error(f"DBT Error: {line}")
+
                 return TaskResult(
                     status="error",
                     message=f"DBT build failed: {build_result.stderr}",
