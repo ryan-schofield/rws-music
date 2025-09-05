@@ -144,7 +144,7 @@ class MusicBrainzProcessor:
         if artists_failed:
             failed_df = pl.DataFrame(artists_failed)
             self.data_writer.write_table(
-                failed_df, "mbz_artist_not_found", mode="append"
+                failed_df, "mbz_artist_not_found", mode="merge"
             )
 
         logger.info(

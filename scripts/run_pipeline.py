@@ -63,11 +63,11 @@ class MusicTrackerPipeline:
                 logger.info("Spotify ingestion completed successfully")
                 return ingestion_result
             else:
-                logger.error(f"Spotify ingestion failed: {result.stderr}")
+                logger.error(f"Spotify ingestion failed. stdout: {result.stdout}, stderr: {result.stderr}")
                 return {
                     "status": "error",
                     "stage": "ingestion",
-                    "message": result.stderr,
+                    "message": f"stdout: {result.stdout}, stderr: {result.stderr}",
                 }
 
         except Exception as e:
@@ -90,11 +90,11 @@ class MusicTrackerPipeline:
                 logger.info("Data processing completed successfully")
                 return processing_result
             else:
-                logger.error(f"Data processing failed: {result.stderr}")
+                logger.error(f"Data processing failed. stdout: {result.stdout}, stderr: {result.stderr}")
                 return {
                     "status": "error",
                     "stage": "processing",
-                    "message": result.stderr,
+                    "message": f"stdout: {result.stdout}, stderr: {result.stderr}",
                 }
 
         except Exception as e:
@@ -127,8 +127,8 @@ class MusicTrackerPipeline:
                 logger.info("dbt transformations completed successfully")
                 return {"status": "success", "stage": "dbt", "output": result.stdout}
             else:
-                logger.error(f"dbt transformations failed: {result.stderr}")
-                return {"status": "error", "stage": "dbt", "message": result.stderr}
+                logger.error(f"dbt transformations failed. stdout: {result.stdout}, stderr: {result.stderr}")
+                return {"status": "error", "stage": "dbt", "message": f"stdout: {result.stdout}, stderr: {result.stderr}"}
 
         except Exception as e:
             logger.error(f"Error running dbt transformations: {e}")
@@ -151,7 +151,7 @@ class MusicTrackerPipeline:
             )
 
             if result.returncode != 0:
-                logger.warning(f"dbt deps failed: {result.stderr}")
+                logger.warning(f"dbt deps failed. stdout: {result.stdout}, stderr: {result.stderr}")
 
         except Exception as e:
             logger.warning(f"Error ensuring dbt deps: {e}")
