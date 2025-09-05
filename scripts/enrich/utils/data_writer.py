@@ -66,7 +66,8 @@ class ParquetDataWriter:
             output_file, compression="snappy", row_group_size=10000, use_pyarrow=True
         )
 
-        logger.info(f"Overwrote {table_name} with {len(df)} records")
+        logger.info(f"Overwrote {table_name} with {len(df)} records to {output_file}")
+        logger.info(f"DataFrame shape: {df.shape}, columns: {df.columns}")
         return {
             "status": "success",
             "operation": "overwrite",

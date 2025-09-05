@@ -157,13 +157,42 @@ class MusicTrackerPipeline:
             logger.warning(f"Error ensuring dbt deps: {e}")
 
     def run_musicbrainz_enrichment(self) -> Dict[str, Any]:
-        """Run MusicBrainz data enrichment (placeholder for future implementation)."""
-        logger.info("MusicBrainz enrichment - placeholder for future implementation")
-        return {
-            "status": "success",
-            "stage": "musicbrainz",
-            "message": "Not yet implemented",
-        }
+        """Run MusicBrainz data enrichment."""
+        logger.info("Starting MusicBrainz data enrichment")
+
+        try:
+            # Import the processor
+            from scripts.enrich.musicbrainz_processor import MusicBrainzProcessor
+
+            # Create processor instance
+            processor = MusicBrainzProcessor()
+
+            # Run full enrichment
+            result = processor.run_full_enrichment()
+
+            if result["overall_status"] in ["success", "partial_failure"]:
+                logger.info("MusicBrainz enrichment completed")
+                return {
+                    "status": "success",
+                    "stage": "musicbrainz",
+                    "result": result,
+                }
+            else:
+                logger.error(f"MusicBrainz enrichment failed: {result}")
+                return {
+                    "status": "error",
+                    "stage": "musicbrainz",
+                    "message": f"Enrichment failed with status: {result['overall_status']}",
+                    "result": result,
+                }
+
+        except Exception as e:
+            logger.error(f"Error running MusicBrainz enrichment: {e}")
+            return {
+                "status": "error",
+                "stage": "musicbrainz",
+                "message": str(e),
+            }
 
     def update_reporting_data(self) -> Dict[str, Any]:
         """Update reporting data (placeholder for Metabase integration)."""

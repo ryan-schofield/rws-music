@@ -209,9 +209,9 @@ class GeographicProcessor:
         # Clean municipality names
         updated_area_df = clean_municipality_names(updated_area_df)
 
-        # Write back to parquet
+        # Write back to parquet - use merge to preserve existing data
         write_result = self.data_writer.write_table(
-            updated_area_df, "mbz_area_hierarchy", mode="overwrite"
+            updated_area_df, "mbz_area_hierarchy", mode="merge"
         )
 
         if write_result["status"] == "success":
@@ -255,9 +255,9 @@ class GeographicProcessor:
             ).alias("params")
         )
 
-        # Write back to parquet
+        # Write back to parquet - use merge to preserve existing data
         write_result = self.data_writer.write_table(
-            updated_df, "mbz_area_hierarchy", mode="overwrite"
+            updated_df, "mbz_area_hierarchy", mode="merge"
         )
 
         return {

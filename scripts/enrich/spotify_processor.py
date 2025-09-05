@@ -368,9 +368,9 @@ class SpotifyProcessor:
 
             final_artists_df = pl.concat([unchanged_artists, updated_artists])
 
-            # Write back to parquet
+            # Write back to parquet - use merge to preserve existing data
             write_result = self.data_writer.write_table(
-                final_artists_df, "spotify_artists", mode="overwrite"
+                final_artists_df, "spotify_artists", mode="merge"
             )
 
             # Count updates

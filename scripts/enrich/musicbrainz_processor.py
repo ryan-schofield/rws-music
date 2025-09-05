@@ -297,18 +297,20 @@ class MusicBrainzProcessor:
             "genre_table_result": genre_result,
         }
 
-    def process_area_hierarchy(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    def process_area_hierarchy(self, limit: Optional[int] = None, test_mode: bool = False) -> Dict[str, Any]:
         """
         Process area hierarchy data from MusicBrainz.
         Based on the working Fabric notebook implementation.
 
         Args:
             limit: Maximum number of areas to process
+            test_mode: If True, skip API calls and test with mock data
         """
-        logger.info("Processing MusicBrainz area hierarchy")
+        logger.info(f"Processing MusicBrainz area hierarchy (test_mode: {test_mode})")
 
         # Get area IDs that need processing
         area_ids = self._get_area_ids_for_processing()
+        logger.info(f"Found {len(area_ids)} area IDs that need processing")
 
         if not area_ids:
             return {"status": "no_updates", "message": "No area IDs need processing"}
@@ -318,23 +320,40 @@ class MusicBrainzProcessor:
             area_ids = area_ids[:limit]
             logger.info(f"Limited to {limit} areas for testing")
 
-        logger.info(f"Processing {len(area_ids)} area IDs")
-
-        # Set user agent for MusicBrainz API
-        import musicbrainzngs
-        musicbrainzngs.set_useragent("rws-music-enrichment", "1.0")
+        logger.info(f"Processing {len(area_ids)} area IDs: {area_ids[:5]}...")  # Log first 5 for debugging
 
         # Process areas and build hierarchy
         all_areas = {}
 
-        for i, area_id in enumerate(area_ids):
-            logger.info(f"Processing {i+1}/{len(area_ids)}: {area_id}")
-            try:
-                areas = self._get_area_with_parents(area_id)
-                all_areas[area_id] = areas
-            except Exception as e:
-                logger.error(f"Error processing area {area_id}: {e}")
-                continue
+        if test_mode:
+            # Test mode: Create mock area data without API calls
+            logger.info("Test mode: Creating mock area hierarchy data")
+            for i, area_id in enumerate(area_ids):
+                logger.info(f"Processing {i+1}/{len(area_ids)}: {area_id} (mock)")
+                # Create mock area hierarchy data
+                mock_areas = {
+                    "country": {
+                        "id": area_id,
+                        "name": f"Mock Country {i+1}",
+                        "sort_name": f"Mock Country {i+1}",
+                        "type": "Country"
+                    }
+                }
+                all_areas[area_id] = mock_areas
+        else:
+            # Normal mode: Use actual API calls
+            # Set user agent for MusicBrainz API
+            import musicbrainzngs
+            musicbrainzngs.set_useragent("rws-music-enrichment", "1.0")
+
+            for i, area_id in enumerate(area_ids):
+                logger.info(f"Processing {i+1}/{len(area_ids)}: {area_id}")
+                try:
+                    areas = self._get_area_with_parents(area_id)
+                    all_areas[area_id] = areas
+                except Exception as e:
+                    logger.error(f"Error processing area {area_id}: {e}")
+                    continue
 
         if not all_areas:
             return {
@@ -344,13 +363,14 @@ class MusicBrainzProcessor:
 
         # Convert to DataFrame format
         hierarchy_df = self._create_hierarchy_dataframe(all_areas)
+        logger.info(f"Created hierarchy DataFrame with {len(hierarchy_df)} rows")
 
-        # Write to parquet - use overwrite for now since we're fixing the schema
+        # Write to parquet - use merge to preserve existing data
         write_result = self.data_writer.write_table(
-            hierarchy_df, "mbz_area_hierarchy", mode="overwrite"
+            hierarchy_df, "mbz_area_hierarchy", mode="merge"
         )
 
-        logger.info(f"Processed {len(all_areas)} area hierarchies")
+        logger.info(f"Processed {len(all_areas)} area hierarchies, wrote {write_result.get('records_written', 0)} records")
 
         return {
             "status": "success",
@@ -460,7 +480,10 @@ class MusicBrainzProcessor:
         existing_hierarchy_df = self.data_writer.read_table("mbz_area_hierarchy")
 
         if artist_df is None:
+            logger.info("No mbz_artist_info table found")
             return []
+
+        logger.info(f"Found {len(artist_df)} artists in mbz_artist_info table")
 
         # Collect all area IDs from artist data
         area_ids = set()
@@ -470,24 +493,32 @@ class MusicBrainzProcessor:
             if col in artist_df.columns:
                 ids = artist_df.select(col).drop_nulls().to_series().to_list()
                 area_ids.update(ids)
+                logger.info(f"Found {len(ids)} area IDs in column {col}")
+
+        logger.info(f"Total unique area IDs collected: {len(area_ids)}")
 
         # Filter out areas that already have hierarchy data
         if existing_hierarchy_df is not None:
             existing_ids = set(
                 existing_hierarchy_df.select("area_id").to_series().to_list()
             )
+            logger.info(f"Found {len(existing_ids)} existing area hierarchies")
             area_ids = area_ids - existing_ids
+            logger.info(f"Area IDs needing processing after filtering: {len(area_ids)}")
+        else:
+            logger.info("No existing hierarchy data found")
 
         return sorted(list(area_ids))
 
-    def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    def run_full_enrichment(self, limit: Optional[int] = None, test_mode: bool = False) -> Dict[str, Any]:
         """
         Run the complete MusicBrainz enrichment pipeline.
 
         Args:
             limit: Maximum number of records to process for testing
+            test_mode: If True, skip API calls and use existing data for testing
         """
-        logger.info("Starting full MusicBrainz enrichment")
+        logger.info(f"Starting full MusicBrainz enrichment (test_mode: {test_mode})")
 
         results = {
             "artist_discovery": None,
@@ -498,41 +529,65 @@ class MusicBrainzProcessor:
         }
 
         try:
-            # Step 1: Discover missing artists
-            discovery_result = self.discover_missing_artists()
-            results["artist_discovery"] = discovery_result
+            if test_mode:
+                # Test mode: Skip API calls and test with existing data
+                logger.info("Running in test mode - skipping API calls")
 
-            if (
-                discovery_result["status"] == "success"
-                and discovery_result["artists_found"] > 0
-            ):
-                # Step 2: Fetch artist data
-                missing_artists_df = discovery_result["missing_artists"]
+                # Step 1: Discover missing artists (will use existing data)
+                discovery_result = self.discover_missing_artists()
+                results["artist_discovery"] = discovery_result
 
-                # Apply limit if specified
-                if limit is not None and len(missing_artists_df) > limit:
-                    missing_artists_df = missing_artists_df.head(limit)
-                    logger.info(f"Limited to {limit} artists for testing")
+                # Step 2: Skip fetching, go straight to parsing
+                parse_result = self.parse_artist_json_files()
+                results["artist_parsing"] = parse_result
 
-                fetch_result = self.fetch_artist_data(missing_artists_df)
-                results["artist_fetching"] = fetch_result
-
-                if fetch_result["status"] != "success":
+                if parse_result["status"] not in ["success", "no_data"]:
                     results["overall_status"] = "partial_failure"
 
-            # Step 3: Parse existing JSON files
-            parse_result = self.parse_artist_json_files()
-            results["artist_parsing"] = parse_result
+                # Step 3: Process area hierarchy with test data
+                area_result = self.process_area_hierarchy(limit=limit, test_mode=test_mode)
+                results["area_processing"] = area_result
 
-            if parse_result["status"] not in ["success", "no_data"]:
-                results["overall_status"] = "partial_failure"
+                if area_result["status"] not in ["success", "no_updates", "no_data"]:
+                    results["overall_status"] = "partial_failure"
 
-            # Step 4: Process area hierarchy
-            area_result = self.process_area_hierarchy(limit=limit)
-            results["area_processing"] = area_result
+            else:
+                # Normal mode: Full pipeline
+                # Step 1: Discover missing artists
+                discovery_result = self.discover_missing_artists()
+                results["artist_discovery"] = discovery_result
 
-            if area_result["status"] not in ["success", "no_updates", "no_data"]:
-                results["overall_status"] = "partial_failure"
+                if (
+                    discovery_result["status"] == "success"
+                    and discovery_result["artists_found"] > 0
+                ):
+                    # Step 2: Fetch artist data
+                    missing_artists_df = discovery_result["missing_artists"]
+
+                    # Apply limit if specified
+                    if limit is not None and len(missing_artists_df) > limit:
+                        missing_artists_df = missing_artists_df.head(limit)
+                        logger.info(f"Limited to {limit} artists for testing")
+
+                    fetch_result = self.fetch_artist_data(missing_artists_df)
+                    results["artist_fetching"] = fetch_result
+
+                    if fetch_result["status"] != "success":
+                        results["overall_status"] = "partial_failure"
+
+                # Step 3: Parse existing JSON files
+                parse_result = self.parse_artist_json_files()
+                results["artist_parsing"] = parse_result
+
+                if parse_result["status"] not in ["success", "no_data"]:
+                    results["overall_status"] = "partial_failure"
+
+                # Step 4: Process area hierarchy
+                area_result = self.process_area_hierarchy(limit=limit)
+                results["area_processing"] = area_result
+
+                if area_result["status"] not in ["success", "no_updates", "no_data"]:
+                    results["overall_status"] = "partial_failure"
 
             logger.info("MusicBrainz enrichment pipeline completed")
             return results
@@ -546,10 +601,18 @@ class MusicBrainzProcessor:
 
 def main():
     """Main entry point for MusicBrainz processor."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="MusicBrainz Data Enrichment Processor")
+    parser.add_argument("--test-mode", action="store_true", help="Run in test mode (skip API calls)")
+    parser.add_argument("--limit", type=int, help="Limit number of records to process")
+
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
 
     processor = MusicBrainzProcessor()
-    result = processor.run_full_enrichment()
+    result = processor.run_full_enrichment(limit=args.limit, test_mode=args.test_mode)
 
     print(f"MusicBrainz enrichment completed with status: {result['overall_status']}")
     for step, step_result in result.items():
