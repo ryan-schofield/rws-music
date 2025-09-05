@@ -1,3 +1,10 @@
+{{
+  config(
+    materialized='external',
+    location='../data/report_artist_genre_plays.parquet' 
+    )
+}}
+
 SELECT
     fg.track_played_uid
     , fg.track_sid

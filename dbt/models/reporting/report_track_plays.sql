@@ -1,3 +1,10 @@
+{{ 
+  config(
+    materialized='external'
+    , location='../data/report_track_plays.parquet'
+    ) 
+}}
+
 SELECT
     ftp.track_sid
     , ftp.artist_sid
