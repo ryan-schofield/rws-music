@@ -7,6 +7,7 @@ enriched data to the data/src/ parquet files.
 """
 
 import logging
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import polars as pl
@@ -354,6 +355,11 @@ class EnrichmentTracker:
         if tracks_df is None:
             logger.warning("tracks_played table not found")
             return pl.DataFrame()
+
+        # Filter tracks played in the last 48 hours
+        current_time = datetime.now(timezone.utc)
+        cutoff_time = current_time - timedelta(hours=48)
+        tracks_df = tracks_df.filter(pl.col("played_at") >= pl.lit(cutoff_time))
 
         # Filter tracks with ISRC and not in exclude list
         tracks_filtered = tracks_df.filter(
