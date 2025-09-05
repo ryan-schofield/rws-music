@@ -95,7 +95,7 @@ class FlowDeployer:
                 "-p",
                 "default-agent-pool",
                 "--cron",
-                "*/10 * * * *",
+                "*/30 * * * *",
                 "--timezone",
                 "UTC",
             ]
