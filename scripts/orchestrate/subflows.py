@@ -43,13 +43,18 @@ from scripts.orchestrate.atomic_tasks import (
 def check_task_success(task_result, task_name: str) -> bool:
     """Check if a task completed successfully."""
     # Handle Prefect Failed states
-    if hasattr(task_result, 'is_failed') and task_result.is_failed():
+    if hasattr(task_result, "is_failed") and task_result.is_failed():
         return False
 
     # Handle dictionary results
     if isinstance(task_result, dict):
         status = task_result.get("status", "unknown")
-        success_statuses = ["success", "no_updates", "partial_success"]
+        success_statuses = [
+            "success",
+            "no_updates",
+            "partial_success",
+            "skipped",
+        ]
         return status in success_statuses
 
     # Default to success for unknown result types
@@ -173,12 +178,8 @@ def spotify_enrichment_subflow(config: Optional[FlowConfig] = None) -> Dict[str,
     # Step 1: Run artist and album enrichment
     logger.info("Running Spotify enrichment (artists + albums)...")
 
-    artist_result = spotify_artist_enrichment(
-        config, limit=config.spotify_artist_limit
-    )
-    album_result = spotify_album_enrichment(
-        config, limit=config.spotify_album_limit
-    )
+    artist_result = spotify_artist_enrichment(config, limit=config.spotify_artist_limit)
+    album_result = spotify_album_enrichment(config, limit=config.spotify_album_limit)
 
     # Step 2: Update MBIDs (depends on MusicBrainz data being available)
     logger.info("Updating artist MBIDs...")
@@ -268,11 +269,17 @@ def musicbrainz_enrichment_subflow(
     logger.info("Parsing MusicBrainz JSON files...")
     parse_result = musicbrainz_parse(config)
 
-    # Step 4: Process area hierarchy
-    logger.info("Processing MusicBrainz area hierarchy...")
-    hierarchy_result = musicbrainz_hierarchy(
-        config, limit=config.musicbrainz_hierarchy_limit
-    )
+    if parse_result.get("status") == "success":
+        # Step 4: Process area hierarchy
+        logger.info("Processing MusicBrainz area hierarchy...")
+        hierarchy_result = musicbrainz_hierarchy(
+            config, limit=config.musicbrainz_hierarchy_limit
+        )
+    else:
+        hierarchy_result = {
+            "status": "skipped",
+            "message": "Skipped due to no data",
+        }
 
     # Collect results
     results = {
@@ -356,8 +363,8 @@ def geographic_enrichment_subflow(
     else:
         overall_status = "failed"
         # Handle Failed state
-        if hasattr(geographic_result, 'is_failed') and geographic_result.is_failed():
-            error_msg = getattr(geographic_result, 'message', 'Task failed')
+        if hasattr(geographic_result, "is_failed") and geographic_result.is_failed():
+            error_msg = getattr(geographic_result, "message", "Task failed")
             logger.error(f"Geographic enrichment failed: {error_msg}")
         # Handle dictionary result
         elif isinstance(geographic_result, dict):

@@ -57,11 +57,15 @@ class GeographicProcessor:
             self.has_api_key = True
             logger.info("OpenWeather API client initialized successfully")
         except ValueError as e:
-            logger.warning(f"OpenWeather API key not found - coordinate enrichment will be skipped: {e}")
+            logger.warning(
+                f"OpenWeather API key not found - coordinate enrichment will be skipped: {e}"
+            )
             self.geo_client = None
             self.has_api_key = False
         except Exception as e:
-            logger.error(f"Failed to initialize OpenWeather API client: {e}", exc_info=True)
+            logger.error(
+                f"Failed to initialize OpenWeather API client: {e}", exc_info=True
+            )
             self.geo_client = None
             self.has_api_key = False
 
@@ -158,7 +162,10 @@ class GeographicProcessor:
         area_df = self.data_writer.read_table("mbz_area_hierarchy")
         if area_df is None:
             logger.error("mbz_area_hierarchy table not found or could not be read")
-            return {"status": "error", "message": "mbz_area_hierarchy table not found or could not be read"}
+            return {
+                "status": "error",
+                "message": "mbz_area_hierarchy table not found or could not be read",
+            }
         logger.info(f"Successfully read {len(area_df)} records from mbz_area_hierarchy")
 
         # Find countries that need continent information
@@ -166,8 +173,14 @@ class GeographicProcessor:
         if "continent" in area_df.columns:
             countries_needing_enrichment = (
                 area_df.filter(
-                    (pl.col("country_name").is_not_null() | pl.col("island_name").is_not_null())
-                    & ((pl.col("continent").is_null()) | (pl.col("continent") == "Unknown"))
+                    (
+                        pl.col("country_name").is_not_null()
+                        | pl.col("island_name").is_not_null()
+                    )
+                    & (
+                        (pl.col("continent").is_null())
+                        | (pl.col("continent") == "Unknown")
+                    )
                 )
                 .select(
                     pl.coalesce([pl.col("country_name"), pl.col("island_name")]).alias(
@@ -182,7 +195,8 @@ class GeographicProcessor:
             # If continent column doesn't exist, all countries need enrichment
             countries_needing_enrichment = (
                 area_df.filter(
-                    pl.col("country_name").is_not_null() | pl.col("island_name").is_not_null()
+                    pl.col("country_name").is_not_null()
+                    | pl.col("island_name").is_not_null()
                 )
                 .select(
                     pl.coalesce([pl.col("country_name"), pl.col("island_name")]).alias(
@@ -252,7 +266,10 @@ class GeographicProcessor:
         area_df = self.data_writer.read_table("mbz_area_hierarchy")
         if area_df is None:
             logger.error("mbz_area_hierarchy table not found or could not be read")
-            return {"status": "error", "message": "mbz_area_hierarchy table not found or could not be read"}
+            return {
+                "status": "error",
+                "message": "mbz_area_hierarchy table not found or could not be read",
+            }
 
         # Create params column, but only for records that have a city/municipality name
         city_expr = pl.coalesce([pl.col("city_name"), pl.col("municipality_name")])
@@ -294,7 +311,9 @@ class GeographicProcessor:
 
         # Check if API key is available
         if not self.has_api_key:
-            logger.info("OpenWeather API key not available - skipping coordinate enrichment")
+            logger.info(
+                "OpenWeather API key not available - skipping coordinate enrichment"
+            )
             return {"status": "skipped", "message": "OpenWeather API key not available"}
 
         # Read area hierarchy data
@@ -304,7 +323,10 @@ class GeographicProcessor:
 
         if area_df is None:
             logger.error("mbz_area_hierarchy table not found or could not be read")
-            return {"status": "error", "message": "mbz_area_hierarchy table not found or could not be read"}
+            return {
+                "status": "error",
+                "message": "mbz_area_hierarchy table not found or could not be read",
+            }
         logger.info(f"Read {len(area_df)} records from mbz_area_hierarchy")
         if cities_df is not None:
             logger.info(f"Read {len(cities_df)} existing city records")
@@ -414,38 +436,56 @@ class GeographicProcessor:
             logger.info("Step 1: Starting continent enrichment")
             continent_result = self.enrich_continents()
             results["continent_enrichment"] = continent_result
-            logger.info(f"Continent enrichment result: {continent_result.get('status', 'unknown')}")
+            logger.info(
+                f"Continent enrichment result: {continent_result.get('status', 'unknown')}"
+            )
 
             if continent_result["status"] not in ["success", "no_updates"]:
                 results["overall_status"] = "partial_failure"
-                logger.warning(f"Continent enrichment failed with status: {continent_result.get('status')}")
+                logger.warning(
+                    f"Continent enrichment failed with status: {continent_result.get('status')}"
+                )
 
             # Step 2: Add geocoding parameters
             logger.info("Step 2: Adding geocoding parameters")
             params_result = self.add_geocoding_params()
             results["parameter_addition"] = params_result
-            logger.info(f"Parameter addition result: {params_result.get('status', 'unknown')}")
+            logger.info(
+                f"Parameter addition result: {params_result.get('status', 'unknown')}"
+            )
 
             if params_result["status"] not in ["success", "no_updates"]:
                 results["overall_status"] = "partial_failure"
-                logger.warning(f"Parameter addition failed with status: {params_result.get('status')}")
+                logger.warning(
+                    f"Parameter addition failed with status: {params_result.get('status')}"
+                )
 
             # Step 3: Lookup coordinates
             logger.info("Step 3: Starting coordinate enrichment")
             coords_result = self.enrich_coordinates(limit=limit)
             results["coordinate_enrichment"] = coords_result
-            logger.info(f"Coordinate enrichment result: {coords_result.get('status', 'unknown')}")
+            logger.info(
+                f"Coordinate enrichment result: {coords_result.get('status', 'unknown')}"
+            )
 
             if coords_result["status"] not in ["success", "no_updates"]:
                 results["overall_status"] = "partial_failure"
-                logger.warning(f"Coordinate enrichment failed with status: {coords_result.get('status')}")
+                logger.warning(
+                    f"Coordinate enrichment failed with status: {coords_result.get('status')}"
+                )
 
-            logger.info(f"Geographic enrichment pipeline completed with overall status: {results['overall_status']}")
-            results["status"] = results["overall_status"]  # Add status field for compatibility
+            logger.info(
+                f"Geographic enrichment pipeline completed with overall status: {results['overall_status']}"
+            )
+            results["status"] = results[
+                "overall_status"
+            ]  # Add status field for compatibility
             return results
 
         except Exception as e:
-            logger.error(f"Geographic enrichment failed with exception: {e}", exc_info=True)
+            logger.error(
+                f"Geographic enrichment failed with exception: {e}", exc_info=True
+            )
             results["overall_status"] = "error"
             results["status"] = "error"  # Also set status for compatibility
             results["message"] = f"Geographic enrichment failed: {str(e)}"

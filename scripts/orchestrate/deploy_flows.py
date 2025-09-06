@@ -346,7 +346,9 @@ class FlowDeployer:
                 return True
             else:
                 error_msg = result.stderr or result.stdout or "Unknown deployment error"
-                print(f"[ERROR] Failed to deploy Spotify Enrichment Subflow: {error_msg}")
+                print(
+                    f"[ERROR] Failed to deploy Spotify Enrichment Subflow: {error_msg}"
+                )
                 self.deployed_flows["spotify_enrichment"] = {
                     "status": "failed",
                     "error": error_msg,
@@ -396,7 +398,9 @@ class FlowDeployer:
                 return True
             else:
                 error_msg = result.stderr or result.stdout or "Unknown deployment error"
-                print(f"[ERROR] Failed to deploy MusicBrainz Enrichment Subflow: {error_msg}")
+                print(
+                    f"[ERROR] Failed to deploy MusicBrainz Enrichment Subflow: {error_msg}"
+                )
                 self.deployed_flows["musicbrainz_enrichment"] = {
                     "status": "failed",
                     "error": error_msg,
@@ -446,7 +450,9 @@ class FlowDeployer:
                 return True
             else:
                 error_msg = result.stderr or result.stdout or "Unknown deployment error"
-                print(f"[ERROR] Failed to deploy Geographic Enrichment Subflow: {error_msg}")
+                print(
+                    f"[ERROR] Failed to deploy Geographic Enrichment Subflow: {error_msg}"
+                )
                 self.deployed_flows["geographic_enrichment"] = {
                     "status": "failed",
                     "error": error_msg,
@@ -530,7 +536,16 @@ class FlowDeployer:
 
         # Deploy subflows
         if deploy_subflows:
-            if not any([data_prep_only, enrichment_only, transformation_only, spotify_enrichment_only, musicbrainz_enrichment_only, geographic_enrichment_only]):
+            if not any(
+                [
+                    data_prep_only,
+                    enrichment_only,
+                    transformation_only,
+                    spotify_enrichment_only,
+                    musicbrainz_enrichment_only,
+                    geographic_enrichment_only,
+                ]
+            ):
                 # Deploy all subflows (default or subflows_only)
                 if self.deploy_data_preparation_subflow():
                     success_count += 1

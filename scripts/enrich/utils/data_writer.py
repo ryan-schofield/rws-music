@@ -191,9 +191,10 @@ class ParquetDataWriter:
                 existing_dtype = existing_df.schema[col]
 
                 # Handle integer type mismatches
-                if (new_dtype in [pl.Int64, pl.Int32] and
-                    existing_dtype in [pl.Int64, pl.Int32]):
-
+                if new_dtype in [pl.Int64, pl.Int32] and existing_dtype in [
+                    pl.Int64,
+                    pl.Int32,
+                ]:
                     # If existing is Int32 but new is Int64, cast to Int32
                     if existing_dtype == pl.Int32 and new_dtype == pl.Int64:
                         aligned_df = aligned_df.with_columns(
@@ -208,9 +209,10 @@ class ParquetDataWriter:
                         conversions_made.append(f"{col}: Int32 -> Int64")
 
                 # Handle float type mismatches
-                elif (new_dtype in [pl.Float64, pl.Float32] and
-                      existing_dtype in [pl.Float64, pl.Float32]):
-
+                elif new_dtype in [pl.Float64, pl.Float32] and existing_dtype in [
+                    pl.Float64,
+                    pl.Float32,
+                ]:
                     if existing_dtype == pl.Float32 and new_dtype == pl.Float64:
                         aligned_df = aligned_df.with_columns(
                             pl.col(col).cast(pl.Float32).alias(col)
@@ -223,34 +225,55 @@ class ParquetDataWriter:
                         conversions_made.append(f"{col}: Float32 -> Float64")
 
                 # Handle datetime type mismatches (timezone issues)
-                elif (isinstance(new_dtype, pl.Datetime) and isinstance(existing_dtype, pl.Datetime)):
+                elif isinstance(new_dtype, pl.Datetime) and isinstance(
+                    existing_dtype, pl.Datetime
+                ):
                     # If existing has timezone but new doesn't, add timezone to new
-                    if existing_dtype.time_zone is not None and new_dtype.time_zone is None:
+                    if (
+                        existing_dtype.time_zone is not None
+                        and new_dtype.time_zone is None
+                    ):
                         aligned_df = aligned_df.with_columns(
-                            pl.col(col).dt.replace_time_zone(existing_dtype.time_zone).alias(col)
+                            pl.col(col)
+                            .dt.replace_time_zone(existing_dtype.time_zone)
+                            .alias(col)
                         )
-                        conversions_made.append(f"{col}: Datetime(None) -> Datetime({existing_dtype.time_zone})")
+                        conversions_made.append(
+                            f"{col}: Datetime(None) -> Datetime({existing_dtype.time_zone})"
+                        )
                     # If new has timezone but existing doesn't, remove timezone from new
-                    elif existing_dtype.time_zone is None and new_dtype.time_zone is not None:
+                    elif (
+                        existing_dtype.time_zone is None
+                        and new_dtype.time_zone is not None
+                    ):
                         aligned_df = aligned_df.with_columns(
                             pl.col(col).dt.replace_time_zone(None).alias(col)
                         )
-                        conversions_made.append(f"{col}: Datetime({new_dtype.time_zone}) -> Datetime(None)")
-                    # If both have timezones but different ones, convert to existing timezone
-                    elif (existing_dtype.time_zone is not None and new_dtype.time_zone is not None
-                          and existing_dtype.time_zone != new_dtype.time_zone):
-                        aligned_df = aligned_df.with_columns(
-                            pl.col(col).dt.convert_time_zone(existing_dtype.time_zone).alias(col)
+                        conversions_made.append(
+                            f"{col}: Datetime({new_dtype.time_zone}) -> Datetime(None)"
                         )
-                        conversions_made.append(f"{col}: Datetime({new_dtype.time_zone}) -> Datetime({existing_dtype.time_zone})")
+                    # If both have timezones but different ones, convert to existing timezone
+                    elif (
+                        existing_dtype.time_zone is not None
+                        and new_dtype.time_zone is not None
+                        and existing_dtype.time_zone != new_dtype.time_zone
+                    ):
+                        aligned_df = aligned_df.with_columns(
+                            pl.col(col)
+                            .dt.convert_time_zone(existing_dtype.time_zone)
+                            .alias(col)
+                        )
+                        conversions_made.append(
+                            f"{col}: Datetime({new_dtype.time_zone}) -> Datetime({existing_dtype.time_zone})"
+                        )
 
                 # Handle string type mismatches
-                elif (new_dtype == pl.Utf8 and existing_dtype == pl.Categorical):
+                elif new_dtype == pl.Utf8 and existing_dtype == pl.Categorical:
                     aligned_df = aligned_df.with_columns(
                         pl.col(col).cast(pl.Categorical).alias(col)
                     )
                     conversions_made.append(f"{col}: Utf8 -> Categorical")
-                elif (new_dtype == pl.Categorical and existing_dtype == pl.Utf8):
+                elif new_dtype == pl.Categorical and existing_dtype == pl.Utf8:
                     aligned_df = aligned_df.with_columns(
                         pl.col(col).cast(pl.Utf8).alias(col)
                     )
@@ -341,12 +364,11 @@ class EnrichmentTracker:
     def __init__(self, data_writer: ParquetDataWriter):
         self.data_writer = data_writer
 
-    def get_missing_artists(self, exclude_list: List[str] = None) -> pl.DataFrame:
+    def get_missing_artists(self) -> pl.DataFrame:
         """
         Find artists that need MusicBrainz enrichment.
         Replaces the missing_sql query from mbz_get_missing_artists.py
         """
-        exclude_list = exclude_list or []
 
         # Read source data
         tracks_df = self.data_writer.read_table("tracks_played")
@@ -362,10 +384,7 @@ class EnrichmentTracker:
         tracks_df = tracks_df.filter(pl.col("played_at") >= pl.lit(cutoff_time))
 
         # Filter tracks with ISRC and not in exclude list
-        tracks_filtered = tracks_df.filter(
-            (pl.col("track_isrc").is_not_null())
-            & (~pl.col("artist").is_in(exclude_list))
-        )
+        tracks_filtered = tracks_df.filter(pl.col("track_isrc").is_not_null())
 
         # Get distinct artist info with highest popularity track ISRC
         artist_tracks = (

@@ -126,13 +126,17 @@ class BaseProcessorTask(BaseTask):
             self.logger.info(f"Prerequisite validation result: {prereq_result.status}")
 
             if prereq_result.is_failure():
-                self.logger.error(f"Prerequisite validation failed: {prereq_result.message}")
+                self.logger.error(
+                    f"Prerequisite validation failed: {prereq_result.message}"
+                )
                 return prereq_result
 
             # Execute the processor method
             self.logger.info("Executing processor method")
             result = self._execute_processor(**kwargs)
-            self.logger.info(f"Processor method result: {result.get('status', 'unknown')}")
+            self.logger.info(
+                f"Processor method result: {result.get('status', 'unknown')}"
+            )
 
             # Convert processor result to TaskResult
             task_result = self._convert_processor_result(result)
@@ -140,7 +144,9 @@ class BaseProcessorTask(BaseTask):
             return task_result
 
         except Exception as e:
-            self.logger.error(f"Processor execution failed with exception: {e}", exc_info=True)
+            self.logger.error(
+                f"Processor execution failed with exception: {e}", exc_info=True
+            )
             return self._handle_error(e, f"Processor execution failed")
 
     @abstractmethod

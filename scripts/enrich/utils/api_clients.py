@@ -278,7 +278,9 @@ class OpenWeatherGeoClient:
 
             # Check if this is an error response
             if isinstance(content, dict) and "cod" in content and content["cod"] != 200:
-                logger.warning(f"OpenWeather API error for '{query}': {content.get('message', 'Unknown error')}")
+                logger.warning(
+                    f"OpenWeather API error for '{query}': {content.get('message', 'Unknown error')}"
+                )
                 return None
 
             if content and isinstance(content, list) and len(content) > 0:
