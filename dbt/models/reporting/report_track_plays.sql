@@ -78,8 +78,13 @@ SELECT
     , dtm.time_of_day
     , dtm.time_of_day_sort
 FROM {{ ref('fact_track_played') }} ftp
-LEFT JOIN {{ ref('dim_track') }} dt ON ftp.track_sid = dt.track_sid
-LEFT JOIN {{ ref('dim_artist') }} dar ON ftp.artist_sid = dar.artist_sid
-LEFT JOIN {{ ref('dim_album') }} da ON ftp.album_sid = da.album_sid
-LEFT JOIN {{ ref('dim_date') }} dd ON ftp.date_sid = dd.date_sid
-LEFT JOIN {{ ref('dim_time') }} dtm ON ftp.time_sid = dtm.time_sid
+LEFT JOIN {{ ref('dim_track') }} dt
+    ON ftp.track_sid = dt.track_sid
+LEFT JOIN {{ ref('dim_artist') }} dar
+    ON ftp.artist_sid = dar.artist_sid
+LEFT JOIN {{ ref('dim_album') }} da
+    ON ftp.album_sid = da.album_sid
+LEFT JOIN {{ ref('dim_date') }} dd
+    ON ftp.date_sid = dd.date_sid
+LEFT JOIN {{ ref('dim_time') }} dtm
+    ON ftp.time_sid = dtm.time_sid

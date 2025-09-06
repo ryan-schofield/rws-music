@@ -6,7 +6,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./dbt:/app/dbt
-      - ./scripts:/app/scripts
+      - ./prefect:/app/prefect
       - ./logs:/app/logs
     env_file: .env
     environment:
@@ -95,7 +95,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./scripts:/app/scripts
+      - ./prefect:/app/prefect
     networks:
       - music-tracker
     depends_on:
@@ -128,7 +128,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./scripts:/app/scripts
+      - ./prefect:/app/prefect
     networks:
       - music-tracker
     depends_on:
@@ -145,7 +145,7 @@ services:
         echo 'Waiting for worker to be ready...';
         sleep 15;
         echo 'Deploying flows...';
-        uv run python scripts/orchestrate/deploy_flows.py;
+        uv run python prefect/orchestrate/deploy_flows.py;
         echo 'Flow deployment completed!';
       "
 

@@ -21,7 +21,7 @@ WITH artist_delimited_cte AS (
         , TRIM(
             CASE
                 WHEN POSITION('|' IN a.artist_delimited) > 0
-                THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
+                    THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
                 ELSE a.artist_name
             END
         ) AS potential_match
@@ -30,7 +30,7 @@ WITH artist_delimited_cte AS (
     WHERE TRIM(
         CASE
             WHEN POSITION('|' IN a.artist_delimited) > 0
-            THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
+                THEN SUBSTRING(a.artist_delimited, 1, POSITION('|' IN a.artist_delimited) - 1)
             ELSE a.artist_name
         END
     ) != ''

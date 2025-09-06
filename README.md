@@ -14,7 +14,7 @@ A modern, open-source music tracking and analytics platform that migrates from M
 - **Cost**: $200-500/month
 
 ### Target Open-Source Solution
-- **Data Extraction**: Python scripts with Spotify Web API
+- **Data Extraction**: Python prefect with Spotify Web API
 - **Processing**: Polars DataFrames (replaces Spark)
 - **Storage**: DuckDB (replaces Lakehouse/Warehouse)
 - **Transformation**: dbt-core with DuckDB adapter (same star schema)
@@ -37,7 +37,7 @@ A modern, open-source music tracking and analytics platform that migrates from M
 ### Phase 1: Architecture & Core Components COMPLETED
 - [x] Design Docker-based architecture with DuckDB, Polars, and Metabase
 - [x] Create dbt-duckdb configuration and migrate dbt models
-- [x] Convert Spark notebooks to Polars-based Python scripts
+- [x] Convert Spark notebooks to Polars-based Python prefect
 - [x] Implement data ingestion pipeline (Spotify API → DuckDB)
 - [x] Create orchestration with Prefect for scheduled tasks
 
@@ -46,7 +46,7 @@ A modern, open-source music tracking and analytics platform that migrates from M
 - [ ] Configure public access for Metabase reports via domain
 - [ ] Test end-to-end data flow and reporting
 - [ ] Optimize performance and add error handling
-- [ ] Create deployment scripts for AWS Lightsail (with Terraform)
+- [ ] Create deployment prefect for AWS Lightsail (with Terraform)
 
 ## Architecture Decisions Made
 
@@ -87,7 +87,7 @@ rws-music/
 │   ├── dbt_project.yml       #  Updated project configuration
 │   ├── packages.yml          #  Removed TSQL dependencies
 │   └── seeds/                #  Original seed data preserved
-├── scripts/                  #  Python application scripts
+├── prefect/                  #  Python application prefect
 │   ├── run_pipeline.py       #  Main pipeline orchestrator
 │   ├── ingestion/            #  Spotify API ingestion
 │   │   └── spotify_api_ingestion.py
@@ -95,7 +95,7 @@ rws-music/
 │   │   └── merge_spotify_recently_played.py
 │   └── orchestration/        #  Prefect workflow definitions
 │       └── prefect_flows.py
-└── terraform/                # AWS deployment scripts (pending)
+└── terraform/                # AWS deployment prefect (pending)
 ```
 
 ## Quick Start (Current State)
@@ -119,12 +119,12 @@ docker-compose up -d
 ### 3. Test Pipeline
 ```bash
 # Run full pipeline
-docker-compose exec data-pipeline python scripts/run_pipeline.py
+docker-compose exec data-pipeline python prefect/run_pipeline.py
 
 # Or run individual stages
-docker-compose exec data-pipeline python scripts/run_pipeline.py --stage ingestion
-docker-compose exec data-pipeline python scripts/run_pipeline.py --stage processing
-docker-compose exec data-pipeline python scripts/run_pipeline.py --stage dbt
+docker-compose exec data-pipeline python prefect/run_pipeline.py --stage ingestion
+docker-compose exec data-pipeline python prefect/run_pipeline.py --stage processing
+docker-compose exec data-pipeline python prefect/run_pipeline.py --stage dbt
 ```
 
 ### 4. Access Interfaces
@@ -185,7 +185,7 @@ LOG_LEVEL=INFO
 3. **End-to-End Testing**: Validate complete data flow
 
 ### Medium Term (1-2 Weeks)
-1. **AWS Deployment**: Create Terraform scripts for Lightsail
+1. **AWS Deployment**: Create Terraform prefect for Lightsail
 2. **Performance Optimization**: Fine-tune for production workload
 3. **Monitoring**: Add health checks and alerting
 
@@ -231,7 +231,7 @@ LOG_LEVEL=INFO
 ## Success Metrics
 
 - [x] **Architecture Complete**: Docker-based solution designed
-- [x] **Core Components Built**: All major scripts and configurations created
+- [x] **Core Components Built**: All major prefect and configurations created
 - [x] **Cost Reduction**: 95%+ reduction from Fabric costs
 - [x] **Functionality Preserved**: All original features maintained
 - [ ] **Testing Complete**: End-to-end validation pending
@@ -313,15 +313,15 @@ docker-compose up -d
 
 ```bash
 # Run full pipeline
-python scripts/run_pipeline.py
+python prefect/run_pipeline.py
 
 # Run specific stages
-python scripts/run_pipeline.py --stage ingestion
-python scripts/run_pipeline.py --stage processing
-python scripts/run_pipeline.py --stage dbt
+python prefect/run_pipeline.py --stage ingestion
+python prefect/run_pipeline.py --stage processing
+python prefect/run_pipeline.py --stage dbt
 
 # Incremental processing (skip ingestion)
-python scripts/run_pipeline.py --incremental
+python prefect/run_pipeline.py --incremental
 ```
 
 ### Scheduled Execution
@@ -329,7 +329,7 @@ python scripts/run_pipeline.py --incremental
 Use Prefect flows for automated scheduling:
 
 ```python
-from scripts.orchestration.prefect_flows import spotify_daily_ingestion_flow
+from prefect.orchestration.prefect_flows import spotify_daily_ingestion_flow
 
 # Run daily ingestion
 result = spotify_daily_ingestion_flow()
@@ -350,10 +350,10 @@ rws-music/
 │   ├── models/               # dbt models
 │   ├── profiles.yml          # dbt configuration
 │   └── dbt_project.yml       # dbt project config
-├── scripts/                  # Python scripts
+├── prefect/                  # Python prefect
 │   ├── run_pipeline.py       # Main pipeline orchestrator
-│   ├── ingestion/            # Data ingestion scripts
-│   ├── processing/           # Data processing scripts
+│   ├── ingestion/            # Data ingestion prefect
+│   ├── processing/           # Data processing prefect
 │   └── orchestration/        # Prefect flows
 └── logs/                     # Application logs
 ```
@@ -471,7 +471,7 @@ aws s3 cp data/music_tracker.duckdb s3://your-backup-bucket/
 ### Spotify Ingestion
 
 ```python
-from scripts.ingestion.spotify_api_ingestion import SpotifyDataIngestion
+from prefect.ingestion.spotify_api_ingestion import SpotifyDataIngestion
 
 ingestor = SpotifyDataIngestion()
 result = ingestor.run_ingestion(limit=50)
@@ -480,7 +480,7 @@ result = ingestor.run_ingestion(limit=50)
 ### Data Processing
 
 ```python
-from scripts.processing.merge_spotify_recently_played import SpotifyDataMerger
+from prefect.processing.merge_spotify_recently_played import SpotifyDataMerger
 
 merger = SpotifyDataMerger()
 result = merger.run_merge_process()

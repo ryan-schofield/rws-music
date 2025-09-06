@@ -7,28 +7,28 @@ Ensure your Prefect server is running before executing this script.
 
 Usage:
     # Basic deployment (deploys all flows and subflows)
-    uv run python scripts/orchestrate/deploy_flows.py
+    uv run python prefect/orchestrate/deploy_flows.py
 
     # With validation
-    uv run python scripts/orchestrate/deploy_flows.py --validate
+    uv run python prefect/orchestrate/deploy_flows.py --validate
 
     # Deploy specific flows
-    uv run python scripts/orchestrate/deploy_flows.py --spotify-only
-    uv run python scripts/orchestrate/deploy_flows.py --etl-only
+    uv run python prefect/orchestrate/deploy_flows.py --spotify-only
+    uv run python prefect/orchestrate/deploy_flows.py --etl-only
 
     # Deploy individual subflows
-    uv run python scripts/orchestrate/deploy_flows.py --data-prep-only
-    uv run python scripts/orchestrate/deploy_flows.py --enrichment-only
-    uv run python scripts/orchestrate/deploy_flows.py --transformation-only
-    uv run python scripts/orchestrate/deploy_flows.py --spotify-enrichment-only
-    uv run python scripts/orchestrate/deploy_flows.py --musicbrainz-enrichment-only
-    uv run python scripts/orchestrate/deploy_flows.py --geographic-enrichment-only
+    uv run python prefect/orchestrate/deploy_flows.py --data-prep-only
+    uv run python prefect/orchestrate/deploy_flows.py --enrichment-only
+    uv run python prefect/orchestrate/deploy_flows.py --transformation-only
+    uv run python prefect/orchestrate/deploy_flows.py --spotify-enrichment-only
+    uv run python prefect/orchestrate/deploy_flows.py --musicbrainz-enrichment-only
+    uv run python prefect/orchestrate/deploy_flows.py --geographic-enrichment-only
 
     # Deploy all subflows independently
-    uv run python scripts/orchestrate/deploy_flows.py --subflows-only
+    uv run python prefect/orchestrate/deploy_flows.py --subflows-only
 
     # Deploy only main flows (no subflows)
-    uv run python scripts/orchestrate/deploy_flows.py --main-flows-only
+    uv run python prefect/orchestrate/deploy_flows.py --main-flows-only
 """
 
 import os
@@ -43,7 +43,7 @@ if str(project_root) not in sys.path:
 
 import subprocess
 from dotenv import load_dotenv
-from scripts.orchestrate.flow_config import FlowConfig
+from prefect.orchestrate.flow_config import FlowConfig
 
 # Load environment variables
 load_dotenv()
@@ -89,7 +89,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.prefect_flows:spotify_ingestion_flow",
+                "prefect.orchestrate.flows.spotify_ingestion:spotify_ingestion_flow",
                 "-n",
                 "spotify-ingestion",
                 "-p",
@@ -137,7 +137,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.prefect_flows:daily_etl_flow",
+                "prefect.orchestrate.flows.daily_etl:daily_etl_flow",
                 "-n",
                 "daily-etl",
                 "-p",
@@ -181,7 +181,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:data_preparation_subflow",
+                "prefect.orchestrate.subflows.data_preparation:data_preparation_subflow",
                 "-n",
                 "data-preparation-subflow",
                 "-p",
@@ -231,7 +231,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:enrichment_coordination_subflow",
+                "prefect.orchestrate.subflows.enrichment_coordination:enrichment_coordination_subflow",
                 "-n",
                 "enrichment-coordination-subflow",
                 "-p",
@@ -277,7 +277,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:transformation_subflow",
+                "prefect.orchestrate.subflows.transformation:transformation_subflow",
                 "-n",
                 "transformation-subflow",
                 "-p",
@@ -327,7 +327,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:spotify_enrichment_subflow",
+                "prefect.orchestrate.subflows.spotify_enrichment:spotify_enrichment_subflow",
                 "-n",
                 "spotify-enrichment-subflow",
                 "-p",
@@ -379,7 +379,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:musicbrainz_enrichment_subflow",
+                "prefect.orchestrate.subflows.musicbrainz_enrichment:musicbrainz_enrichment_subflow",
                 "-n",
                 "musicbrainz-enrichment-subflow",
                 "-p",
@@ -431,7 +431,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "scripts.orchestrate.subflows:geographic_enrichment_subflow",
+                "prefect.orchestrate.subflows.geographic_enrichment:geographic_enrichment_subflow",
                 "-n",
                 "geographic-enrichment-subflow",
                 "-p",

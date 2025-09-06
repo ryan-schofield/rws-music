@@ -20,11 +20,11 @@ docker-compose up -d prefect-server prefect-db
 ### 2. Deploy Flows
 ```bash
 # Deploy all flows with validation
-uv run python scripts/orchestrate/deploy_flows.py --validate
+uv run python prefect/orchestrate/deploy_flows.py --validate
 
 # Deploy specific flows
-uv run python scripts/orchestrate/deploy_flows.py --spotify-only
-uv run python scripts/orchestrate/deploy_flows.py --etl-only
+uv run python prefect/orchestrate/deploy_flows.py --spotify-only
+uv run python prefect/orchestrate/deploy_flows.py --etl-only
 ```
 
 ### 3. Access Prefect UI
@@ -34,37 +34,46 @@ Open http://localhost:4200 to view and manage your flows.
 
 ### New File Structure
 ```
-scripts/orchestrate/
-├── flow_config.py          # Centralized configuration management
-├── base_tasks.py           # Base classes eliminating code duplication
+prefect/orchestrate/
+├── flows/
+│   ├── spotify_ingestion.py  # Spotify Ingestion Flow
+│   └── daily_etl.py          # Daily ETL Flow
+├── subflows/
+│   ├── data_preparation.py
+│   ├── enrichment_coordination.py
+│   ├── spotify_enrichment.py
+│   ├── musicbrainz_enrichment.py
+│   ├── geographic_enrichment.py
+│   ├── transformation.py
+│   └── utils.py              # Helper functions for subflows
 ├── atomic_tasks.py         # Discrete, testable task implementations
-├── subflows.py            # Concurrent execution subflows
-├── prefect_flows.py       # Main flow definitions
+├── base_tasks.py           # Base classes eliminating code duplication
 ├── deploy_flows.py        # Deployment script
+├── flow_config.py          # Centralized configuration management
 ├── monitoring.py          # Monitoring and alerting
 └── README.md              # This documentation
 ```
 
 ### Core Components
 
-#### 1. **Configuration Management** ([`flow_config.py`](scripts/orchestrate/flow_config.py))
+#### 1. **Configuration Management** ([`flow_config.py`](prefect/orchestrate/flow_config.py))
 - Environment-aware configuration
 - Dynamic parameter management
 - Centralized limits and timeouts
 
-#### 2. **Base Infrastructure** ([`base_tasks.py`](scripts/orchestrate/base_tasks.py))
+#### 2. **Base Infrastructure** ([`base_tasks.py`](prefect/orchestrate/base_tasks.py))
 - `BaseTask` - Common task patterns
 - `BaseProcessorTask` - Direct processor integration
 - `BaseEnrichmentTask` - Enrichment-specific functionality
 - `TaskResult` - Standardized result format
 
-#### 3. **Atomic Tasks** ([`atomic_tasks.py`](scripts/orchestrate/atomic_tasks.py))
+#### 3. **Atomic Tasks** ([`atomic_tasks.py`](prefect/orchestrate/atomic_tasks.py))
 - Single-responsibility tasks
 - Direct processor usage (no subprocess duplication)
 - Comprehensive error handling
 - Granular retry strategies
 
-#### 4. **Concurrent Subflows** ([`subflows.py`](scripts/orchestrate/subflows.py))
+#### 4. **Concurrent Subflows** (within `prefect/orchestrate/subflows/`)
 - `data_preparation_subflow` - Sequential data loading & validation
 - `spotify_enrichment_subflow` - Parallel artist & album enrichment
 - `musicbrainz_enrichment_subflow` - Optimized MBZ pipeline
@@ -144,17 +153,17 @@ DEFAULT_TIMEOUT=300
 ### Deploy Flows
 ```bash
 # Deploy both flows
-uv run python scripts/orchestrate/deploy_flows.py
+uv run python prefect/orchestrate/deploy_flows.py
 
 # Validate configuration
-uv run python scripts/orchestrate/deploy_flows.py --validate
+uv run python prefect/orchestrate/deploy_flows.py --validate
 ```
 
 ### Run Flows Manually
 ```bash
 # Test flows directly
-uv run python scripts/orchestrate/prefect_flows.py --flow spotify --limit 10
-uv run python scripts/orchestrate/prefect_flows.py --flow etl --config-env testing
+uv run python prefect/orchestrate/prefect_flows.py --flow spotify --limit 10
+uv run python prefect/orchestrate/prefect_flows.py --flow etl --config-env testing
 
 # Via Prefect CLI
 prefect deployment run spotify-ingestion
@@ -164,10 +173,10 @@ prefect deployment run daily-etl
 ### Test Configuration
 ```bash
 # Test configuration loading
-uv run python scripts/orchestrate/flow_config.py
+uv run python prefect/orchestrate/flow_config.py
 
 # Test individual components
-uv run python -c "from scripts.orchestrate.flow_config import get_flow_config; print(get_flow_config().to_dict())"
+uv run python -c "from prefect.orchestrate.flow_config import get_flow_config; print(get_flow_config().to_dict())"
 ```
 
 ## Architecture Benefits

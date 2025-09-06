@@ -20,9 +20,9 @@ import pycountry_convert as pc
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from scripts.enrich.utils.api_clients import OpenWeatherGeoClient
-from scripts.enrich.utils.data_writer import ParquetDataWriter
-from scripts.enrich.utils.polars_ops import (
+from prefect.enrich.utils.api_clients import OpenWeatherGeoClient
+from prefect.enrich.utils.data_writer import ParquetDataWriter
+from prefect.enrich.utils.polars_ops import (
     create_continent_lookup_df,
     merge_continent_data,
     clean_municipality_names,

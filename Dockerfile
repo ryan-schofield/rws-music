@@ -23,7 +23,7 @@ RUN uv sync --frozen --no-dev
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/logs /app/scripts
+RUN mkdir -p /app/data /app/logs /app/prefect
 
 # Add uv's virtual environment bin directory to PATH
 ENV PATH="/app/.venv/bin:$PATH"
