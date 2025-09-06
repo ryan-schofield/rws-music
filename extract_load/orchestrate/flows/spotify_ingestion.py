@@ -18,9 +18,9 @@ project_root = Path(__file__).parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from prefect.orchestrate.flow_config import FlowConfig, get_flow_config
-from prefect.orchestrate.monitoring import metrics_collector, monitor_flow, send_alert
-from prefect.orchestrate.atomic_tasks import spotify_api_ingestion
+from extract_load.orchestrate.flow_config import FlowConfig, get_flow_config
+from extract_load.orchestrate.monitoring import metrics_collector, monitor_flow, send_alert
+from extract_load.orchestrate.atomic_tasks import spotify_api_ingestion
 
 
 # SPOTIFY INGESTION FLOW

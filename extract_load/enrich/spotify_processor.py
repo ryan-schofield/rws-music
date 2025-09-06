@@ -18,9 +18,9 @@ import polars as pl
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from prefect.enrich.utils.api_clients import SpotifyAPIClient
-from prefect.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
-from prefect.enrich.utils.polars_ops import explode_genre_array, batch_process_dataframe
+from extract_load.enrich.utils.api_clients import SpotifyAPIClient
+from extract_load.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
+from extract_load.enrich.utils.polars_ops import explode_genre_array, batch_process_dataframe
 
 logger = logging.getLogger(__name__)
 

@@ -20,9 +20,9 @@ import pandas as pd
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from prefect.enrich.utils.api_clients import MusicBrainzClient
-from prefect.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
-from prefect.enrich.utils.polars_ops import (
+from extract_load.enrich.utils.api_clients import MusicBrainzClient
+from extract_load.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
+from extract_load.enrich.utils.polars_ops import (
     normalize_artist_json_data,
     process_area_hierarchy_data,
     create_artist_genre_table,

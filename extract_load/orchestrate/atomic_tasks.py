@@ -19,8 +19,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from prefect.orchestrate.flow_config import FlowConfig
-from prefect.orchestrate.base_tasks import (
+from extract_load.orchestrate.flow_config import FlowConfig
+from extract_load.orchestrate.base_tasks import (
     BaseTask,
     BaseProcessorTask,
     BaseEnrichmentTask,
@@ -32,7 +32,7 @@ from prefect.orchestrate.base_tasks import (
 )
 
 # Import processor classes
-from prefect.enrich import (
+from extract_load.enrich import (
     SpotifyProcessor,
     MusicBrainzProcessor,
     GeographicProcessor,

@@ -176,7 +176,7 @@ prefect deployment run daily-etl
 uv run python prefect/orchestrate/flow_config.py
 
 # Test individual components
-uv run python -c "from prefect.orchestrate.flow_config import get_flow_config; print(get_flow_config().to_dict())"
+uv run python -c "from extract_load.orchestrate.flow_config import get_flow_config; print(get_flow_config().to_dict())"
 ```
 
 ## Architecture Benefits

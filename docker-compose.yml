@@ -145,7 +145,7 @@ services:
         echo 'Waiting for worker to be ready...';
         sleep 15;
         echo 'Deploying flows...';
-        uv run python prefect/orchestrate/deploy_flows.py;
+        /app/.venv/bin/python extract_load/orchestrate/deploy_flows.py;
         echo 'Flow deployment completed!';
       "
 

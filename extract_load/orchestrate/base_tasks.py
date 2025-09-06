@@ -23,8 +23,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from prefect.orchestrate.flow_config import FlowConfig
-from prefect.enrich.utils.data_writer import ParquetDataWriter
+from extract_load.orchestrate.flow_config import FlowConfig
+from extract_load.enrich.utils.data_writer import ParquetDataWriter
 
 # Type variables for generic base classes
 T = TypeVar("T")

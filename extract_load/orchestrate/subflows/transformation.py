@@ -17,12 +17,12 @@ project_root = Path(__file__).parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from prefect.orchestrate.flow_config import FlowConfig, get_flow_config
-from prefect.orchestrate.atomic_tasks import (
+from extract_load.orchestrate.flow_config import FlowConfig, get_flow_config
+from extract_load.orchestrate.atomic_tasks import (
     dbt_transformations,
     update_reporting_data,
 )
-from prefect.orchestrate.subflows.utils import check_task_success, log_subflow_summary
+from extract_load.orchestrate.subflows.utils import check_task_success, log_subflow_summary
 
 
 # TRANSFORMATION SUBFLOW

@@ -17,10 +17,10 @@ project_root = Path(__file__).parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from prefect.orchestrate.flow_config import FlowConfig, get_flow_config
-from prefect.orchestrate.subflows.spotify_enrichment import spotify_enrichment_subflow
-from prefect.orchestrate.subflows.musicbrainz_enrichment import musicbrainz_enrichment_subflow
-from prefect.orchestrate.subflows.geographic_enrichment import geographic_enrichment_subflow
+from extract_load.orchestrate.flow_config import FlowConfig, get_flow_config
+from extract_load.orchestrate.subflows.spotify_enrichment import spotify_enrichment_subflow
+from extract_load.orchestrate.subflows.musicbrainz_enrichment import musicbrainz_enrichment_subflow
+from extract_load.orchestrate.subflows.geographic_enrichment import geographic_enrichment_subflow
 
 
 # ENRICHMENT COORDINATION SUBFLOW

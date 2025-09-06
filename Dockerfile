@@ -29,7 +29,6 @@ RUN mkdir -p /app/data /app/logs /app/prefect
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Set environment variables
-ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Health check

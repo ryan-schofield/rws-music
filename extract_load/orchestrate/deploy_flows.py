@@ -43,7 +43,7 @@ if str(project_root) not in sys.path:
 
 import subprocess
 from dotenv import load_dotenv
-from prefect.orchestrate.flow_config import FlowConfig
+from extract_load.orchestrate.flow_config import FlowConfig
 
 # Load environment variables
 load_dotenv()
@@ -62,7 +62,7 @@ class FlowDeployer:
 
         # Check Prefect API connection (skip if server not running)
         try:
-            from prefect import get_client
+            from extract_load import get_client
 
             # Try to create a client - this will work even if server is not running
             client = get_client()
@@ -89,7 +89,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.flows.spotify_ingestion:spotify_ingestion_flow",
+                "extract_load.orchestrate.flows.spotify_ingestion:spotify_ingestion_flow",
                 "-n",
                 "spotify-ingestion",
                 "-p",
@@ -137,7 +137,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.flows.daily_etl:daily_etl_flow",
+                "extract_load.orchestrate.flows.daily_etl:daily_etl_flow",
                 "-n",
                 "daily-etl",
                 "-p",
@@ -181,7 +181,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.data_preparation:data_preparation_subflow",
+                "extract_load.orchestrate.subflows.data_preparation:data_preparation_subflow",
                 "-n",
                 "data-preparation-subflow",
                 "-p",
@@ -231,7 +231,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.enrichment_coordination:enrichment_coordination_subflow",
+                "extract_load.orchestrate.subflows.enrichment_coordination:enrichment_coordination_subflow",
                 "-n",
                 "enrichment-coordination-subflow",
                 "-p",
@@ -277,7 +277,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.transformation:transformation_subflow",
+                "extract_load.orchestrate.subflows.transformation:transformation_subflow",
                 "-n",
                 "transformation-subflow",
                 "-p",
@@ -327,7 +327,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.spotify_enrichment:spotify_enrichment_subflow",
+                "extract_load.orchestrate.subflows.spotify_enrichment:spotify_enrichment_subflow",
                 "-n",
                 "spotify-enrichment-subflow",
                 "-p",
@@ -379,7 +379,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.musicbrainz_enrichment:musicbrainz_enrichment_subflow",
+                "extract_load.orchestrate.subflows.musicbrainz_enrichment:musicbrainz_enrichment_subflow",
                 "-n",
                 "musicbrainz-enrichment-subflow",
                 "-p",
@@ -431,7 +431,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-                "prefect.orchestrate.subflows.geographic_enrichment:geographic_enrichment_subflow",
+                "extract_load.orchestrate.subflows.geographic_enrichment:geographic_enrichment_subflow",
                 "-n",
                 "geographic-enrichment-subflow",
                 "-p",
