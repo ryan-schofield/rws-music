@@ -5,9 +5,13 @@ max_line_length = 120
 [sqlfluff:indentation]
 indent_unit = space
 tab_space_size = 4
+indented_using_on = True
 
 [sqlfluff:layout:type:comma]
 line_position = leading
+
+[sqlfluff:layout:type:join_on_condition]
+keyword_line_position = leading
 
 [sqlfluff:rules]
 # Keyword capitalization
