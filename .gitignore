@@ -44,3 +44,5 @@ dmypy.json
 
 *.tfvars
 *.tar.gz
+
+*/.terraform
