@@ -41,3 +41,8 @@ MANIFEST
 .dmypy.json
 dmypy.json
 .pyre/
+
+*.tfvars
+*.tar.gz
+
+*/.terraform

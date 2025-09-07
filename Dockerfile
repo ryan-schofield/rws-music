@@ -22,6 +22,9 @@ RUN uv sync --frozen --no-dev
 # Copy application code
 COPY . .
 
+# Copy the flows directory specifically to ensure it's accessible
+COPY flows/ flows/
+
 # Create necessary directories
 RUN mkdir -p /app/data /app/logs /app/prefect
 
