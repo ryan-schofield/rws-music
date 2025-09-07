@@ -69,6 +69,8 @@ A modern, open-source music tracking and analytics platform that migrates from M
 - **Open-Source**: Zero licensing fees for all components
 - **Scalable**: Easy to upgrade instance size if data grows
 
+<<<<<<< HEAD
+=======
 ## Current Project Structure
 
 ```
@@ -156,6 +158,7 @@ LOG_LEVEL=INFO
 3. Copy Client ID and Client Secret to `.env`
 4. No redirect URIs needed (using Client Credentials flow)
 
+>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
 ## Data Flow
 
 ### Current Implementation Status
@@ -189,45 +192,6 @@ LOG_LEVEL=INFO
 2. **Performance Optimization**: Fine-tune for production workload
 3. **Monitoring**: Add health checks and alerting
 
-## Cost Savings Achieved
-
-| Component | Fabric Cost | Open Source Cost | Savings |
-|-----------|-------------|------------------|---------|
-| Database | $150-300/month | $0 | $150-300 |
-| Processing | $50-100/month | $0 | $50-100 |
-| Reporting | $50-100/month | $0 | $50-100 |
-| Infrastructure | Included | $5-15/month | -$5-15 |
-| **Total** | **$250-500/month** | **$5-15/month** | **$235-485/month** |
-
-*95%+ cost reduction while maintaining all functionality*
-
-## Important Notes
-
-### Data Preservation
-- All existing dbt models, transformations, and business logic preserved
-- Star schema structure maintained exactly
-- No data loss during migration
-- Same analytical capabilities as original Fabric solution
-
-### Technical Considerations
-- DuckDB file-based database (perfect for analytical workloads)
-- Polars provides 5-10x performance improvement over Pandas
-- Metabase offers similar functionality to Power BI with public sharing
-- Docker ensures consistent deployment across environments
-
-### Migration Approach
-- **Incremental**: Test locally first, then deploy to cloud
-- **Non-Disruptive**: Original Fabric solution can run in parallel
-- **Reversible**: Easy to rollback if needed
-- **Scalable**: Architecture supports future growth
-
-## Support & Documentation
-
-- **Local Testing**: Use the Quick Start section above
-- **Logs**: Check `logs/` directory and `docker-compose logs`
-- **Configuration**: Refer to `.env.example` for all settings
-- **Architecture**: See docker-compose.yml for service relationships
-
 ## Success Metrics
 
 - [x] **Architecture Complete**: Docker-based solution designed
@@ -236,6 +200,8 @@ LOG_LEVEL=INFO
 - [x] **Functionality Preserved**: All original features maintained
 - [ ] **Testing Complete**: End-to-end validation pending
 - [ ] **Production Deployed**: AWS Lightsail deployment pending
+<<<<<<< HEAD
+=======
 
 ---
 
@@ -532,3 +498,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | **Total** | **$200-500/month** | **$5-15/month** |
 
 *Costs based on typical usage patterns. Open source solution runs on AWS Lightsail or local hardware.
+>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
