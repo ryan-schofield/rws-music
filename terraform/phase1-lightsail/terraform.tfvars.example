@@ -1,0 +1,21 @@
+# Copy this file to terraform.tfvars and update with your values
+
+# Domain configuration
+domain_name       = "yourdomain.com"
+subdomain        = "music"        # Will create music.yourdomain.com
+admin_subdomain  = "admin"        # Will create admin.yourdomain.com
+
+# AWS configuration
+aws_region = "us-east-1"  # Choose region closest to you
+
+# Spotify API credentials
+spotify_client_id     = "your_spotify_client_id_here"
+spotify_client_secret = "your_spotify_client_secret_here"
+
+# Database passwords (generate strong passwords)
+metabase_db_password = "secure_metabase_password_here"
+prefect_db_password  = "secure_prefect_password_here"
+
+# Instance configuration (optional overrides)
+# instance_bundle = "medium_2_0"  # 4GB RAM, 2 vCPUs, 80GB SSD ($20/month)
+# instance_blueprint = "ubuntu_22_04"  # Available: ubuntu_22_04, ubuntu_24_04
