@@ -26,13 +26,12 @@ COPY . .
 COPY flows/ flows/
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/logs /app/scripts
+RUN mkdir -p /app/data /app/logs /app/prefect
 
 # Add uv's virtual environment bin directory to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Set environment variables
-ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Health check

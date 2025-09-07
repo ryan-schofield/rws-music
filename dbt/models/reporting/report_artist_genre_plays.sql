@@ -87,9 +87,15 @@ SELECT
     , dtm.time_of_day
     , dtm.time_of_day_sort
 FROM {{ ref('fact_artist_genre') }} fg
-LEFT JOIN {{ ref('dim_track') }} dt ON fg.track_sid = dt.track_sid
-LEFT JOIN {{ ref('dim_artist') }} dar ON fg.artist_sid = dar.artist_sid
-LEFT JOIN {{ ref('dim_album') }} da ON fg.album_sid = da.album_sid
-LEFT JOIN {{ ref('dim_artist_genre') }} dag ON fg.genre_sid = dag.genre_sid
-LEFT JOIN {{ ref('dim_date') }} dd ON fg.date_sid = dd.date_sid
-LEFT JOIN {{ ref('dim_time') }} dtm ON fg.time_sid = dtm.time_sid
+LEFT JOIN {{ ref('dim_track') }} dt
+    ON fg.track_sid = dt.track_sid
+LEFT JOIN {{ ref('dim_artist') }} dar
+    ON fg.artist_sid = dar.artist_sid
+LEFT JOIN {{ ref('dim_album') }} da
+    ON fg.album_sid = da.album_sid
+LEFT JOIN {{ ref('dim_artist_genre') }} dag
+    ON fg.genre_sid = dag.genre_sid
+LEFT JOIN {{ ref('dim_date') }} dd
+    ON fg.date_sid = dd.date_sid
+LEFT JOIN {{ ref('dim_time') }} dtm
+    ON fg.time_sid = dtm.time_sid
