@@ -6,6 +6,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./dbt:/app/dbt
+      - ./flows:/app/flows
       - ./scripts:/app/scripts
       - ./logs:/app/logs
     env_file: .env
@@ -95,7 +96,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./scripts:/app/scripts
+      - ./flows:/app/flows
     networks:
       - music-tracker
     depends_on:
@@ -128,7 +129,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./scripts:/app/scripts
+      - ./flows:/app/flows
     networks:
       - music-tracker
     depends_on:
@@ -145,7 +146,7 @@ services:
         echo 'Waiting for worker to be ready...';
         sleep 15;
         echo 'Deploying flows...';
-        uv run python scripts/orchestrate/deploy_flows.py;
+        cd /app && PYTHONPATH=/app uv run python flows/orchestrate/deploy_flows.py;
         echo 'Flow deployment completed!';
       "
 

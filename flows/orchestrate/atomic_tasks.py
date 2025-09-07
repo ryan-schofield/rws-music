@@ -19,8 +19,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from scripts.orchestrate.flow_config import FlowConfig
-from scripts.orchestrate.base_tasks import (
+from flows.orchestrate.flow_config import FlowConfig
+from flows.orchestrate.base_tasks import (
     BaseTask,
     BaseProcessorTask,
     BaseEnrichmentTask,
@@ -32,7 +32,7 @@ from scripts.orchestrate.base_tasks import (
 )
 
 # Import processor classes
-from scripts.enrich import (
+from flows.enrich import (
     SpotifyProcessor,
     MusicBrainzProcessor,
     GeographicProcessor,
@@ -52,7 +52,7 @@ class LoadRawTracksTask(BaseTask):
 
         try:
             # Use the existing append_tracks.py logic but with better error handling
-            from scripts.load.append_tracks import main as append_tracks_main
+            from flows.load.append_tracks import main as append_tracks_main
 
             self.logger.info("Starting raw tracks data loading")
 
@@ -158,7 +158,7 @@ class SpotifyIngestionTask(BaseTask):
             # Use subprocess for now to maintain compatibility with existing script
             # TODO: Refactor spotify_api_ingestion.py to be importable
             script_path = (
-                project_root / "scripts" / "ingest" / "spotify_api_ingestion.py"
+                project_root / "flows" / "ingest" / "spotify_api_ingestion.py"
             )
             cmd = [sys.executable, str(script_path), "--limit", str(limit)]
 

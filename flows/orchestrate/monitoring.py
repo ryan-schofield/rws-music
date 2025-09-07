@@ -28,13 +28,17 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Ensure logs directory exists
+logs_dir = project_root / "logs"
+logs_dir.mkdir(exist_ok=True)
+
 # Configure structured logging
 logging.basicConfig(
     level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")),
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("logs/prefect_monitoring.log"),
+        logging.FileHandler(logs_dir / "prefect_monitoring.log"),
     ],
 )
 logger = logging.getLogger(__name__)
@@ -44,7 +48,7 @@ class FlowMetrics:
     """Collect and report metrics for flow execution."""
 
     def __init__(self):
-        self.metrics_file = Path("logs/flow_metrics.json")
+        self.metrics_file = project_root / "logs" / "flow_metrics.json"
         self.metrics_file.parent.mkdir(exist_ok=True)
         self.current_metrics = {}
 

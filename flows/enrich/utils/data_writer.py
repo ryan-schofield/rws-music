@@ -341,12 +341,11 @@ class EnrichmentTracker:
     def __init__(self, data_writer: ParquetDataWriter):
         self.data_writer = data_writer
 
-    def get_missing_artists(self, exclude_list: List[str] = None) -> pl.DataFrame:
+    def get_missing_artists(self) -> pl.DataFrame:
         """
         Find artists that need MusicBrainz enrichment.
         Replaces the missing_sql query from mbz_get_missing_artists.py
         """
-        exclude_list = exclude_list or []
 
         # Read source data
         tracks_df = self.data_writer.read_table("tracks_played")
@@ -362,10 +361,7 @@ class EnrichmentTracker:
         tracks_df = tracks_df.filter(pl.col("played_at") >= pl.lit(cutoff_time))
 
         # Filter tracks with ISRC and not in exclude list
-        tracks_filtered = tracks_df.filter(
-            (pl.col("track_isrc").is_not_null())
-            & (~pl.col("artist").is_in(exclude_list))
-        )
+        tracks_filtered = tracks_df.filter(pl.col("track_isrc").is_not_null())
 
         # Get distinct artist info with highest popularity track ISRC
         artist_tracks = (
