@@ -18,15 +18,9 @@ import polars as pl
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-<<<<<<<< HEAD:flows/enrich/spotify_processor.py
 from flows.enrich.utils.api_clients import SpotifyAPIClient
 from flows.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
 from flows.enrich.utils.polars_ops import explode_genre_array, batch_process_dataframe
-========
-from extract_load.enrich.utils.api_clients import SpotifyAPIClient
-from extract_load.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
-from extract_load.enrich.utils.polars_ops import explode_genre_array, batch_process_dataframe
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/spotify_processor.py
 
 logger = logging.getLogger(__name__)
 

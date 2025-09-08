@@ -18,15 +18,9 @@ project_root = Path(__file__).parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-<<<<<<<< HEAD:flows/orchestrate/flows/daily_etl.py
 from flows.orchestrate.flow_config import FlowConfig, get_flow_config
 from flows.orchestrate.monitoring import metrics_collector, monitor_flow, send_alert
 from flows.orchestrate.subflows import (
-========
-from extract_load.orchestrate.flow_config import FlowConfig, get_flow_config
-from extract_load.orchestrate.monitoring import metrics_collector, monitor_flow, send_alert
-from extract_load.orchestrate.subflows import (
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/flows/daily_etl.py
     data_preparation_subflow,
     enrichment_coordination_subflow,
     transformation_subflow,
