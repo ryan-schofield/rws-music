@@ -286,6 +286,16 @@ ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 3000:localhost:3000 -N ubun
 ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 4200:localhost:4200 -N ubuntu@44.238.218.183
 ```
 
+```bash
+# Linux/macOS SSH Tunneling Commands:
+# Create SSH tunnels for secure access (run in separate terminal windows)
+# Tunnel 1: Metabase (localhost:3000 -> server:3000)
+ssh -i ~/.ssh/music-tracker-key.pem -L 3000:localhost:3000 -N ubuntu@44.238.218.183
+
+# Tunnel 2: Prefect (localhost:4200 -> server:4200)
+ssh -i ~/.ssh/music-tracker-key.pem -L 4200:localhost:4200 -N ubuntu@44.238.218.183
+```
+
 **After setting up tunnels, access services securely:**
 - **Metabase:** `http://localhost:3000` (via SSH tunnel)
 - **Prefect:** `http://localhost:4200` (via SSH tunnel)

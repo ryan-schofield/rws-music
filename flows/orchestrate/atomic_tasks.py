@@ -19,13 +19,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-<<<<<<<< HEAD:flows/orchestrate/atomic_tasks.py
 from flows.orchestrate.flow_config import FlowConfig
 from flows.orchestrate.base_tasks import (
-========
-from extract_load.orchestrate.flow_config import FlowConfig
-from extract_load.orchestrate.base_tasks import (
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/atomic_tasks.py
     BaseTask,
     BaseProcessorTask,
     BaseEnrichmentTask,
@@ -37,11 +32,7 @@ from extract_load.orchestrate.base_tasks import (
 )
 
 # Import processor classes
-<<<<<<<< HEAD:flows/orchestrate/atomic_tasks.py
 from flows.enrich import (
-========
-from extract_load.enrich import (
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/atomic_tasks.py
     SpotifyProcessor,
     MusicBrainzProcessor,
     GeographicProcessor,
@@ -61,11 +52,7 @@ class LoadRawTracksTask(BaseTask):
 
         try:
             # Use the existing append_tracks.py logic but with better error handling
-<<<<<<<< HEAD:flows/orchestrate/atomic_tasks.py
             from flows.load.append_tracks import main as append_tracks_main
-========
-            from prefect.load.append_tracks import main as append_tracks_main
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/atomic_tasks.py
 
             self.logger.info("Starting raw tracks data loading")
 
@@ -171,11 +158,7 @@ class SpotifyIngestionTask(BaseTask):
             # Use subprocess for now to maintain compatibility with existing script
             # TODO: Refactor spotify_api_ingestion.py to be importable
             script_path = (
-<<<<<<<< HEAD:flows/orchestrate/atomic_tasks.py
                 project_root / "flows" / "ingest" / "spotify_api_ingestion.py"
-========
-                project_root / "prefect" / "ingest" / "spotify_api_ingestion.py"
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/atomic_tasks.py
             )
             cmd = [sys.executable, str(script_path), "--limit", str(limit)]
 

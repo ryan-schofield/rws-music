@@ -6,12 +6,8 @@ services:
     volumes:
       - ./data:/app/data
       - ./dbt:/app/dbt
-<<<<<<< HEAD
       - ./flows:/app/flows
       - ./scripts:/app/scripts
-=======
-      - ./prefect:/app/prefect
->>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
       - ./logs:/app/logs
     env_file: .env
     environment:
@@ -100,11 +96,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-<<<<<<< HEAD
       - ./flows:/app/flows
-=======
-      - ./prefect:/app/prefect
->>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
     networks:
       - music-tracker
     depends_on:
@@ -137,11 +129,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-<<<<<<< HEAD
       - ./flows:/app/flows
-=======
-      - ./prefect:/app/prefect
->>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
     networks:
       - music-tracker
     depends_on:
@@ -158,11 +146,7 @@ services:
         echo 'Waiting for worker to be ready...';
         sleep 15;
         echo 'Deploying flows...';
-<<<<<<< HEAD
         cd /app && PYTHONPATH=/app uv run python flows/orchestrate/deploy_flows.py;
-=======
-        /app/.venv/bin/python extract_load/orchestrate/deploy_flows.py;
->>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2
         echo 'Flow deployment completed!';
       "
 
