@@ -287,9 +287,7 @@ class MusicBrainzProcessor:
             "genre_table_result": genre_result,
         }
 
-    def process_area_hierarchy(
-        self, limit: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def process_area_hierarchy(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Process area hierarchy data from MusicBrainz.
         Based on the working Fabric notebook implementation.
@@ -500,9 +498,7 @@ class MusicBrainzProcessor:
 
         return sorted(list(area_ids))
 
-    def run_full_enrichment(
-        self, limit: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Run the complete MusicBrainz enrichment pipeline.
 

@@ -2,8 +2,8 @@
 """
 Spotify data enrichment processor.
 
-This module consolidates spotify_add_new_artists.py and spotify_add_new_albums.py 
-from the original Fabric notebooks, replacing Spark operations with Polars and 
+This module consolidates spotify_add_new_artists.py and spotify_add_new_albums.py
+from the original Fabric notebooks, replacing Spark operations with Polars and
 writing directly to parquet files.
 """
 

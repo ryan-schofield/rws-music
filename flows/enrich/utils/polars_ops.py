@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_continent_lookup_df(
-    continent_mapping: Dict[str, Dict[str, str]]
+    continent_mapping: Dict[str, Dict[str, str]],
 ) -> pl.DataFrame:
     """
     Create a Polars DataFrame from continent mapping data.

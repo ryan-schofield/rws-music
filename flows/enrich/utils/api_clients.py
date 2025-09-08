@@ -4,7 +4,7 @@ API clients for data enrichment services.
 
 This module consolidates API access patterns from the original Fabric notebooks:
 - Spotify Web API (from spotify_add_new_artists.py and spotify_add_new_albums.py)
-- MusicBrainz API (from mbz_get_missing_artists.py and mbz_parse_area_hierarchy.py)  
+- MusicBrainz API (from mbz_get_missing_artists.py and mbz_parse_area_hierarchy.py)
 - OpenWeather Geo API (from geo_add_lat_long.py)
 """
 

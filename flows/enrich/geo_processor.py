@@ -2,8 +2,8 @@
 """
 Geographic data enrichment processor.
 
-This module consolidates geo_add_continent.py and geo_add_lat_long.py from 
-the original Fabric notebooks, replacing Spark operations with Polars and 
+This module consolidates geo_add_continent.py and geo_add_lat_long.py from
+the original Fabric notebooks, replacing Spark operations with Polars and
 writing directly to parquet files.
 """
 
