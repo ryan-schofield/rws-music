@@ -157,9 +157,7 @@ class SpotifyIngestionTask(BaseTask):
 
             # Use subprocess for now to maintain compatibility with existing script
             # TODO: Refactor spotify_api_ingestion.py to be importable
-            script_path = (
-                project_root / "flows" / "ingest" / "spotify_api_ingestion.py"
-            )
+            script_path = project_root / "flows" / "ingest" / "spotify_api_ingestion.py"
             cmd = [sys.executable, str(script_path), "--limit", str(limit)]
 
             result = subprocess.run(
