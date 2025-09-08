@@ -11,8 +11,8 @@ This project provides a complete data pipeline for ingesting, processing, and an
 ### Technology Stack
 
 - **🐍 Python 3.11**: Core application language with uv package management
-- **� uv**: Ultra-fast Python package manager and dependency resolver
-- **�📊 DuckDB**: Analytical database for efficient data storage and querying
+- **🏗️ uv**: Ultra-fast Python package manager and dependency resolver
+- **📊 DuckDB**: Analytical database for efficient data storage and querying
 - **⚡ Polars**: High-performance DataFrame library for data processing
 - **🔄 Prefect**: Workflow orchestration and scheduling
 - **📈 Metabase**: Business intelligence and reporting platform
