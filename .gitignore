@@ -1,6 +1,7 @@
 # Top
 data/
 logs/
+working/
 
 # IDE
 .vscode/

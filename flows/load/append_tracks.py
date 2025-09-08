@@ -6,6 +6,43 @@ from pathlib import Path
 import polars as pl
 
 
+def harmonize_dataframe_schemas(dataframes):
+    """
+    Harmonize schemas across multiple dataframes by ensuring all have the same columns
+    and consistent types (casting Null columns to String).
+
+    Args:
+        dataframes: List of polars DataFrames
+
+    Returns:
+        List of harmonized polars DataFrames ready for concatenation
+    """
+    if not dataframes:
+        return []
+
+    # Get all unique column names across all dataframes
+    all_columns = set()
+    for df in dataframes:
+        all_columns.update(df.columns)
+
+    # Ensure all dataframes have the same columns with consistent types
+    harmonized_dfs = []
+    for df in dataframes:
+        # Add missing columns as null strings
+        for col in all_columns:
+            if col not in df.columns:
+                df = df.with_columns(pl.lit(None).cast(pl.String).alias(col))
+
+        # Cast all null columns to string to ensure consistent schema
+        for col in df.columns:
+            if df[col].dtype == pl.Null:
+                df = df.with_columns(pl.col(col).cast(pl.String))
+
+        harmonized_dfs.append(df)
+
+    return harmonized_dfs
+
+
 def main():
     # Define paths
     base_path = Path("data")
@@ -36,7 +73,8 @@ def main():
         new_data_frames.append(df)
 
     if new_data_frames:
-        new_df = pl.concat(new_data_frames)
+        harmonized_dfs = harmonize_dataframe_schemas(new_data_frames)
+        new_df = pl.concat(harmonized_dfs)
     else:
         new_df = pl.DataFrame()
 
@@ -49,7 +87,8 @@ def main():
 
     # Step 3: Concatenate new data with existing
     if not existing_df.is_empty() and not new_df.is_empty():
-        combined_df = pl.concat([existing_df, new_df])
+        harmonized_dfs = harmonize_dataframe_schemas([existing_df, new_df])
+        combined_df = pl.concat(harmonized_dfs)
     elif not existing_df.is_empty():
         combined_df = existing_df
     else:
