@@ -20,15 +20,9 @@ import pandas as pd
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-<<<<<<<< HEAD:flows/enrich/musicbrainz_processor.py
 from flows.enrich.utils.api_clients import MusicBrainzClient
 from flows.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
 from flows.enrich.utils.polars_ops import (
-========
-from extract_load.enrich.utils.api_clients import MusicBrainzClient
-from extract_load.enrich.utils.data_writer import ParquetDataWriter, EnrichmentTracker
-from extract_load.enrich.utils.polars_ops import (
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/musicbrainz_processor.py
     normalize_artist_json_data,
     process_area_hierarchy_data,
     create_artist_genre_table,
@@ -293,13 +287,9 @@ class MusicBrainzProcessor:
             "genre_table_result": genre_result,
         }
 
-<<<<<<<< HEAD:flows/enrich/musicbrainz_processor.py
     def process_area_hierarchy(
         self, limit: Optional[int] = None
     ) -> Dict[str, Any]:
-========
-    def process_area_hierarchy(self, limit: Optional[int] = None) -> Dict[str, Any]:
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/musicbrainz_processor.py
         """
         Process area hierarchy data from MusicBrainz.
         Based on the working Fabric notebook implementation.
@@ -510,13 +500,9 @@ class MusicBrainzProcessor:
 
         return sorted(list(area_ids))
 
-<<<<<<<< HEAD:flows/enrich/musicbrainz_processor.py
     def run_full_enrichment(
         self, limit: Optional[int] = None
     ) -> Dict[str, Any]:
-========
-    def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/musicbrainz_processor.py
         """
         Run the complete MusicBrainz enrichment pipeline.
 
@@ -564,7 +550,6 @@ class MusicBrainzProcessor:
                 results["overall_status"] = "partial_failure"
 
             # Step 4: Process area hierarchy
-<<<<<<<< HEAD:flows/enrich/musicbrainz_processor.py
             if parse_result["status"] == "success":
                 area_result = self.process_area_hierarchy(limit=limit)
                 results["area_processing"] = area_result
@@ -577,13 +562,6 @@ class MusicBrainzProcessor:
                     results["overall_status"] = "partial_failure"
             else:
                 results = {"status": "skipped"}
-========
-            area_result = self.process_area_hierarchy(limit=limit)
-            results["area_processing"] = area_result
-
-            if area_result["status"] not in ["success", "no_updates", "no_data"]:
-                results["overall_status"] = "partial_failure"
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/musicbrainz_processor.py
 
             logger.info("MusicBrainz enrichment pipeline completed")
             return results

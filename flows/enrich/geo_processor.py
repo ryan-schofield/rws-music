@@ -20,15 +20,9 @@ import pycountry_convert as pc
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-<<<<<<<< HEAD:flows/enrich/geo_processor.py
 from flows.enrich.utils.api_clients import OpenWeatherGeoClient
 from flows.enrich.utils.data_writer import ParquetDataWriter
 from flows.enrich.utils.polars_ops import (
-========
-from extract_load.enrich.utils.api_clients import OpenWeatherGeoClient
-from extract_load.enrich.utils.data_writer import ParquetDataWriter
-from extract_load.enrich.utils.polars_ops import (
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/enrich/geo_processor.py
     create_continent_lookup_df,
     merge_continent_data,
     clean_municipality_names,
