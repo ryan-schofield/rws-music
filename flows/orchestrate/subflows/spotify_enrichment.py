@@ -52,12 +52,8 @@ def spotify_enrichment_subflow(config: Optional[FlowConfig] = None) -> Dict[str,
     # Step 1: Run artist and album enrichment
     logger.info("Running Spotify enrichment (artists + albums)...")
 
-    artist_result = spotify_artist_enrichment(
-        config, limit=config.spotify_artist_limit
-    )
-    album_result = spotify_album_enrichment(
-        config, limit=config.spotify_album_limit
-    )
+    artist_result = spotify_artist_enrichment(config, limit=config.spotify_artist_limit)
+    album_result = spotify_album_enrichment(config, limit=config.spotify_album_limit)
 
     # Step 2: Update MBIDs (depends on MusicBrainz data being available)
     logger.info("Updating artist MBIDs...")

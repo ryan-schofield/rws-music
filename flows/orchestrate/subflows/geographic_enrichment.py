@@ -65,8 +65,8 @@ def geographic_enrichment_subflow(
     else:
         overall_status = "failed"
         # Handle Failed state
-        if hasattr(geographic_result, 'is_failed') and geographic_result.is_failed():
-            error_msg = getattr(geographic_result, 'message', 'Task failed')
+        if hasattr(geographic_result, "is_failed") and geographic_result.is_failed():
+            error_msg = getattr(geographic_result, "message", "Task failed")
             logger.error(f"Geographic enrichment failed: {error_msg}")
         # Handle dictionary result
         elif isinstance(geographic_result, dict):

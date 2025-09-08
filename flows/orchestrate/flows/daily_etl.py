@@ -93,9 +93,9 @@ def daily_etl_flow(config: Optional[FlowConfig] = None) -> Dict[str, Any]:
 
             # Update performance metrics
             enrichment_summary = enrichment_result.get("summary", {})
-            flow_results["performance_metrics"][
-                "total_subflows"
-            ] = enrichment_summary.get("subflows_completed", 0)
+            flow_results["performance_metrics"]["total_subflows"] = (
+                enrichment_summary.get("subflows_completed", 0)
+            )
             flow_results["performance_metrics"][
                 "total_tasks"
             ] += enrichment_summary.get("total_tasks", 0)

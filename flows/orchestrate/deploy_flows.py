@@ -7,7 +7,6 @@ Ensure your Prefect server is running before executing this script.
 
 Usage:
     # Basic deployment (deploys all flows and subflows)
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
     uv run python flows/orchestrate/deploy_flows.py
 
     # With validation
@@ -30,30 +29,6 @@ Usage:
 
     # Deploy only main flows (no subflows)
     uv run python flows/orchestrate/deploy_flows.py --main-flows-only
-========
-    uv run python prefect/orchestrate/deploy_flows.py
-
-    # With validation
-    uv run python prefect/orchestrate/deploy_flows.py --validate
-
-    # Deploy specific flows
-    uv run python prefect/orchestrate/deploy_flows.py --spotify-only
-    uv run python prefect/orchestrate/deploy_flows.py --etl-only
-
-    # Deploy individual subflows
-    uv run python prefect/orchestrate/deploy_flows.py --data-prep-only
-    uv run python prefect/orchestrate/deploy_flows.py --enrichment-only
-    uv run python prefect/orchestrate/deploy_flows.py --transformation-only
-    uv run python prefect/orchestrate/deploy_flows.py --spotify-enrichment-only
-    uv run python prefect/orchestrate/deploy_flows.py --musicbrainz-enrichment-only
-    uv run python prefect/orchestrate/deploy_flows.py --geographic-enrichment-only
-
-    # Deploy all subflows independently
-    uv run python prefect/orchestrate/deploy_flows.py --subflows-only
-
-    # Deploy only main flows (no subflows)
-    uv run python prefect/orchestrate/deploy_flows.py --main-flows-only
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
 """
 
 import os
@@ -71,7 +46,6 @@ flows_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(flows_dir))
 
 from dotenv import load_dotenv
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
 
 # Import flow config with error handling
 try:
@@ -80,9 +54,6 @@ except ImportError:
     # Fallback import approach
     sys.path.insert(0, str(Path(__file__).parent))
     from flow_config import FlowConfig
-========
-from extract_load.orchestrate.flow_config import FlowConfig
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
 
 # Load environment variables
 load_dotenv()
@@ -128,11 +99,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.flows.spotify_ingestion:spotify_ingestion_flow",
-========
-                "extract_load.orchestrate.flows.spotify_ingestion:spotify_ingestion_flow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "spotify-ingestion",
                 "-p",
@@ -180,11 +147,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.flows.daily_etl:daily_etl_flow",
-========
-                "extract_load.orchestrate.flows.daily_etl:daily_etl_flow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "daily-etl",
                 "-p",
@@ -228,11 +191,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.data_preparation:data_preparation_subflow",
-========
-                "extract_load.orchestrate.subflows.data_preparation:data_preparation_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "data-preparation-subflow",
                 "-p",
@@ -282,11 +241,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.enrichment_coordination:enrichment_coordination_subflow",
-========
-                "extract_load.orchestrate.subflows.enrichment_coordination:enrichment_coordination_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "enrichment-coordination-subflow",
                 "-p",
@@ -332,11 +287,8 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.transformation:transformation_subflow",
-========
                 "extract_load.orchestrate.subflows.transformation:transformation_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "transformation-subflow",
                 "-p",
@@ -386,11 +338,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.spotify_enrichment:spotify_enrichment_subflow",
-========
-                "extract_load.orchestrate.subflows.spotify_enrichment:spotify_enrichment_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "spotify-enrichment-subflow",
                 "-p",
@@ -442,11 +390,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.musicbrainz_enrichment:musicbrainz_enrichment_subflow",
-========
-                "extract_load.orchestrate.subflows.musicbrainz_enrichment:musicbrainz_enrichment_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "musicbrainz-enrichment-subflow",
                 "-p",
@@ -498,11 +442,7 @@ class FlowDeployer:
             cmd = [
                 "prefect",
                 "deploy",
-<<<<<<<< HEAD:flows/orchestrate/deploy_flows.py
                 "flows.orchestrate.subflows.geographic_enrichment:geographic_enrichment_subflow",
-========
-                "extract_load.orchestrate.subflows.geographic_enrichment:geographic_enrichment_subflow",
->>>>>>>> 1c166aa7c78de24c096275292bb30d26ec7091b2:extract_load/orchestrate/deploy_flows.py
                 "-n",
                 "geographic-enrichment-subflow",
                 "-p",
