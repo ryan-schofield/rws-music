@@ -9,6 +9,10 @@ following DRY principles and enabling better error handling and monitoring.
 import sys
 import json
 import subprocess
+import threading
+import time
+import os
+import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -368,18 +372,147 @@ class GeographicEnrichmentTask(BaseEnrichmentTask):
 class DBTTransformationTask(BaseTask):
     """Task for running DBT transformations."""
 
+    def _log_environment_info(self, dbt_dir: Path):
+        """Log detailed environment information for debugging."""
+        self.logger.info("=== DBT Environment Information ===")
+        self.logger.info(f"DBT directory: {dbt_dir}")
+        self.logger.info(f"DBT directory exists: {dbt_dir.exists()}")
+        self.logger.info(f"Current working directory: {os.getcwd()}")
+
+        # Check disk space
+        try:
+            disk_usage = shutil.disk_usage(dbt_dir)
+            free_gb = disk_usage.free / (1024**3)
+            self.logger.info(f"Available disk space: {free_gb:.2f} GB")
+        except Exception as e:
+            self.logger.warning(f"Could not check disk space: {e}")
+
+        # Check key files
+        key_files = ["dbt_project.yml", "profiles.yml"]
+        for file in key_files:
+            file_path = dbt_dir / file
+            self.logger.info(f"{file} exists: {file_path.exists()}")
+
+        # Check uv availability
+        try:
+            uv_result = subprocess.run(
+                ["uv", "--version"], capture_output=True, text=True, timeout=10
+            )
+            if uv_result.returncode == 0:
+                self.logger.info(f"uv version: {uv_result.stdout.strip()}")
+            else:
+                self.logger.warning("uv command failed")
+        except Exception as e:
+            self.logger.warning(f"Could not check uv version: {e}")
+
+    def _run_command_with_streaming(
+        self, cmd: List[str], cwd: Path, timeout: int, operation_name: str
+    ) -> Dict[str, Any]:
+        """Run a subprocess command with real-time output streaming and heartbeat logging."""
+        self.logger.info(f"Starting {operation_name}: {' '.join(cmd)}")
+
+        stdout_lines = []
+        stderr_lines = []
+
+        def log_heartbeat():
+            """Log heartbeat every 30 seconds to show the process is alive."""
+            start_time = time.time()
+            while True:
+                time.sleep(30)
+                elapsed = time.time() - start_time
+                self.logger.info(
+                    f"{operation_name} still running... ({elapsed:.0f}s elapsed)"
+                )
+
+        try:
+            # Start the process
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=cwd,
+                bufsize=1,
+                universal_newlines=True,
+            )
+
+            # Start heartbeat thread
+            heartbeat_thread = threading.Thread(target=log_heartbeat, daemon=True)
+            heartbeat_thread.start()
+
+            # Stream output in real-time
+            def read_stdout():
+                for line in iter(process.stdout.readline, ""):
+                    line = line.rstrip()
+                    if line:
+                        self.logger.info(f"{operation_name}: {line}")
+                        stdout_lines.append(line)
+                process.stdout.close()
+
+            def read_stderr():
+                for line in iter(process.stderr.readline, ""):
+                    line = line.rstrip()
+                    if line:
+                        self.logger.warning(f"{operation_name} Warning: {line}")
+                        stderr_lines.append(line)
+                process.stderr.close()
+
+            # Start output reading threads
+            stdout_thread = threading.Thread(target=read_stdout)
+            stderr_thread = threading.Thread(target=read_stderr)
+
+            stdout_thread.start()
+            stderr_thread.start()
+
+            # Wait for process to complete with timeout
+            try:
+                returncode = process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                self.logger.error(f"{operation_name} timed out after {timeout} seconds")
+                process.kill()
+                process.wait()
+                return {
+                    "returncode": -1,
+                    "stdout": "\n".join(stdout_lines),
+                    "stderr": "\n".join(stderr_lines)
+                    + f"\nProcess timed out after {timeout} seconds",
+                    "timed_out": True,
+                }
+
+            # Wait for output threads to finish
+            stdout_thread.join(timeout=5)
+            stderr_thread.join(timeout=5)
+
+            self.logger.info(
+                f"{operation_name} completed with return code: {returncode}"
+            )
+
+            return {
+                "returncode": returncode,
+                "stdout": "\n".join(stdout_lines),
+                "stderr": "\n".join(stderr_lines),
+                "timed_out": False,
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error running {operation_name}: {e}", exc_info=True)
+            return {
+                "returncode": -1,
+                "stdout": "\n".join(stdout_lines),
+                "stderr": "\n".join(stderr_lines) + f"\nException: {str(e)}",
+                "timed_out": False,
+            }
+
     def execute(self, **kwargs) -> TaskResult:
         """Execute DBT transformations."""
         metrics = TaskMetrics()
 
         try:
             self.logger.info("Starting DBT transformations")
-
             dbt_dir = self.config.dbt_dir
 
-            # Log the dbt directory and cwd for debugging
-            self.logger.info(f"DBT directory: {dbt_dir}")
-            self.logger.info(f"Current working directory will be: {dbt_dir}")
+            # Log detailed environment information
+            self._log_environment_info(dbt_dir)
 
             # Ensure dbt dependencies
             deps_cmd = [
@@ -393,22 +526,15 @@ class DBTTransformationTask(BaseTask):
                 ".",
             ]
 
-            self.logger.info(f"Running dbt deps command: {' '.join(deps_cmd)}")
-
-            deps_result = subprocess.run(
-                deps_cmd,
-                capture_output=True,
-                text=True,
-                cwd=dbt_dir,
-                timeout=300,
+            self.logger.info("=== Running DBT Dependencies ===")
+            deps_result = self._run_command_with_streaming(
+                deps_cmd, dbt_dir, 300, "DBT Deps"
             )
 
-            if deps_result.returncode != 0:
-                self.logger.warning("dbt deps failed")
-                if deps_result.stderr.strip():
-                    for line in deps_result.stderr.strip().split("\n"):
-                        if line.strip():
-                            self.logger.warning(f"DBT Deps: {line}")
+            if deps_result["returncode"] != 0:
+                self.logger.warning("dbt deps failed but continuing with build")
+                if deps_result["timed_out"]:
+                    self.logger.error("dbt deps timed out")
 
             # Run dbt build
             build_cmd = [
@@ -422,65 +548,44 @@ class DBTTransformationTask(BaseTask):
                 ".",
             ]
 
-            self.logger.info(f"Running dbt build command: {' '.join(build_cmd)}")
-
-            build_result = subprocess.run(
-                build_cmd,
-                capture_output=True,
-                text=True,
-                cwd=dbt_dir,
-                timeout=self.config.dbt_timeout,
+            self.logger.info("=== Running DBT Build ===")
+            build_result = self._run_command_with_streaming(
+                build_cmd, dbt_dir, self.config.dbt_timeout, "DBT Build"
             )
 
-            if build_result.returncode == 0:
+            if build_result["timed_out"]:
+                return TaskResult(
+                    status="error",
+                    message=f"DBT transformations timed out after {self.config.dbt_timeout} seconds",
+                    data={"deps": deps_result, "build": build_result, "timeout": True},
+                    metrics=metrics.finalize(),
+                )
+
+            if build_result["returncode"] == 0:
                 self.logger.info("DBT transformations completed successfully")
-
-                # Log dbt stdout if present
-                if build_result.stdout.strip():
-                    for line in build_result.stdout.strip().split("\n"):
-                        if line.strip():
-                            self.logger.info(f"DBT: {line}")
-
-                # Log any stderr warnings even on success
-                if build_result.stderr.strip():
-                    for line in build_result.stderr.strip().split("\n"):
-                        if line.strip():
-                            self.logger.warning(f"DBT Warning: {line}")
-
                 return TaskResult(
                     status="success",
                     message="DBT transformations completed successfully",
-                    data={"stdout": build_result.stdout, "stderr": build_result.stderr},
+                    data={
+                        "deps": deps_result,
+                        "build": build_result,
+                    },
                     metrics=metrics.finalize(),
                 )
             else:
-                self.logger.error("DBT build failed")
-
-                # Log stdout if present (may contain useful context)
-                if build_result.stdout.strip():
-                    for line in build_result.stdout.strip().split("\n"):
-                        if line.strip():
-                            self.logger.info(f"DBT Output: {line}")
-
-                # Log stderr errors
-                if build_result.stderr.strip():
-                    for line in build_result.stderr.strip().split("\n"):
-                        if line.strip():
-                            self.logger.error(f"DBT Error: {line}")
-
+                self.logger.error(
+                    f"DBT build failed with return code: {build_result['returncode']}"
+                )
                 return TaskResult(
                     status="error",
-                    message=f"DBT build failed: {build_result.stderr}",
-                    data={"stdout": build_result.stdout, "stderr": build_result.stderr},
+                    message=f"DBT build failed: {build_result['stderr']}",
+                    data={
+                        "deps": deps_result,
+                        "build": build_result,
+                    },
                     metrics=metrics.finalize(),
                 )
 
-        except subprocess.TimeoutExpired:
-            return TaskResult(
-                status="error",
-                message=f"DBT transformations timed out after {self.config.dbt_timeout} seconds",
-                metrics=metrics.finalize(),
-            )
         except Exception as e:
             return self._handle_error(e, "DBT transformations failed")
 
