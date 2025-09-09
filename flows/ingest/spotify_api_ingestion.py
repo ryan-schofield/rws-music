@@ -238,9 +238,9 @@ class SpotifyDataIngestion:
         """Consolidate all JSON files from recently_played/detail directory to a single CSV."""
         logger.info("Starting consolidation of JSON files to CSV")
         
-        # Find all JSON files in the detail directory and subdirectories
-        detail_dir = self.data_dir / "raw" / "recently_played" / "detail"
-        json_pattern = str(detail_dir / "**" / "*.json")
+        # Find all JSON files in the played directory and subdirectories
+        played_dir = self.data_dir / "raw" / "recently_played"
+        json_pattern = str(played_dir / "**" / "*.json")
         json_files = glob.glob(json_pattern, recursive=True)
         
         if not json_files:
