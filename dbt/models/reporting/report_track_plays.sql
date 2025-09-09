@@ -1,8 +1,8 @@
-{{ 
+{{
   config(
-    materialized='external'
-    , location='../data/report_track_plays.parquet'
-    ) 
+    materialized='external',
+    location='../data/report_track_plays.parquet'
+  )
 }}
 
 SELECT
@@ -42,6 +42,7 @@ SELECT
     , dar.artist_popularity AS dim_artist_popularity
     , dar.artist_popularity_group
     , dar.artist_popularity_sort
+    , CONCAT(CAST(dar.artist_popularity_sort AS VARCHAR), ' - ', dar.artist_popularity_group) AS artist_popularity_label
     , dar.is_popular AS artist_is_popular
     , dar.primary_genre
     , dar.continent_code
@@ -77,6 +78,7 @@ SELECT
     , dtm.am_pm
     , dtm.time_of_day
     , dtm.time_of_day_sort
+    , CONCAT(CAST(dtm.time_of_day_sort AS VARCHAR), ' - ', dtm.time_of_day) AS time_of_day_label
 FROM {{ ref('fact_track_played') }} ftp
 LEFT JOIN {{ ref('dim_track') }} dt
     ON ftp.track_sid = dt.track_sid

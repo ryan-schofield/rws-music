@@ -20,6 +20,11 @@ capitalisation_policy = upper
 # Disable quoting unless necessary
 quoted_identifiers_policy = none
 
+templater = jinja
+
+[sqlfluff:rules:jinja.padding]
+single_space = true
+
 [sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = upper
 
