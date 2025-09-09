@@ -30,7 +30,7 @@ def transformation_subflow(config: Optional[FlowConfig] = None) -> Dict[str, Any
     """
     Transformation subflow with sequential execution.
 
-    Flow: DBT Transformations then Reporting Updates
+    Flow: dbt Transformations then Reporting Updates
 
     Args:
         config: Flow configuration (uses default if None)
@@ -43,20 +43,20 @@ def transformation_subflow(config: Optional[FlowConfig] = None) -> Dict[str, Any
 
     logger.info("Starting transformation subflow")
 
-    # Step 1: Run DBT transformations
-    logger.info("Running DBT transformations...")
+    # Step 1: Run dbt transformations
+    logger.info("Running dbt transformations...")
     dbt_result = dbt_transformations(config)
 
-    # Step 2: Update reporting data (depends on DBT success)
+    # Step 2: Update reporting data (depends on dbt success)
     reporting_result = None
     if check_task_success(dbt_result, "dbt_transformations"):
         logger.info("Updating reporting data...")
         reporting_result = update_reporting_data(config)
     else:
-        logger.warning("Skipping reporting updates due to DBT failure")
+        logger.warning("Skipping reporting updates due to dbt failure")
         reporting_result = {
             "status": "skipped",
-            "message": "Skipped due to DBT failure",
+            "message": "Skipped due to dbt failure",
         }
 
     # Collect results

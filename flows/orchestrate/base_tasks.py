@@ -76,7 +76,12 @@ class BaseTask(ABC):
     ):
         self.config = config
         self.data_writer = data_writer or ParquetDataWriter(str(config.data_base_path))
-        self.logger = logging.getLogger(self.__class__.__name__)
+        # Use Prefect's logger to ensure logs appear in the UI
+        try:
+            self.logger = get_run_logger()
+        except Exception:
+            # Fallback to standard logger if not in Prefect context
+            self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def execute(self, **kwargs) -> TaskResult:
@@ -118,34 +123,43 @@ class BaseProcessorTask(BaseTask):
     def execute(self, **kwargs) -> TaskResult:
         """Execute using processor class."""
         try:
-            self.logger.info("Starting processor task execution")
+            self.logger.info("🔄 Starting processor task execution")
+            self.logger.info(f"Processor class: {self.processor_class.__name__}")
 
             # Validate prerequisites first
-            self.logger.info("Validating prerequisites")
+            self.logger.info("🔍 Validating prerequisites")
             prereq_result = self._validate_prerequisites()
             self.logger.info(f"Prerequisite validation result: {prereq_result.status}")
 
             if prereq_result.is_failure():
                 self.logger.error(
-                    f"Prerequisite validation failed: {prereq_result.message}"
+                    f"❌ Prerequisite validation failed: {prereq_result.message}"
                 )
                 return prereq_result
 
+            self.logger.info("✅ Prerequisites validated successfully")
+
             # Execute the processor method
-            self.logger.info("Executing processor method")
+            self.logger.info("⚡ Executing processor method")
             result = self._execute_processor(**kwargs)
-            self.logger.info(
-                f"Processor method result: {result.get('status', 'unknown')}"
-            )
+            
+            status = result.get('status', 'unknown')
+            self.logger.info(f"Processor method result: {status}")
+            
+            # Log additional processor result details
+            if isinstance(result, dict):
+                for key, value in result.items():
+                    if key.endswith(('_processed', '_written', '_updated', '_found', '_failed')):
+                        self.logger.info(f"{key}: {value}")
 
             # Convert processor result to TaskResult
             task_result = self._convert_processor_result(result)
-            self.logger.info(f"Task result: {task_result.status}")
+            self.logger.info(f"Final task result: {task_result.status}")
             return task_result
 
         except Exception as e:
             self.logger.error(
-                f"Processor execution failed with exception: {e}", exc_info=True
+                f"❌ Processor execution failed with exception: {e}", exc_info=True
             )
             return self._handle_error(e, f"Processor execution failed")
 
@@ -175,22 +189,33 @@ class BaseEnrichmentTask(BaseProcessorTask):
 
     def _validate_prerequisites(self) -> TaskResult:
         """Validate that source data exists for enrichment."""
+        self.logger.info("🔍 Checking enrichment prerequisites")
+        
+        self.logger.info("Checking if tracks_played table exists...")
         if not self.data_writer.table_exists("tracks_played"):
+            self.logger.error("❌ tracks_played table not found")
             return TaskResult(
                 status="error",
                 message="tracks_played table not found - cannot perform enrichment",
             )
 
+        self.logger.info("✅ tracks_played table found, checking record count...")
         tracks_info = self.data_writer.get_table_info("tracks_played")
-        if tracks_info.get("record_count", 0) == 0:
+        record_count = tracks_info.get("record_count", 0)
+        
+        self.logger.info(f"tracks_played record count: {record_count}")
+        
+        if record_count == 0:
+            self.logger.error("❌ tracks_played table is empty")
             return TaskResult(
                 status="error",
                 message="tracks_played table is empty - cannot perform enrichment",
             )
 
+        self.logger.info(f"✅ Prerequisites validated - {record_count} tracks available for enrichment")
         return TaskResult(
             status="success",
-            message=f"Prerequisites validated - {tracks_info.get('record_count', 0)} tracks available",
+            message=f"Prerequisites validated - {record_count} tracks available",
         )
 
 
@@ -218,30 +243,48 @@ def create_processor_task(
         logger = get_run_logger()
 
         try:
-            logger.info(f"Starting {task_name} task wrapper")
+            logger.info(f"🚀 === {task_name.upper()} TASK STARTING === 🚀")
+            logger.info(f"Task class: {task_class.__name__}")
+            logger.info(f"Processor class: {processor_class.__name__}")
+            logger.info(f"Configuration: {config.environment}")
+            
+            # Log any task-specific kwargs
+            if kwargs:
+                logger.info(f"Task parameters: {kwargs}")
 
             # Create task instance
-            logger.info(f"Creating {task_class.__name__} instance")
+            logger.info(f"Creating {task_class.__name__} instance...")
             task_instance = task_class(config, processor_class)
-            logger.info("Task instance created successfully")
+            logger.info("✅ Task instance created successfully")
 
             # Execute task
-            logger.info("Executing task")
+            logger.info("⚡ Executing task...")
             result = task_instance.execute(**kwargs)
             logger.info(f"Task execution completed with status: {result.status}")
 
+            # Log detailed result information
+            if result.data:
+                logger.info(f"Result data keys: {list(result.data.keys())}")
+            if result.metrics:
+                logger.info(f"Metrics: {result.metrics}")
+            if result.errors:
+                logger.warning(f"Errors encountered: {len(result.errors)} errors")
+
             # Log result
             if result.is_success():
-                logger.info(f"{task_name} completed: {result.message}")
+                logger.info(f"✅ {task_name} completed successfully: {result.message}")
                 return result.to_dict()
             else:
-                logger.error(f"{task_name} failed: {result.message}")
+                logger.error(f"❌ {task_name} failed: {result.message}")
+                if result.errors:
+                    for error in result.errors:
+                        logger.error(f"Error detail: {error}")
                 # Return Failed state to properly fail the Prefect task
                 return Failed(message=f"{task_name} failed: {result.message}")
 
         except Exception as e:
             error_msg = f"{task_name} failed with exception: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+            logger.error(f"❌ {error_msg}", exc_info=True)
 
             raise RuntimeError(error_msg)
 
