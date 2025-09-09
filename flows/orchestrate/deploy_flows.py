@@ -288,7 +288,6 @@ class FlowDeployer:
                 "prefect",
                 "deploy",
                 "flows.orchestrate.subflows.transformation:transformation_subflow",
-                "extract_load.orchestrate.subflows.transformation:transformation_subflow",
                 "-n",
                 "transformation-subflow",
                 "-p",
