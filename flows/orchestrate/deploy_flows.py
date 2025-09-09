@@ -72,7 +72,7 @@ class FlowDeployer:
 
         # Check Prefect API connection (skip if server not running)
         try:
-            from extract_load import get_client
+            from flows import get_client
 
             # Try to create a client - this will work even if server is not running
             client = get_client()

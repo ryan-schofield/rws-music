@@ -175,40 +175,40 @@ export AWS_SECRET_ACCESS_KEY="your-secret-key"
 #### For Windows Users
 
 **1. Extract SSH Private Key (Required - Missing Step):**
-```cmd
+```powershell
 # Navigate to terraform directory
-cd terraform\phase1-lightsail
+Set-Location terraform\phase1-lightsail
 
 # Add SSH key output to terraform configuration (if not already done)
 # The key should already be available after running terraform apply
 
 # Extract the private key to your SSH directory
-mkdir "%USERPROFILE%\.ssh" 2>nul
-terraform output -raw ssh_private_key > "%USERPROFILE%\.ssh\music-tracker-key.pem"
+New-Item -ItemType Directory "$env:USERPROFILE\.ssh" -Force
+terraform output -raw ssh_private_key > "$env:USERPROFILE\.ssh\music-tracker-key.pem"
 ```
 
 **2. Create deployment package:**
-```cmd
-# From your project root directory (correct Windows syntax)
+```powershell
+# From your project root directory
 tar -czf music-tracker-app.tar.gz --exclude=".git" --exclude="terraform" --exclude="docs" --exclude="*.pyc" --exclude="__pycache__" --exclude="music-tracker-app.tar.gz" .
 ```
 
 **3. Transfer application code:**
-```cmd
+```powershell
 # Windows SCP command (use actual IP from terraform output)
-scp -i "%USERPROFILE%\.ssh\music-tracker-key.pem" music-tracker-app.tar.gz ubuntu@44.238.218.183:/opt/music-tracker/
+scp -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" music-tracker-app.tar.gz ubuntu@44.238.218.183:/opt/music-tracker/
 ```
 
 **4. Connect and setup application:**
-```cmd
+```powershell
 # Connect to server and extract files (Windows SSH command)
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "cd /opt/music-tracker && tar -xzf music-tracker-app.tar.gz && sudo chown -R ubuntu:ubuntu /opt/music-tracker"
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "cd /opt/music-tracker && tar -xzf music-tracker-app.tar.gz && sudo chown -R ubuntu:ubuntu /opt/music-tracker"
 ```
 
 **5. Start the application:**
-```cmd
+```powershell
 # Start the music tracker service
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo systemctl start music-tracker"
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo systemctl start music-tracker"
 ```
 
 #### For Linux/macOS Users
@@ -243,19 +243,19 @@ ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo sy
 #### Windows Commands
 
 1. **Check service status:**
-   ```cmd
-   ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo systemctl status music-tracker"
-   ```
+    ```powershell
+    ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo systemctl status music-tracker"
+    ```
 
 2. **Check container status:**
-   ```cmd
-   ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "docker ps"
-   ```
+    ```powershell
+    ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "docker ps"
+    ```
 
 3. **Run health check:**
-   ```cmd
-   ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "/opt/music-tracker/scripts/health_check.sh"
-   ```
+    ```powershell
+    ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "/opt/music-tracker/scripts/health_check.sh"
+    ```
 
 #### Linux/macOS Commands
 
@@ -277,13 +277,13 @@ ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "sudo sy
 #### Secure Access via SSH Tunneling (Recommended)
 
 **Windows SSH Tunneling Commands:**
-```cmd
-# Create SSH tunnels for secure access (run in separate command windows)
+```powershell
+# Create SSH tunnels for secure access (run in separate PowerShell windows)
 # Tunnel 1: Metabase (localhost:3000 -> server:3000)
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 3000:localhost:3000 -N ubuntu@44.238.218.183
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" -L 3000:localhost:3000 -N ubuntu@44.238.218.183
 
 # Tunnel 2: Prefect (localhost:4200 -> server:4200)
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 4200:localhost:4200 -N ubuntu@44.238.218.183
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" -L 4200:localhost:4200 -N ubuntu@44.238.218.183
 ```
 
 ```bash
@@ -308,9 +308,9 @@ If you need to access the server from another Windows machine, follow these step
 
 #### Step 1: Transfer SSH Private Key Securely
 **On your current machine (where Terraform was run):**
-```cmd
+```powershell
 # The private key is located at:
-# %USERPROFILE%\.ssh\music-tracker-key.pem
+# $env:USERPROFILE\.ssh\music-tracker-key.pem
 # Copy this file securely to the other machine
 ```
 
@@ -321,25 +321,25 @@ If you need to access the server from another Windows machine, follow these step
 
 #### Step 2: Setup SSH Directory on New Machine
 **On the new Windows machine:**
-```cmd
+```powershell
 # Create SSH directory
-mkdir "%USERPROFILE%\.ssh" 2>nul
+New-Item -ItemType Directory "$env:USERPROFILE\.ssh" -Force
 
 # Copy the private key file to this location:
-# %USERPROFILE%\.ssh\music-tracker-key.pem
+# $env:USERPROFILE\.ssh\music-tracker-key.pem
 ```
 
 #### Step 3: Test SSH Connection
-```cmd
+```powershell
 # Test basic SSH connection
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "echo 'SSH connection successful from new machine!'"
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "echo 'SSH connection successful from new machine!'"
 ```
 
 #### Step 4: Create SSH Tunnels on New Machine
-```cmd
+```powershell
 # Start tunnels (same commands as original machine)
-start "Metabase Tunnel" ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 3000:localhost:3000 -N ubuntu@44.238.218.183
-start "Prefect Tunnel" ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" -L 4200:localhost:4200 -N ubuntu@44.238.218.183
+Start-Process -FilePath ssh -ArgumentList "-i `"$env:USERPROFILE\.ssh\music-tracker-key.pem`" -L 3000:localhost:3000 -N ubuntu@44.238.218.183" -WindowStyle Hidden
+Start-Process -FilePath ssh -ArgumentList "-i `"$env:USERPROFILE\.ssh\music-tracker-key.pem`" -L 4200:localhost:4200 -N ubuntu@44.238.218.183" -WindowStyle Hidden
 ```
 
 #### Step 5: Access Services
@@ -360,18 +360,18 @@ If you prefer not to share the same private key:
 2. **Add the public key** to the server's authorized_keys
 3. **Use the new private key** for connections
 
-```cmd
+```powershell
 # On new machine - generate new key pair
-ssh-keygen -t rsa -b 2048 -f "%USERPROFILE%\.ssh\new-music-tracker-key"
+ssh-keygen -t rsa -b 2048 -f "$env:USERPROFILE\.ssh\new-music-tracker-key"
 
 # Copy public key to server (requires existing access)
-scp -i "%USERPROFILE%\.ssh\music-tracker-key.pem" "%USERPROFILE%\.ssh\new-music-tracker-key.pub" ubuntu@44.238.218.183:~/
+scp -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" "$env:USERPROFILE\.ssh\new-music-tracker-key.pub" ubuntu@44.238.218.183:~/
 
 # On server - add new public key
-ssh -i "%USERPROFILE%\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "cat ~/new-music-tracker-key.pub >> ~/.ssh/authorized_keys && rm ~/new-music-tracker-key.pub"
+ssh -i "$env:USERPROFILE\.ssh\music-tracker-key.pem" ubuntu@44.238.218.183 "cat ~/new-music-tracker-key.pub >> ~/.ssh/authorized_keys && rm ~/new-music-tracker-key.pub"
 
 # Use new key for connections
-ssh -i "%USERPROFILE%\.ssh\new-music-tracker-key" ubuntu@44.238.218.183
+ssh -i "$env:USERPROFILE\.ssh\new-music-tracker-key" ubuntu@44.238.218.183
 ```
 
 ### Step 6: Initial Configuration
