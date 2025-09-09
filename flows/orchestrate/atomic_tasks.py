@@ -370,13 +370,13 @@ class GeographicEnrichmentTask(BaseEnrichmentTask):
 
 
 class DBTTransformationTask(BaseTask):
-    """Task for running DBT transformations."""
+    """Task for running dbt transformations."""
 
     def _log_environment_info(self, dbt_dir: Path):
         """Log detailed environment information for debugging."""
-        self.logger.info("=== DBT Environment Information ===")
-        self.logger.info(f"DBT directory: {dbt_dir}")
-        self.logger.info(f"DBT directory exists: {dbt_dir.exists()}")
+        self.logger.info("=== dbt Environment Information ===")
+        self.logger.info(f"dbt directory: {dbt_dir}")
+        self.logger.info(f"dbt directory exists: {dbt_dir.exists()}")
         self.logger.info(f"Current working directory: {os.getcwd()}")
 
         # Check disk space
@@ -409,19 +409,27 @@ class DBTTransformationTask(BaseTask):
         self, cmd: List[str], cwd: Path, timeout: int, operation_name: str
     ) -> Dict[str, Any]:
         """Run a subprocess command with real-time output streaming and heartbeat logging."""
-        self.logger.info(f"Starting {operation_name}: {' '.join(cmd)}")
+        self.logger.info(f"🔄 Starting {operation_name}: {' '.join(cmd)}")
+        self.logger.info(f"Working directory: {cwd}")
+        self.logger.info(f"Timeout: {timeout} seconds")
 
         stdout_lines = []
         stderr_lines = []
 
+        heartbeat_active = [True]  # Use list for mutable reference
+        
         def log_heartbeat():
             """Log heartbeat every 30 seconds to show the process is alive."""
             start_time = time.time()
-            while True:
+            heartbeat_count = 0
+            while heartbeat_active[0]:
                 time.sleep(30)
+                if not heartbeat_active[0]:
+                    break
+                heartbeat_count += 1
                 elapsed = time.time() - start_time
                 self.logger.info(
-                    f"{operation_name} still running... ({elapsed:.0f}s elapsed)"
+                    f"💓 {operation_name} heartbeat #{heartbeat_count} - still running... ({elapsed:.0f}s elapsed)"
                 )
 
         try:
@@ -467,8 +475,11 @@ class DBTTransformationTask(BaseTask):
             # Wait for process to complete with timeout
             try:
                 returncode = process.wait(timeout=timeout)
+                # Stop heartbeat
+                heartbeat_active[0] = False
             except subprocess.TimeoutExpired:
-                self.logger.error(f"{operation_name} timed out after {timeout} seconds")
+                self.logger.error(f"⏰ {operation_name} timed out after {timeout} seconds")
+                heartbeat_active[0] = False
                 process.kill()
                 process.wait()
                 return {
@@ -484,7 +495,7 @@ class DBTTransformationTask(BaseTask):
             stderr_thread.join(timeout=5)
 
             self.logger.info(
-                f"{operation_name} completed with return code: {returncode}"
+                f"✅ {operation_name} completed with return code: {returncode}"
             )
 
             return {
@@ -504,11 +515,12 @@ class DBTTransformationTask(BaseTask):
             }
 
     def execute(self, **kwargs) -> TaskResult:
-        """Execute DBT transformations."""
+        """Execute dbt transformations."""
         metrics = TaskMetrics()
 
         try:
-            self.logger.info("Starting DBT transformations")
+            self.logger.info("🚀 ENHANCED dbt TRANSFORMATIONS STARTING 🚀")
+            self.logger.info("This is the new enhanced version with detailed logging")
             dbt_dir = self.config.dbt_dir
 
             # Log detailed environment information
@@ -526,9 +538,9 @@ class DBTTransformationTask(BaseTask):
                 ".",
             ]
 
-            self.logger.info("=== Running DBT Dependencies ===")
+            self.logger.info("=== Running dbt Dependencies ===")
             deps_result = self._run_command_with_streaming(
-                deps_cmd, dbt_dir, 300, "DBT Deps"
+                deps_cmd, dbt_dir, 300, "dbt Deps"
             )
 
             if deps_result["returncode"] != 0:
@@ -548,24 +560,24 @@ class DBTTransformationTask(BaseTask):
                 ".",
             ]
 
-            self.logger.info("=== Running DBT Build ===")
+            self.logger.info("=== Running dbt Build ===")
             build_result = self._run_command_with_streaming(
-                build_cmd, dbt_dir, self.config.dbt_timeout, "DBT Build"
+                build_cmd, dbt_dir, self.config.dbt_timeout, "dbt Build"
             )
 
             if build_result["timed_out"]:
                 return TaskResult(
                     status="error",
-                    message=f"DBT transformations timed out after {self.config.dbt_timeout} seconds",
+                    message=f"dbt transformations timed out after {self.config.dbt_timeout} seconds",
                     data={"deps": deps_result, "build": build_result, "timeout": True},
                     metrics=metrics.finalize(),
                 )
 
             if build_result["returncode"] == 0:
-                self.logger.info("DBT transformations completed successfully")
+                self.logger.info("dbt transformations completed successfully")
                 return TaskResult(
                     status="success",
-                    message="DBT transformations completed successfully",
+                    message="dbt transformations completed successfully",
                     data={
                         "deps": deps_result,
                         "build": build_result,
@@ -574,11 +586,11 @@ class DBTTransformationTask(BaseTask):
                 )
             else:
                 self.logger.error(
-                    f"DBT build failed with return code: {build_result['returncode']}"
+                    f"dbt build failed with return code: {build_result['returncode']}"
                 )
                 return TaskResult(
                     status="error",
-                    message=f"DBT build failed: {build_result['stderr']}",
+                    message=f"dbt build failed: {build_result['stderr']}",
                     data={
                         "deps": deps_result,
                         "build": build_result,
@@ -587,7 +599,7 @@ class DBTTransformationTask(BaseTask):
                 )
 
         except Exception as e:
-            return self._handle_error(e, "DBT transformations failed")
+            return self._handle_error(e, "dbt transformations failed")
 
 
 class ReportingUpdateTask(BaseTask):
@@ -625,13 +637,28 @@ class ReportingUpdateTask(BaseTask):
 def load_raw_tracks_data(config: FlowConfig) -> Dict[str, Any]:
     """Load raw tracks data task."""
     logger = get_run_logger()
+    
+    logger.info(f"📁 === LOAD RAW TRACKS DATA STARTING === 📁")
+    logger.info(f"Data path: {config.data_base_path}")
+    logger.info(f"Environment: {config.environment}")
+    
     task_instance = LoadRawTracksTask(config)
     result = task_instance.execute()
+    
+    logger.info(f"=== LOAD RAW TRACKS DATA COMPLETED ===")
+    logger.info(f"Result status: {result.status}")
+    
+    if result.metrics:
+        logger.info(f"Records loaded: {result.metrics.get('records_loaded', 0)}")
+        logger.info(f"Duration: {result.metrics.get('duration_seconds', 0):.2f}s")
 
     if result.is_success():
-        logger.info(f"Data loading completed: {result.message}")
+        logger.info(f"✅ Data loading completed: {result.message}")
     else:
-        logger.error(f"Data loading failed: {result.message}")
+        logger.error(f"❌ Data loading failed: {result.message}")
+        if result.errors:
+            for error in result.errors:
+                logger.error(f"Error detail: {error}")
 
     return result.to_dict()
 
@@ -646,13 +673,28 @@ def load_raw_tracks_data(config: FlowConfig) -> Dict[str, Any]:
 def validate_data_quality(config: FlowConfig) -> Dict[str, Any]:
     """Validate data quality task."""
     logger = get_run_logger()
+    
+    logger.info(f"🔍 === DATA QUALITY VALIDATION STARTING === 🔍")
+    logger.info(f"Environment: {config.environment}")
+    
     task_instance = ValidateDataQualityTask(config)
     result = task_instance.execute()
+    
+    logger.info(f"=== DATA QUALITY VALIDATION COMPLETED ===")
+    logger.info(f"Result status: {result.status}")
+    
+    if result.metrics:
+        logger.info(f"Total tracks validated: {result.metrics.get('total_tracks', 0)}")
+        logger.info(f"Columns checked: {result.metrics.get('columns_count', 0)}")
+        logger.info(f"Duration: {result.metrics.get('duration_seconds', 0):.2f}s")
 
     if result.is_success():
-        logger.info(f"Data validation completed: {result.message}")
+        logger.info(f"✅ Data validation completed: {result.message}")
     else:
-        logger.error(f"Data validation failed: {result.message}")
+        logger.error(f"❌ Data validation failed: {result.message}")
+        if result.errors:
+            for error in result.errors:
+                logger.error(f"Error detail: {error}")
 
     return result.to_dict()
 
@@ -668,13 +710,29 @@ def validate_data_quality(config: FlowConfig) -> Dict[str, Any]:
 def spotify_api_ingestion(config: FlowConfig, limit: int = 50) -> Dict[str, Any]:
     """Spotify API ingestion task."""
     logger = get_run_logger()
+    
+    logger.info(f"🎵 === SPOTIFY API INGESTION STARTING === 🎵")
+    logger.info(f"Limit: {limit} tracks")
+    logger.info(f"Environment: {config.environment}")
+    logger.info(f"API timeout: {config.api_timeout}s")
+    
     task_instance = SpotifyIngestionTask(config)
     result = task_instance.execute(limit=limit)
+    
+    logger.info(f"=== SPOTIFY API INGESTION COMPLETED ===")
+    logger.info(f"Result status: {result.status}")
+    
+    if result.metrics:
+        logger.info(f"Records ingested: {result.metrics.get('records_ingested', 0)}")
+        logger.info(f"Duration: {result.metrics.get('duration_seconds', 0):.2f}s")
 
     if result.is_success():
-        logger.info(f"Spotify ingestion completed: {result.message}")
+        logger.info(f"✅ Spotify ingestion completed: {result.message}")
     else:
-        logger.error(f"Spotify ingestion failed: {result.message}")
+        logger.error(f"❌ Spotify ingestion failed: {result.message}")
+        if result.errors:
+            for error in result.errors:
+                logger.error(f"Error detail: {error}")
 
     return result.to_dict()
 
@@ -748,22 +806,46 @@ geographic_enrichment = create_enrichment_task(
 
 # Transformation tasks
 @task(
-    name="DBT Transformations",
-    description="Run DBT transformations for star schema",
+    name="dbt Transformations",
+    description="Run dbt transformations for star schema",
     retries=2,
     retry_delay_seconds=30,
     timeout_seconds=1200,
 )
 def dbt_transformations(config: FlowConfig) -> Dict[str, Any]:
-    """DBT transformations task."""
+    """dbt transformations task."""
     logger = get_run_logger()
+    
+    logger.info("=== dbt TRANSFORMATIONS TASK STARTING ===")
+    logger.info(f"dbt timeout: {config.dbt_timeout} seconds")
+    logger.info(f"dbt directory: {config.dbt_dir}")
+    
     task_instance = DBTTransformationTask(config)
     result = task_instance.execute()
+    
+    logger.info("=== dbt TRANSFORMATIONS TASK COMPLETED ===")
+    logger.info(f"Result status: {result.status}")
+    logger.info(f"Result message: {result.message}")
+    
+    # Log additional details if available
+    if result.data:
+        if "build" in result.data:
+            build_info = result.data["build"]
+            logger.info(f"dbt build return code: {build_info.get('returncode', 'unknown')}")
+            if build_info.get("timed_out"):
+                logger.warning("dbt build timed out!")
+        
+        if "deps" in result.data:
+            deps_info = result.data["deps"]
+            logger.info(f"dbt deps return code: {deps_info.get('returncode', 'unknown')}")
 
     if result.is_success():
-        logger.info(f"DBT transformations completed: {result.message}")
+        logger.info(f"✅ dbt transformations completed: {result.message}")
     else:
-        logger.error(f"DBT transformations failed: {result.message}")
+        logger.error(f"❌ dbt transformations failed: {result.message}")
+        if result.errors:
+            for error in result.errors:
+                logger.error(f"Error detail: {error}")
 
     return result.to_dict()
 

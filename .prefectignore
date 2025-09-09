@@ -53,7 +53,7 @@ tests/
 *_test.py
 test_*.py
 
-# DBT files that are mounted separately
+# dbt files that are mounted separately
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
