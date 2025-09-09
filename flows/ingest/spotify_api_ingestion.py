@@ -11,6 +11,8 @@ from typing import List, Dict, Any
 import json
 from pathlib import Path
 import base64
+import csv
+import glob
 
 import requests
 from dotenv import load_dotenv
@@ -232,6 +234,61 @@ class SpotifyDataIngestion:
         logger.info(f"Saved {len(data)} records to {filepath}")
         return str(filepath)
 
+    def consolidate_to_csv(self) -> str:
+        """Consolidate all JSON files from recently_played/detail directory to a single CSV."""
+        logger.info("Starting consolidation of JSON files to CSV")
+        
+        # Find all JSON files in the detail directory and subdirectories
+        detail_dir = self.data_dir / "raw" / "recently_played" / "detail"
+        json_pattern = str(detail_dir / "**" / "*.json")
+        json_files = glob.glob(json_pattern, recursive=True)
+        
+        if not json_files:
+            logger.info("No JSON files found to consolidate")
+            return None
+        
+        logger.info(f"Found {len(json_files)} JSON files to consolidate")
+        
+        # Collect all data from JSON files
+        all_data = []
+        for json_file in json_files:
+            try:
+                with open(json_file, 'r') as f:
+                    file_data = json.load(f)
+                    if isinstance(file_data, list):
+                        all_data.extend(file_data)
+                    else:
+                        all_data.append(file_data)
+                logger.debug(f"Loaded data from {json_file}")
+            except Exception as e:
+                logger.error(f"Error reading {json_file}: {e}")
+                continue
+        
+        if not all_data:
+            logger.info("No valid data found in JSON files")
+            return None
+        
+        # Use static CSV filename (overwrite each time)
+        csv_filename = "recently_played.csv"
+        csv_filepath = self.data_dir / csv_filename
+        
+        # Write to CSV
+        try:
+            # Get headers from the first record
+            headers = list(all_data[0].keys()) if all_data else []
+            
+            with open(csv_filepath, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(all_data)
+            
+            logger.info(f"Successfully consolidated {len(all_data)} records to {csv_filepath}")
+            return str(csv_filepath)
+            
+        except Exception as e:
+            logger.error(f"Error writing CSV file: {e}")
+            raise
+
     def run_ingestion(self) -> Dict[str, Any]:
         """Run the complete ingestion process."""
         start_time = datetime.now(timezone.utc)
@@ -256,6 +313,9 @@ class SpotifyDataIngestion:
             # Save to file
             saved_file = self.save_raw_data(data)
 
+            # Consolidate all JSON files to CSV
+            csv_file = self.consolidate_to_csv()
+
             # Update cursor with max played_at + 1 to prevent duplicates
             if data:
                 max_played_at = data[0]["played_at"]
@@ -271,6 +331,7 @@ class SpotifyDataIngestion:
                 "duration_seconds": duration,
                 "records_ingested": len(data),
                 "saved_file": saved_file,
+                "csv_file": csv_file,
             }
 
             logger.info(f"Ingestion completed in {duration:.2f} seconds")
