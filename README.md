@@ -11,7 +11,7 @@ This project provides a complete data pipeline for ingesting, processing, and an
 ### Technology Stack
 
 - **🐍 Python 3.11**: Core application language with uv package management
-- **🏗️ uv**: Ultra-fast Python package manager and dependency resolver
+- **⚡️ uv**: Ultra-fast Python package manager and dependency resolver
 - **📊 DuckDB**: Analytical database for efficient data storage and querying
 - **⚡ Polars**: High-performance DataFrame library for data processing
 - **🔄 Prefect**: Workflow orchestration and scheduling
@@ -33,7 +33,7 @@ The application consists of several containerized services:
 - **Prefect Deployer**: Automatically deploys flows on startup
 
 #### Reporting & Database Services
-- **DuckDB**: Analytical database for data warehousing and analytics
+- **DuckDB**: Analytical database for data warehousing and analytics (in-app file storage)
 - **Metabase**: Business intelligence platform (port 3000)
 - **PostgreSQL (Metabase)**: Metadata storage for Metabase
 - **PostgreSQL (Prefect)**: Workflow state and history storage
