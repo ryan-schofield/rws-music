@@ -4,10 +4,10 @@ music-tracker:
      dev:
        type: duckdb
        path: "{{ env_var('DUCKDB_PATH', '../data/music_tracker.duckdb') }}"
-       threads: 4
+       threads: 1
        extensions:
          - httpfs
          - parquet
        settings:
          memory_limit: 2GB
-         threads: 2
+         threads: 1
