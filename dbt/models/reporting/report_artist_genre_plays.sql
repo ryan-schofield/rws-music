@@ -1,3 +1,5 @@
+-- depends_on: {{ ref('report_track_plays') }}
+
 {{
   config(
     materialized='external',

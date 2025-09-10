@@ -9,5 +9,5 @@ music-tracker:
          - httpfs
          - parquet
        settings:
-         memory_limit: 8GB
-         threads: 4
+         memory_limit: 2GB
+         threads: 2
