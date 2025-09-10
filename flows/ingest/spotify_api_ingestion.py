@@ -16,6 +16,7 @@ import glob
 
 import requests
 from dotenv import load_dotenv
+import polars as pl
 
 # Load environment variables
 load_dotenv()
@@ -237,23 +238,23 @@ class SpotifyDataIngestion:
     def consolidate_to_csv(self) -> str:
         """Consolidate all JSON files from recently_played/detail directory to a single CSV."""
         logger.info("Starting consolidation of JSON files to CSV")
-        
+
         # Find all JSON files in the played directory and subdirectories
         played_dir = self.data_dir / "raw" / "recently_played"
         json_pattern = str(played_dir / "**" / "*.json")
         json_files = glob.glob(json_pattern, recursive=True)
-        
+
         if not json_files:
             logger.info("No JSON files found to consolidate")
             return None
-        
+
         logger.info(f"Found {len(json_files)} JSON files to consolidate")
-        
+
         # Collect all data from JSON files
         all_data = []
         for json_file in json_files:
             try:
-                with open(json_file, 'r') as f:
+                with open(json_file, "r") as f:
                     file_data = json.load(f)
                     if isinstance(file_data, list):
                         all_data.extend(file_data)
@@ -263,28 +264,113 @@ class SpotifyDataIngestion:
             except Exception as e:
                 logger.error(f"Error reading {json_file}: {e}")
                 continue
-        
+
         if not all_data:
             logger.info("No valid data found in JSON files")
             return None
-        
+
         # Use static CSV filename (overwrite each time)
         csv_filename = "recently_played.csv"
         csv_filepath = self.data_dir / csv_filename
-        
-        # Write to CSV
+
+        # Convert to Polars DataFrame and remove duplicates
         try:
-            # Get headers from the first record
-            headers = list(all_data[0].keys()) if all_data else []
-            
-            with open(csv_filepath, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=headers)
-                writer.writeheader()
-                writer.writerows(all_data)
-            
-            logger.info(f"Successfully consolidated {len(all_data)} records to {csv_filepath}")
+            logger.info(f"Converting {len(all_data)} records to DataFrame")
+            df = pl.DataFrame(all_data)
+
+            # Convert played_at to datetime and duration_ms to seconds for calculations
+            df = df.with_columns(
+                [
+                    pl.col("played_at")
+                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ")
+                    .alias("played_at_dt"),
+                    (pl.col("duration_ms") / 1000).alias("duration_sec"),
+                ]
+            )
+
+            # Step 1: Remove exact duplicates by grouping on track_id and played_at (same play event)
+            df_step1 = (
+                df.with_row_index()
+                .with_columns(
+                    pl.col("index")
+                    .first()
+                    .over(["track_id", "played_at"])
+                    .alias("keep_row")
+                )
+                .filter(pl.col("index") == pl.col("keep_row"))
+                .drop(["index", "keep_row"])
+            )
+
+            step1_count = len(df_step1)
+            step1_removed = len(df) - step1_count
+
+            # Step 2: Remove duplicates where same track_id and request_after have plays within track duration
+            df_unique = (
+                df_step1.sort(["track_id", "request_after", "played_at_dt"])
+                .with_columns(
+                    [
+                        pl.col("played_at_dt")
+                        .shift(1)
+                        .over(["track_id", "request_after"])
+                        .alias("prev_played_at"),
+                        pl.col("duration_sec")
+                        .shift(1)
+                        .over(["track_id", "request_after"])
+                        .alias("prev_duration_sec"),
+                    ]
+                )
+                .with_columns(
+                    [
+                        (
+                            (
+                                pl.col("played_at_dt") - pl.col("prev_played_at")
+                            ).dt.total_seconds()
+                        ).alias("time_diff_sec")
+                    ]
+                )
+                .filter(
+                    (pl.col("time_diff_sec").is_null())  # Keep first occurrence
+                    | (
+                        pl.col("time_diff_sec") > pl.col("prev_duration_sec")
+                    )  # Keep if gap > previous track duration
+                )
+                .drop(
+                    [
+                        "played_at_dt",
+                        "duration_sec",
+                        "prev_played_at",
+                        "prev_duration_sec",
+                        "time_diff_sec",
+                    ]
+                )
+            )
+
+            # Log deduplication results
+            original_count = len(all_data)
+            unique_count = len(df_unique)
+            step2_removed = step1_count - unique_count
+            total_removed = original_count - unique_count
+
+            if total_removed > 0:
+                logger.info(f"Deduplication complete:")
+                logger.info(
+                    f"  - Step 1 (exact duplicates): {step1_removed} records removed"
+                )
+                logger.info(
+                    f"  - Step 2 (duration-based): {step2_removed} records removed"
+                )
+                logger.info(f"  - Total removed: {total_removed} records")
+            else:
+                logger.info("No duplicate records found")
+
+            # Write to CSV
+            df_unique.write_csv(csv_filepath)
+
+            logger.info(
+                f"Successfully consolidated {unique_count} unique records to {csv_filepath}"
+            )
             return str(csv_filepath)
-            
+
         except Exception as e:
             logger.error(f"Error writing CSV file: {e}")
             raise
@@ -301,9 +387,7 @@ class SpotifyDataIngestion:
             # Fetch data from Spotify
             data = self.fetch_recently_played(after=after)
             if not data:
-                logger.info(
-                    "No new tracks retrieved from Spotify. This is not an error."
-                )
+                logger.info("No new tracks retrieved from Spotify. Skipping CSV write.")
                 return {
                     "status": "success",
                     "message": "No new data retrieved from Spotify",
