@@ -3,6 +3,7 @@ data/
 docs/
 logs/
 working/
+.github/
 
 # IDE
 .vscode/

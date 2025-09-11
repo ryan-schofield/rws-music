@@ -1,0 +1,50 @@
+{
+    "dashboards": [
+        {
+            "description": null,
+            "archived": false,
+            "view_count": 6,
+            "collection_position": null,
+            "creator": {
+                "email": "api-key-user-1d0e4442-3e13-40d0-a4bb-be2d31766266@api-key.invalid",
+                "first_name": "metabase-deployer",
+                "last_login": null,
+                "is_qbnewb": true,
+                "is_superuser": true,
+                "id": 2,
+                "last_name": "",
+                "date_joined": "2025-09-11T21:09:52.375128Z",
+                "common_name": "metabase-deployer"
+            },
+            "initially_published_at": null,
+            "enable_embedding": false,
+            "collection_id": 4,
+            "show_in_getting_started": false,
+            "name": "Track History",
+            "width": "fixed",
+            "caveats": null,
+            "creator_id": 2,
+            "updated_at": "2025-09-11T21:55:18.437673Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "id": 3,
+            "last_viewed_at": "2025-09-11T21:13:49.128087Z",
+            "position": null,
+            "archived_directly": false,
+            "entity_id": "AE1hPvi4nSuQ3ch7R17LE",
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-11T21:55:18.549798Z"
+            },
+            "parameters": [],
+            "auto_apply_filters": true,
+            "created_at": "2025-09-11T21:13:49.128087Z",
+            "public_uuid": null,
+            "points_of_interest": null
+        }
+    ]
+}

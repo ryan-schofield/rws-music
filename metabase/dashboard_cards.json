@@ -1,0 +1,111 @@
+{
+    "dashboard_cards": [
+        {
+            "size_x": 6,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 1,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 11,
+                "result_metadata": [
+                    {
+                        "display_name": "Sum of Tracks Played",
+                        "semantic_type": "type/Category",
+                        "settings": null,
+                        "field_ref": [
+                            "aggregation",
+                            0
+                        ],
+                        "base_type": "type/BigInteger",
+                        "effective_type": "type/BigInteger",
+                        "name": "sum",
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 1,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Number": {
+                                    "min": 329216.0,
+                                    "q1": 329216.0,
+                                    "q3": 329216.0,
+                                    "max": 329216.0,
+                                    "sd": null,
+                                    "avg": 329216.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 4,
+                "query_type": "query",
+                "name": "Tracks Played",
+                "last_used_at": "2025-09-11T21:55:15.007879Z",
+                "type": "question",
+                "query_average_duration": 210,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-11T21:54:54.51147Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "source-table": 11,
+                        "aggregation": [
+                            [
+                                "sum",
+                                [
+                                    "field",
+                                    183,
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "XY4qkcWLmn9DvoY7_FmRS"
+                        }
+                    }
+                },
+                "id": 39,
+                "parameter_mappings": [],
+                "display": "scalar",
+                "archived_directly": false,
+                "entity_id": "uf4pcDfZ8M_eB5BlVLS6G",
+                "collection_preview": true,
+                "visualization_settings": {},
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-11T21:13:48.943504Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-11T21:55:18.437673Z",
+            "col": 0,
+            "id": 36,
+            "parameter_mappings": [],
+            "card_id": 39,
+            "entity_id": "aKf10ywJwln17SLAdNcFy",
+            "visualization_settings": {},
+            "size_y": 3,
+            "dashboard_id": 3,
+            "created_at": "2025-09-11T21:55:18.437673Z",
+            "row": 0
+        }
+    ]
+}
