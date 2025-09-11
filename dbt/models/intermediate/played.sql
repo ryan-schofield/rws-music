@@ -9,7 +9,7 @@ SELECT
     , t.played_at
     , t.played_at_local
     , CAST(t.played_at_local AS DATE) AS date_sid
-    , CAST(t.played_at_local AS TIME) AS time_sid
+    , CAST(DATE_TRUNC('second', t.played_at_local) AS TIME) AS time_sid
     , t.popularity
     , a.artist_popularity
     , t.duration_ms
