@@ -272,12 +272,229 @@ def clean_payload(item, item_type="card"):
     return cleaned
 
 
+def create_table_mapping(source_tables, target_tables):
+    """Create mapping from source table_id to target table_id by matching name and schema."""
+    table_mapping = {}
+
+    print(
+        f"Creating table mapping with {len(source_tables)} source tables and {len(target_tables)} target tables"
+    )
+
+    for source_table in source_tables:
+        source_id = source_table.get("id")
+        source_name = source_table.get("name")
+        source_schema = source_table.get("schema")
+        source_db_id = source_table.get("db_id")
+
+        print(
+            f"Looking for target match for source table: id={source_id}, name='{source_name}', schema='{source_schema}', db_id={source_db_id}"
+        )
+
+        # Find matching target table
+        for target_table in target_tables:
+            target_name = target_table.get("name")
+            target_schema = target_table.get("schema")
+            target_db_id = target_table.get("db_id")
+            target_id = target_table.get("id")
+
+            if (
+                target_name == source_name
+                and target_schema == source_schema
+                and target_db_id == source_db_id
+            ):
+                table_mapping[source_id] = target_id
+                print(
+                    f"✓ Mapped table '{source_name}' (schema: {source_schema}, db: {source_db_id}) from {source_id} to {target_id}"
+                )
+                break
+        else:
+            print(
+                f"✗ No match found for source table: id={source_id}, name='{source_name}', schema='{source_schema}', db_id={source_db_id}"
+            )
+
+    print(f"Final table mapping: {table_mapping}")
+    return table_mapping
+
+
+def create_field_mapping(source_fields, target_fields, table_mapping):
+    """Create mapping from source field_id to target field_id by matching name and table."""
+    field_mapping = {}
+
+    print(
+        f"Creating field mapping with {len(source_fields)} source fields and {len(target_fields)} target fields"
+    )
+    print(f"Table mapping: {table_mapping}")
+
+    for source_field in source_fields:
+        source_id = source_field.get("id")
+        source_name = source_field.get("name")
+        source_table_id = source_field.get("table_id")
+
+        # Only map fields if we have a table mapping for this field's table
+        if source_table_id in table_mapping:
+            target_table_id = table_mapping[source_table_id]
+
+            # Find matching target field
+            for target_field in target_fields:
+                target_name = target_field.get("name")
+                target_table_id_check = target_field.get("table_id")
+                target_id = target_field.get("id")
+
+                if (
+                    target_name == source_name
+                    and target_table_id_check == target_table_id
+                ):
+                    field_mapping[source_id] = target_id
+                    print(
+                        f"✓ Mapped field '{source_name}' (table: {source_table_id} -> {target_table_id}) from {source_id} to {target_id}"
+                    )
+                    break
+            else:
+                print(
+                    f"✗ No match found for source field: id={source_id}, name='{source_name}', table_id={source_table_id}"
+                )
+        else:
+            print(
+                f"  Skipping field {source_id} - no table mapping for table_id {source_table_id}"
+            )
+
+    return field_mapping
+
+
+def update_field_references(obj, field_mapping):
+    """Recursively update field references in a nested data structure."""
+    if isinstance(obj, dict):
+        # Recursively process all values in dict
+        for key, value in obj.items():
+            obj[key] = update_field_references(value, field_mapping)
+        return obj
+    elif isinstance(obj, list):
+        # Handle field references like ["field", field_id, {...}]
+        if (
+            len(obj) >= 2
+            and obj[0] == "field"
+            and isinstance(obj[1], int)
+            and obj[1] in field_mapping
+        ):
+            old_field_id = obj[1]
+            obj[1] = field_mapping[old_field_id]
+            print(f"Updated field reference from {old_field_id} to {obj[1]}")
+
+        # Recursively process all items in list
+        return [update_field_references(item, field_mapping) for item in obj]
+    else:
+        return obj
+
+
+def update_table_references(obj, table_mapping):
+    """Recursively update table references (source-table) in a nested data structure."""
+    if isinstance(obj, dict):
+        # Recursively process all values in dict
+        for key, value in obj.items():
+            if (
+                key == "source-table"
+                and isinstance(value, int)
+                and value in table_mapping
+            ):
+                print(
+                    f"  ✓ Updated source-table from {value} to {table_mapping[value]}"
+                )
+                obj[key] = table_mapping[value]
+            else:
+                obj[key] = update_table_references(value, table_mapping)
+        return obj
+    elif isinstance(obj, list):
+        # Recursively process all items in list
+        return [update_table_references(item, table_mapping) for item in obj]
+    else:
+        return obj
+
+
+def update_table_id_in_question(question, table_mapping, field_mapping):
+    """Update table_id and field references in question's dataset_query and top-level table_id if they exist."""
+    question_name = question.get("name", "Unknown")
+    print(f"\nUpdating question '{question_name}'")
+
+    # Update top-level table_id
+    top_level_table_id = question.get("table_id")
+    print(f"  Top-level table_id: {top_level_table_id}")
+    if (
+        top_level_table_id
+        and isinstance(top_level_table_id, int)
+        and top_level_table_id in table_mapping
+    ):
+        old_table_id = top_level_table_id
+        question["table_id"] = table_mapping[top_level_table_id]
+        print(
+            f"  ✓ Updated top-level table_id from {old_table_id} to {question['table_id']}"
+        )
+    else:
+        print(f"  ✗ No mapping found for top-level table_id {top_level_table_id}")
+
+    # Update source-table references and field references in dataset_query
+    dataset_query = question.get("dataset_query", {})
+
+    # Update all source-table references recursively
+    print("  Updating table references...")
+    dataset_query = update_table_references(dataset_query, table_mapping)
+
+    # Update field references throughout the query
+    print("  Updating field references...")
+    dataset_query = update_field_references(dataset_query, field_mapping)
+
+    return question
+
+
 def import_metabase_content():
     global METABASE_API_KEY
     script_dir = os.path.dirname(os.path.abspath(__file__))
     headers = {"Content-Type": "application/json", "x-api-key": METABASE_API_KEY}
 
     print("Starting improved Metabase content import...")
+
+    # Load source tables and create mapping
+    try:
+        with open(os.path.join(script_dir, "..", "tables.json"), "r") as f:
+            tables_data = json.load(f)
+        source_tables = tables_data.get("tables", [])
+    except FileNotFoundError:
+        print("tables.json not found, skipping table mapping")
+        source_tables = []
+
+    # Load source fields
+    try:
+        with open(os.path.join(script_dir, "..", "fields.json"), "r") as f:
+            fields_data = json.load(f)
+        source_fields = fields_data.get("fields", [])
+    except FileNotFoundError:
+        print("fields.json not found, skipping field mapping")
+        source_fields = []
+
+    # Get target tables
+    target_tables = get_existing_items("table", headers)
+
+    # Get target fields by fetching metadata for each target table
+    target_fields = []
+    for table in target_tables:
+        try:
+            table_metadata_response = requests.get(
+                f"{METABASE_HOST}/api/table/{table['id']}/query_metadata",
+                headers=headers,
+            )
+            table_metadata_response.raise_for_status()
+            table_metadata = table_metadata_response.json()
+            table_fields = table_metadata.get("fields", [])
+            for field in table_fields:
+                field["table_id"] = table["id"]  # Associate field with its table
+                target_fields.append(field)
+        except Exception as e:
+            print(f"Failed to fetch fields for target table {table['id']}: {e}")
+
+    # Create table ID mapping
+    table_mapping = create_table_mapping(source_tables, target_tables)
+
+    # Create field ID mapping
+    field_mapping = create_field_mapping(source_fields, target_fields, table_mapping)
 
     # Get existing items to enable updates instead of recreating
     existing_queries = get_existing_items("native-query-snippet", headers)
@@ -309,9 +526,14 @@ def import_metabase_content():
     question_id_mapping = {}
 
     for question in questions:
+        # Update table_id and field references in question before importing
+        updated_question = update_table_id_in_question(
+            question, table_mapping, field_mapping
+        )
+
         old_question_id = question.get("id")
         new_question_id = import_or_update_item(
-            question, "card", "card", existing_questions, headers
+            updated_question, "card", "card", existing_questions, headers
         )
         if old_question_id and new_question_id:
             question_id_mapping[old_question_id] = new_question_id

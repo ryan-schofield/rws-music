@@ -4,7 +4,2131 @@
             "cache_invalidated_at": null,
             "description": null,
             "archived": false,
-            "view_count": 1,
+            "view_count": 22,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 11,
+            "result_metadata": [
+                {
+                    "display_name": "Artists Played",
+                    "semantic_type": "type/Quantity",
+                    "settings": null,
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "Artists Played",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 1,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 1206.0,
+                                "q1": 1206.0,
+                                "q3": 1206.0,
+                                "max": 1206.0,
+                                "sd": null,
+                                "avg": 1206.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 5,
+            "query_type": "query",
+            "name": "Artists Played",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:03:52.030885Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 11,
+                    "aggregation": [
+                        [
+                            "aggregation-options",
+                            [
+                                "distinct",
+                                [
+                                    "field",
+                                    188,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            ],
+                            {
+                                "name": "Artists Played",
+                                "display-name": "Artists Played"
+                            }
+                        ]
+                    ],
+                    "aggregation-idents": {
+                        "0": "Wt3k6mKc3RIOzrLguT_j2"
+                    }
+                }
+            },
+            "id": 58,
+            "parameter_mappings": [],
+            "display": "scalar",
+            "archived_directly": false,
+            "entity_id": "Sz6e0w6i5iM4h0n3M8kn7",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:03:52.043128Z"
+            },
+            "visualization_settings": {},
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "tracks_played_questions",
+                "archive_operation_id": null,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 5,
+                "archived_directly": null,
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:03:38.507752Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T12:58:40.158368Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 17,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "display_name": "Artist/Track",
+                    "field_ref": [
+                        "expression",
+                        "Artist/Track"
+                    ],
+                    "base_type": "type/Text",
+                    "effective_type": "type/Text",
+                    "name": "Artist/Track",
+                    "semantic_type": null,
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 23.75
+                            }
+                        }
+                    }
+                },
+                {
+                    "description": null,
+                    "semantic_type": null,
+                    "coercion_strategy": null,
+                    "unit": "day",
+                    "name": "played_at",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        163,
+                        {
+                            "base-type": "type/DateTimeWithTZ",
+                            "temporal-unit": "day"
+                        }
+                    ],
+                    "effective_type": "type/DateTimeWithTZ",
+                    "id": 163,
+                    "visibility_type": "normal",
+                    "display_name": "Played At: Day",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 187,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/DateTime": {
+                                "earliest": "2025-09-07T01:04:52.659Z",
+                                "latest": "2025-09-11T18:44:16.997Z"
+                            }
+                        }
+                    },
+                    "base_type": "type/DateTimeWithTZ"
+                },
+                {
+                    "display_name": "Played At (UTC)",
+                    "field_ref": [
+                        "expression",
+                        "Played At (UTC)"
+                    ],
+                    "base_type": "type/Text",
+                    "effective_type": "type/Text",
+                    "name": "Played At (UTC)",
+                    "semantic_type": null,
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 5.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Last 4",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:58:41.063876Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 10,
+                    "expressions": {
+                        "Artist/Track": [
+                            "concat",
+                            [
+                                "field",
+                                165,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            " - ",
+                            [
+                                "field",
+                                166,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "Played At (UTC)": [
+                            "concat",
+                            [
+                                "get-hour",
+                                [
+                                    "field",
+                                    163,
+                                    {
+                                        "base-type": "type/DateTimeWithTZ"
+                                    }
+                                ]
+                            ],
+                            ":",
+                            [
+                                "expression",
+                                "Played at Minute",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "Played at Minute": [
+                            "concat",
+                            [
+                                "if",
+                                [
+                                    [
+                                        [
+                                            "<",
+                                            [
+                                                "get-minute",
+                                                [
+                                                    "field",
+                                                    163,
+                                                    {
+                                                        "base-type": "type/DateTimeWithTZ"
+                                                    }
+                                                ]
+                                            ],
+                                            10
+                                        ],
+                                        "0"
+                                    ]
+                                ],
+                                {
+                                    "default": ""
+                                }
+                            ],
+                            [
+                                "get-minute",
+                                [
+                                    "field",
+                                    163,
+                                    {
+                                        "base-type": "type/DateTimeWithTZ"
+                                    }
+                                ]
+                            ]
+                        ]
+                    },
+                    "breakout": [
+                        [
+                            "expression",
+                            "Artist/Track",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        [
+                            "field",
+                            163,
+                            {
+                                "base-type": "type/DateTimeWithTZ",
+                                "temporal-unit": "day"
+                            }
+                        ],
+                        [
+                            "expression",
+                            "Played At (UTC)",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "limit": 4,
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "field",
+                                163,
+                                {
+                                    "base-type": "type/DateTimeWithTZ",
+                                    "temporal-unit": "day"
+                                }
+                            ]
+                        ],
+                        [
+                            "desc",
+                            [
+                                "expression",
+                                "Played At (UTC)",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ]
+                    ],
+                    "breakout-idents": {
+                        "0": "MBBMoJVu0-ztzGFrfmI97",
+                        "1": "8F0MNgKna08ivjeTShLHW",
+                        "2": "wvTCA0lCt_IBz23POkztK"
+                    },
+                    "expression-idents": {
+                        "Artist/Track": "ecQMTL6R81PnI1w0sgAGa",
+                        "Played At (UTC)": "AmcLbfKZgQX1GFRIvOErp",
+                        "Played at Minute": "vhsKJygA1-OBZa1RRQbIV"
+                    }
+                }
+            },
+            "id": 62,
+            "parameter_mappings": [],
+            "display": "table",
+            "archived_directly": false,
+            "entity_id": "ulaHJ22hj6MGoKuAcyznO",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:58:41.082741Z"
+            },
+            "visualization_settings": {
+                "table.pivot_column": "Played",
+                "table.cell_column": "Artist/Track",
+                "column_settings": {
+                    "[\"name\",\"played_at\"]": {
+                        "date_style": "MMMM D, YYYY",
+                        "date_separator": "-",
+                        "date_abbreviate": true
+                    }
+                }
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:45:06.790789Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 24,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "display_name": "Minutes Played",
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/Float",
+                    "effective_type": "type/Float",
+                    "name": "Minutes Played",
+                    "semantic_type": null,
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 1,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 392.0,
+                                "q1": 392.0,
+                                "q3": 392.0,
+                                "max": 392.0,
+                                "sd": null,
+                                "avg": 392.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Minutes Played",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T14:01:50.450664Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "aggregation": [
+                        [
+                            "aggregation-options",
+                            [
+                                "round",
+                                [
+                                    "/",
+                                    [
+                                        "sum",
+                                        [
+                                            "field",
+                                            164,
+                                            {
+                                                "base-type": "type/BigInteger"
+                                            }
+                                        ]
+                                    ],
+                                    60000
+                                ]
+                            ],
+                            {
+                                "name": "Minutes Played",
+                                "display-name": "Minutes Played"
+                            }
+                        ]
+                    ],
+                    "source-table": 10,
+                    "aggregation-idents": {
+                        "0": "l15Jx5hdFw_lG442OiHtk"
+                    },
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            163,
+                            {
+                                "base-type": "type/DateTimeWithTZ"
+                            }
+                        ],
+                        -1,
+                        "day",
+                        {
+                            "include-current": true
+                        }
+                    ]
+                }
+            },
+            "id": 64,
+            "parameter_mappings": [],
+            "display": "scalar",
+            "archived_directly": false,
+            "entity_id": "11BhYGCncF3A4TsbC73GB",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T14:01:50.464665Z"
+            },
+            "visualization_settings": {},
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:51:56.912026Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 27,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "display_name": "Artists Played",
+                    "semantic_type": "type/Quantity",
+                    "settings": null,
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "Artists Played",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 1,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 42.0,
+                                "q1": 42.0,
+                                "q3": 42.0,
+                                "max": 42.0,
+                                "sd": null,
+                                "avg": 42.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Recently Played Artists",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T17:35:28.778734Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 10,
+                    "aggregation": [
+                        [
+                            "aggregation-options",
+                            [
+                                "distinct",
+                                [
+                                    "field",
+                                    165,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            ],
+                            {
+                                "name": "Artists Played",
+                                "display-name": "Artists Played"
+                            }
+                        ]
+                    ],
+                    "aggregation-idents": {
+                        "0": "XI338pVU_XVO8YiBmJc6Z"
+                    }
+                }
+            },
+            "id": 66,
+            "parameter_mappings": [],
+            "display": "scalar",
+            "archived_directly": false,
+            "entity_id": "fJjzJgN9f-Y1ed1j4nM_F",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T17:35:28.802566Z"
+            },
+            "visualization_settings": {},
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:53:41.666294Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 23,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "description": null,
+                    "semantic_type": null,
+                    "coercion_strategy": null,
+                    "name": "artist",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        165,
+                        {
+                            "base-type": "type/Text"
+                        }
+                    ],
+                    "effective_type": "type/Text",
+                    "id": 165,
+                    "visibility_type": "normal",
+                    "display_name": "Artist",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 59,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 9.133689839572192
+                            }
+                        }
+                    },
+                    "base_type": "type/Text"
+                },
+                {
+                    "display_name": "Sum of Duration Minutes",
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/Float",
+                    "effective_type": "type/Float",
+                    "name": "sum",
+                    "semantic_type": null,
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 11,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 5.0,
+                                "q1": 6.375,
+                                "q3": 31.75,
+                                "max": 83.0,
+                                "sd": 21.95731790369237,
+                                "avg": 20.866666666666667
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Recently Played by Artist",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:23:31.009078Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "aggregation-idents": {
+                        "0": "FdZZuSu1X3PCMkuyiB1vG"
+                    },
+                    "breakout-idents": {
+                        "0": "gqMoGIfdYYUh3lvmrO5b5"
+                    },
+                    "limit": 15,
+                    "expression-idents": {
+                        "Duration Minutes": "fj8m6vN0Dp9Vy1zFaPpgS"
+                    },
+                    "source-table": 10,
+                    "expressions": {
+                        "Duration Minutes": [
+                            "round",
+                            [
+                                "/",
+                                [
+                                    "field",
+                                    164,
+                                    {
+                                        "base-type": "type/BigInteger"
+                                    }
+                                ],
+                                60000
+                            ]
+                        ]
+                    },
+                    "breakout": [
+                        [
+                            "field",
+                            165,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "aggregation",
+                                0
+                            ]
+                        ]
+                    ],
+                    "aggregation": [
+                        [
+                            "sum",
+                            [
+                                "expression",
+                                "Duration Minutes",
+                                {
+                                    "base-type": "type/Integer"
+                                }
+                            ]
+                        ]
+                    ]
+                }
+            },
+            "id": 61,
+            "parameter_mappings": [],
+            "display": "row",
+            "archived_directly": false,
+            "entity_id": "2ZUVRCPnFLCyE-RSKnytv",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:23:31.023639Z"
+            },
+            "visualization_settings": {
+                "series_settings": {
+                    "sum": {
+                        "color": "#88BF4D"
+                    }
+                },
+                "graph.show_values": true,
+                "graph.x_axis.labels_enabled": false,
+                "graph.y_axis.auto_range": true,
+                "graph.y_axis.labels_enabled": false,
+                "graph.dimensions": [
+                    "artist"
+                ],
+                "graph.metrics": [
+                    "sum"
+                ]
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:20:09.831444Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 27,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "display_name": "Count",
+                    "semantic_type": "type/Quantity",
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "count",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 1,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 99.0,
+                                "q1": 99.0,
+                                "q3": 99.0,
+                                "max": 99.0,
+                                "sd": null,
+                                "avg": 99.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Recently Played Tracks",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T17:34:57.937414Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 10,
+                    "aggregation": [
+                        [
+                            "count"
+                        ]
+                    ],
+                    "aggregation-idents": {
+                        "0": "2bz8WpxSk8BBv28OrPfDm"
+                    }
+                }
+            },
+            "id": 65,
+            "parameter_mappings": [],
+            "display": "scalar",
+            "archived_directly": false,
+            "entity_id": "-TDeusGoiDlfNCyGMT3Qf",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T17:34:57.985828Z"
+            },
+            "visualization_settings": {},
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:52:32.756422Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 26,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 11,
+            "result_metadata": [
+                {
+                    "description": null,
+                    "semantic_type": "type/Category",
+                    "coercion_strategy": null,
+                    "name": "time_of_day_label",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        213,
+                        {
+                            "base-type": "type/Text"
+                        }
+                    ],
+                    "effective_type": "type/Text",
+                    "id": 213,
+                    "visibility_type": "normal",
+                    "display_name": "Time Of Day Label",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 11.7834
+                            }
+                        }
+                    },
+                    "base_type": "type/Text"
+                },
+                {
+                    "display_name": "Sum of Tracks Played",
+                    "semantic_type": "type/Category",
+                    "field_ref": [
+                        "field",
+                        "sum",
+                        {
+                            "base-type": "type/Integer"
+                        }
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "sum",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 109.0,
+                                "q1": 1249.5,
+                                "q3": 3060.5,
+                                "max": 3442.0,
+                                "sd": 1434.3739633256966,
+                                "avg": 2155.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 5,
+            "query_type": "query",
+            "name": "Time of Day",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:08:18.562908Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "order-by": [
+                        [
+                            "asc",
+                            [
+                                "field",
+                                "time_of_day_label",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ]
+                    ],
+                    "filter": [
+                        "!=",
+                        [
+                            "field",
+                            "time_of_day_label",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        " - "
+                    ],
+                    "source-query": {
+                        "source-table": 11,
+                        "aggregation": [
+                            [
+                                "sum",
+                                [
+                                    "field",
+                                    183,
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "breakout": [
+                            [
+                                "field",
+                                213,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "-LuyQfuWpKxqwiXNiIgvE"
+                        },
+                        "breakout-idents": {
+                            "0": "V6dvHngl-AzHYlFTDLNS_"
+                        }
+                    }
+                }
+            },
+            "id": 60,
+            "parameter_mappings": [],
+            "display": "row",
+            "archived_directly": false,
+            "entity_id": "5K0EXZfEB-5Y6fe_LAEyV",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:08:18.577642Z"
+            },
+            "visualization_settings": {
+                "series_settings": {
+                    "sum": {
+                        "color": "#999AC4"
+                    }
+                },
+                "graph.dimensions": [
+                    "time_of_day_label"
+                ],
+                "graph.x_axis.labels_enabled": false,
+                "graph.y_axis.labels_enabled": false,
+                "graph.y_axis.axis_enabled": false,
+                "graph.metrics": [
+                    "sum"
+                ]
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "tracks_played_questions",
+                "archive_operation_id": null,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 5,
+                "archived_directly": null,
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:03:38.507752Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:03:00.021293Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 16,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 10,
+            "result_metadata": [
+                {
+                    "display_name": "Artist - Album",
+                    "field_ref": [
+                        "expression",
+                        "Artist - Album"
+                    ],
+                    "base_type": "type/Text",
+                    "effective_type": "type/Text",
+                    "name": "Artist - Album",
+                    "semantic_type": null,
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 24.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "display_name": "Count",
+                    "semantic_type": "type/Quantity",
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "count",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 4,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 10.0,
+                                "q1": 10.5,
+                                "q3": 13.5,
+                                "max": 15.0,
+                                "sd": 2.160246899469287,
+                                "avg": 12.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 6,
+            "query_type": "query",
+            "name": "Top Albums",
+            "last_used_at": "2025-09-12T17:35:42.355613Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T17:21:40.869271Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "aggregation-idents": {
+                        "0": "MA4pWJdkz3e4x2ECn6cYT"
+                    },
+                    "breakout-idents": {
+                        "0": "YB38Xd05Wb5nhixhfrCio"
+                    },
+                    "limit": 4,
+                    "expression-idents": {
+                        "Album Short": "0JNFLOaVQjrbJl6wc7Pjw",
+                        "Artist Short": "qTovSoLETXR7SbLneZ4Wc",
+                        "Artist - Album": "pm_ELmYJe7dM3zR7FR6f9"
+                    },
+                    "source-table": 10,
+                    "expressions": {
+                        "Album Short": [
+                            "if",
+                            [
+                                [
+                                    [
+                                        ">",
+                                        [
+                                            "length",
+                                            [
+                                                "field",
+                                                167,
+                                                {
+                                                    "base-type": "type/Text"
+                                                }
+                                            ]
+                                        ],
+                                        40
+                                    ],
+                                    [
+                                        "concat",
+                                        [
+                                            "substring",
+                                            [
+                                                "field",
+                                                167,
+                                                {
+                                                    "base-type": "type/Text"
+                                                }
+                                            ],
+                                            1,
+                                            40
+                                        ],
+                                        "..."
+                                    ]
+                                ]
+                            ],
+                            {
+                                "default": [
+                                    "field",
+                                    167,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Artist Short": [
+                            "if",
+                            [
+                                [
+                                    [
+                                        ">",
+                                        [
+                                            "length",
+                                            [
+                                                "field",
+                                                165,
+                                                {
+                                                    "base-type": "type/Text"
+                                                }
+                                            ]
+                                        ],
+                                        40
+                                    ],
+                                    [
+                                        "concat",
+                                        [
+                                            "substring",
+                                            [
+                                                "field",
+                                                165,
+                                                {
+                                                    "base-type": "type/Text"
+                                                }
+                                            ],
+                                            1,
+                                            40
+                                        ],
+                                        "..."
+                                    ]
+                                ]
+                            ],
+                            {
+                                "default": [
+                                    "field",
+                                    165,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Artist - Album": [
+                            "concat",
+                            [
+                                "expression",
+                                "Artist Short",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            " - ",
+                            [
+                                "expression",
+                                "Album Short",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ]
+                    },
+                    "breakout": [
+                        [
+                            "expression",
+                            "Artist - Album",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "aggregation",
+                                0
+                            ]
+                        ]
+                    ],
+                    "aggregation": [
+                        [
+                            "count"
+                        ]
+                    ]
+                }
+            },
+            "id": 63,
+            "parameter_mappings": [],
+            "display": "table",
+            "archived_directly": false,
+            "entity_id": "AJWg_IIA91z3tyd5uuEUE",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T17:21:40.892572Z"
+            },
+            "visualization_settings": {
+                "table.cell_column": "count",
+                "table.pivot_column": "Artist - Album",
+                "column_settings": {
+                    "[\"name\",\"count\"]": {
+                        "column_title": "Tracks Played"
+                    }
+                }
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "recently_played_questions",
+                "archive_operation_id": null,
+                "name": "Recently Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 6,
+                "archived_directly": null,
+                "entity_id": "uAXeeOXfUclMxwH1XD2SX",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:18:53.681409Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:50:40.215206Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 26,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 11,
+            "result_metadata": [
+                {
+                    "description": null,
+                    "semantic_type": null,
+                    "coercion_strategy": null,
+                    "name": "artist_name",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        188,
+                        {
+                            "base-type": "type/Text"
+                        }
+                    ],
+                    "effective_type": "type/Text",
+                    "id": 188,
+                    "visibility_type": "normal",
+                    "display_name": "Artist Name",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 1799,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0005,
+                                "average-length": 9.9532
+                            }
+                        }
+                    },
+                    "base_type": "type/Text"
+                },
+                {
+                    "display_name": "Sum of Tracks Played",
+                    "semantic_type": "type/Category",
+                    "settings": null,
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "sum",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 13,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 58.0,
+                                "q1": 66.375,
+                                "q3": 106.25,
+                                "max": 161.0,
+                                "sd": 32.20204075165778,
+                                "avg": 85.4
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 5,
+            "query_type": "query",
+            "name": "Tracks by Artist",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:12:46.455086Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 11,
+                    "aggregation": [
+                        [
+                            "sum",
+                            [
+                                "field",
+                                183,
+                                {
+                                    "base-type": "type/Integer"
+                                }
+                            ]
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            188,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "limit": 15,
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "aggregation",
+                                0
+                            ]
+                        ]
+                    ],
+                    "aggregation-idents": {
+                        "0": "Zz7MYMvPCLVTdeVnokPLM"
+                    },
+                    "breakout-idents": {
+                        "0": "wxDr3yVxLj_iTAUDzDzuA"
+                    }
+                }
+            },
+            "id": 55,
+            "parameter_mappings": [],
+            "display": "row",
+            "archived_directly": false,
+            "entity_id": "YWmDmHGOG7wpmPn0a9Mx4",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:12:46.467167Z"
+            },
+            "visualization_settings": {
+                "graph.dimensions": [
+                    "artist_name"
+                ],
+                "graph.x_axis.labels_enabled": false,
+                "graph.y_axis.labels_enabled": false,
+                "graph.show_values": true,
+                "graph.metrics": [
+                    "sum"
+                ]
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "tracks_played_questions",
+                "archive_operation_id": null,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 5,
+                "archived_directly": null,
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:03:38.507752Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T12:54:31.991454Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 22,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 11,
+            "result_metadata": [
+                {
+                    "description": null,
+                    "semantic_type": "type/Country",
+                    "coercion_strategy": null,
+                    "name": "country",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        195,
+                        {
+                            "base-type": "type/Text"
+                        }
+                    ],
+                    "effective_type": "type/Text",
+                    "id": 195,
+                    "visibility_type": "normal",
+                    "display_name": "Country",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 51,
+                            "nil%": 0.0899
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 10.31
+                            }
+                        }
+                    },
+                    "base_type": "type/Text"
+                },
+                {
+                    "display_name": "Sum of Tracks Played",
+                    "semantic_type": "type/Category",
+                    "settings": null,
+                    "field_ref": [
+                        "aggregation",
+                        0
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "sum",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 30,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 1.0,
+                                "q1": 2.1666666666666665,
+                                "q3": 58.5,
+                                "max": 3823.0,
+                                "sd": 614.7415936394369,
+                                "avg": 179.58333333333334
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 5,
+            "query_type": "query",
+            "name": "Tracks by Country",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:03:52.031782Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "source-table": 11,
+                    "aggregation": [
+                        [
+                            "sum",
+                            [
+                                "field",
+                                183,
+                                {
+                                    "base-type": "type/Integer"
+                                }
+                            ]
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            195,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "aggregation-idents": {
+                        "0": "YaPD_QIqGuAwSORYafaXM"
+                    },
+                    "breakout-idents": {
+                        "0": "GdpfWPp2KvbTUeFDAHrFt"
+                    }
+                }
+            },
+            "id": 59,
+            "parameter_mappings": [],
+            "display": "map",
+            "archived_directly": false,
+            "entity_id": "_ykmsDk1POOKHPaIcPczz",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:03:52.043803Z"
+            },
+            "visualization_settings": {
+                "map.type": "region",
+                "map.region": "world_countries",
+                "map.colors": [
+                    "rgb(255, 245, 214)",
+                    "rgb(255, 237, 178)",
+                    "rgb(255, 228, 141)",
+                    "rgb(255, 220, 105)",
+                    "hsl(45.89999999999998, 100%, 55.5%)"
+                ]
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "tracks_played_questions",
+                "archive_operation_id": null,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 5,
+                "archived_directly": null,
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:03:38.507752Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T13:00:15.775683Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 25,
+            "collection_position": null,
+            "source_card_id": null,
+            "table_id": 11,
+            "result_metadata": [
+                {
+                    "description": null,
+                    "semantic_type": null,
+                    "coercion_strategy": null,
+                    "name": "primary_genre",
+                    "settings": null,
+                    "fk_target_field_id": null,
+                    "field_ref": [
+                        "field",
+                        239,
+                        {
+                            "base-type": "type/Text"
+                        }
+                    ],
+                    "effective_type": "type/Text",
+                    "id": 239,
+                    "visibility_type": "normal",
+                    "display_name": "Primary Genre",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 370,
+                            "nil%": 0.0067
+                        },
+                        "type": {
+                            "type/Text": {
+                                "percent-json": 0.0,
+                                "percent-url": 0.0,
+                                "percent-email": 0.0,
+                                "percent-state": 0.0,
+                                "average-length": 12.1794
+                            }
+                        }
+                    },
+                    "base_type": "type/Text"
+                },
+                {
+                    "display_name": "Sum of Tracks Played",
+                    "semantic_type": "type/Category",
+                    "field_ref": [
+                        "field",
+                        "sum",
+                        {
+                            "base-type": "type/Integer"
+                        }
+                    ],
+                    "base_type": "type/BigInteger",
+                    "effective_type": "type/BigInteger",
+                    "name": "sum",
+                    "fingerprint": {
+                        "global": {
+                            "distinct-count": 13,
+                            "nil%": 0.0
+                        },
+                        "type": {
+                            "type/Number": {
+                                "min": 109.0,
+                                "q1": 139.0,
+                                "q3": 328.75,
+                                "max": 683.0,
+                                "sd": 158.17034796180658,
+                                "avg": 264.7692307692308
+                            }
+                        }
+                    }
+                }
+            ],
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "database_id": 2,
+            "enable_embedding": false,
+            "collection_id": 5,
+            "query_type": "query",
+            "name": "Tracks by Primary Genre",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
+            "type": "question",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:11:58.949497Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "dataset_query": {
+                "database": 2,
+                "type": "query",
+                "query": {
+                    "filter": [
+                        "and",
+                        [
+                            "!=",
+                            [
+                                "field",
+                                "primary_genre",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            "no genre defined"
+                        ],
+                        [
+                            "not-empty",
+                            [
+                                "field",
+                                "primary_genre",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ]
+                    ],
+                    "source-query": {
+                        "source-table": 11,
+                        "aggregation": [
+                            [
+                                "sum",
+                                [
+                                    "field",
+                                    183,
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "limit": 15,
+                        "order-by": [
+                            [
+                                "desc",
+                                [
+                                    "aggregation",
+                                    0
+                                ]
+                            ]
+                        ],
+                        "breakout": [
+                            [
+                                "field",
+                                239,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "Zz7MYMvPCLVTdeVnokPLM"
+                        },
+                        "breakout-idents": {
+                            "0": "kqzTklWvS7NygAUEm1z6m"
+                        }
+                    }
+                }
+            },
+            "id": 56,
+            "parameter_mappings": [],
+            "display": "row",
+            "archived_directly": false,
+            "entity_id": "N-eb3WRaO3choeeWdlgIj",
+            "collection_preview": true,
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:11:58.96463Z"
+            },
+            "visualization_settings": {
+                "graph.dimensions": [
+                    "primary_genre"
+                ],
+                "series_settings": {
+                    "sum": {
+                        "color": "#8A5EB0"
+                    }
+                },
+                "graph.x_axis.labels_enabled": false,
+                "graph.y_axis.labels_enabled": false,
+                "graph.show_values": true,
+                "graph.metrics": [
+                    "sum"
+                ]
+            },
+            "collection": {
+                "authority_level": null,
+                "description": null,
+                "archived": false,
+                "slug": "tracks_played_questions",
+                "archive_operation_id": null,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
+                "type": null,
+                "is_sample": false,
+                "id": 5,
+                "archived_directly": null,
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
+                "namespace": null,
+                "created_at": "2025-09-12T13:03:38.507752Z"
+            },
+            "metabase_version": "v0.53.7 (1cd6e9d)",
+            "parameters": [],
+            "dashboard_id": null,
+            "created_at": "2025-09-12T12:55:14.919107Z",
+            "public_uuid": null
+        },
+        {
+            "cache_invalidated_at": null,
+            "description": null,
+            "archived": false,
+            "view_count": 22,
             "collection_position": null,
             "source_card_id": null,
             "table_id": 11,
@@ -27,38 +2151,38 @@
                         },
                         "type": {
                             "type/Number": {
-                                "min": 329216.0,
-                                "q1": 329216.0,
-                                "q3": 329216.0,
-                                "max": 329216.0,
+                                "min": 8620.0,
+                                "q1": 8620.0,
+                                "q3": 8620.0,
+                                "max": 8620.0,
                                 "sd": null,
-                                "avg": 329216.0
+                                "avg": 8620.0
                             }
                         }
                     }
                 }
             ],
             "creator": {
-                "email": "api-key-user-1d0e4442-3e13-40d0-a4bb-be2d31766266@api-key.invalid",
-                "first_name": "metabase-deployer",
-                "last_login": null,
-                "is_qbnewb": true,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
                 "is_superuser": true,
-                "id": 2,
-                "last_name": "",
-                "date_joined": "2025-09-11T21:09:52.375128Z",
-                "common_name": "metabase-deployer"
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
             },
             "initially_published_at": null,
             "database_id": 2,
             "enable_embedding": false,
-            "collection_id": 4,
+            "collection_id": 5,
             "query_type": "query",
             "name": "Tracks Played",
-            "last_used_at": "2025-09-11T21:55:15.007879Z",
+            "last_used_at": "2025-09-12T17:36:26.878065Z",
             "type": "question",
-            "creator_id": 2,
-            "updated_at": "2025-09-11T21:54:54.51147Z",
+            "creator_id": 1,
+            "updated_at": "2025-09-12T13:03:52.049476Z",
             "made_public_by_id": null,
             "embedding_params": null,
             "cache_ttl": null,
@@ -80,45 +2204,45 @@
                         ]
                     ],
                     "aggregation-idents": {
-                        "0": "XY4qkcWLmn9DvoY7_FmRS"
+                        "0": "vXr633_AWVplV8QJSdTLn"
                     }
                 }
             },
-            "id": 39,
+            "id": 57,
             "parameter_mappings": [],
             "display": "scalar",
             "archived_directly": false,
-            "entity_id": "uf4pcDfZ8M_eB5BlVLS6G",
+            "entity_id": "G-SI0VimWI3edMyQvdJ0j",
             "collection_preview": true,
             "last-edit-info": {
-                "id": 2,
-                "email": "api-key-user-1d0e4442-3e13-40d0-a4bb-be2d31766266@api-key.invalid",
-                "first_name": "metabase-deployer",
-                "last_name": "",
-                "timestamp": "2025-09-11T21:13:48.9586Z"
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T13:03:52.061312Z"
             },
             "visualization_settings": {},
             "collection": {
                 "authority_level": null,
                 "description": null,
                 "archived": false,
-                "slug": "ryan_s_personal_collection",
+                "slug": "tracks_played_questions",
                 "archive_operation_id": null,
-                "name": "Ryan's Personal Collection",
-                "personal_owner_id": 1,
+                "name": "Tracks Played Questions",
+                "personal_owner_id": null,
                 "type": null,
                 "is_sample": false,
-                "id": 4,
+                "id": 5,
                 "archived_directly": null,
-                "entity_id": "nd8gDFcG8ULgflS8ha5Ce",
-                "location": "/",
+                "entity_id": "eF2c_3K6PEnKWxF5HRKn8",
+                "location": "/4/",
                 "namespace": null,
-                "created_at": "2025-09-11T20:39:06.663191Z"
+                "created_at": "2025-09-12T13:03:38.507752Z"
             },
             "metabase_version": "v0.53.7 (1cd6e9d)",
             "parameters": [],
             "dashboard_id": null,
-            "created_at": "2025-09-11T21:13:48.943504Z",
+            "created_at": "2025-09-12T12:57:28.965123Z",
             "public_uuid": null
         }
     ]

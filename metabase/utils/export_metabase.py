@@ -44,9 +44,7 @@ def export_metabase_content():
             )
             dashboard_response.raise_for_status()
             dashboard_data = dashboard_response.json()
-            print(
-                f"Dashboard {dashboard['id']} data keys: {list(dashboard_data.keys())}"
-            )
+
             cards = dashboard_data.get("dashcards", [])
             if not cards:
                 print(f"No cards found in 'dashcards' for dashboard {dashboard['id']}")
@@ -63,6 +61,33 @@ def export_metabase_content():
     # Save dashboard cards to file
     with open(os.path.join(script_dir, "..", "dashboard_cards.json"), "w") as f:
         json.dump({"dashboard_cards": dashboard_cards}, f, indent=4)
+
+    # Export tables
+    tables_response = requests.get(f"{METABASE_HOST}/api/table", headers=headers)
+    tables_response.raise_for_status()
+    tables = tables_response.json()
+
+    # Export field metadata for each table
+    fields = []
+    for table in tables:
+        try:
+            table_metadata_response = requests.get(
+                f"{METABASE_HOST}/api/table/{table['id']}/query_metadata", headers=headers
+            )
+            table_metadata_response.raise_for_status()
+            table_metadata = table_metadata_response.json()
+            table_fields = table_metadata.get("fields", [])
+            for field in table_fields:
+                field["table_id"] = table["id"]  # Associate field with its table
+                fields.append(field)
+        except Exception as e:
+            print(f"Failed to export fields for table {table['id']}: {e}")
+
+    # Save tables and fields to files
+    with open(os.path.join(script_dir, "..", "tables.json"), "w") as f:
+        json.dump({"tables": tables}, f, indent=4)
+    with open(os.path.join(script_dir, "..", "fields.json"), "w") as f:
+        json.dump({"fields": fields}, f, indent=4)
 
     # Export queries
     queries_response = requests.get(
