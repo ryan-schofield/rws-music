@@ -11,3 +11,14 @@ music-tracker:
        settings:
          memory_limit: 2GB
          threads: 1
+
+     local:
+       type: duckdb
+       path: "../data/music_tracker.duckdb"
+       threads: 4
+       extensions:
+         - httpfs
+         - parquet
+       settings:
+         memory_limit: 4GB
+         threads: 4

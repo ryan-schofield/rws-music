@@ -1,0 +1,140 @@
+{
+    "dashboards": [
+        {
+            "description": null,
+            "archived": false,
+            "view_count": 17,
+            "collection_position": null,
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "enable_embedding": false,
+            "collection_id": 4,
+            "show_in_getting_started": false,
+            "name": "Recently Played Dashboard",
+            "width": "fixed",
+            "caveats": null,
+            "creator_id": 1,
+            "updated_at": "2025-09-12T17:35:49.67691Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "id": 5,
+            "last_viewed_at": "2025-09-12T17:35:42.071387Z",
+            "position": null,
+            "archived_directly": false,
+            "entity_id": "PUpJaSt2c6XJJqoLo8CeZ",
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T17:35:49.711956Z"
+            },
+            "parameters": [
+                {
+                    "name": "Date",
+                    "slug": "date",
+                    "id": "f581b7fa",
+                    "type": "date/all-options",
+                    "sectionId": "date"
+                },
+                {
+                    "name": "Artist",
+                    "slug": "artist",
+                    "id": "c9875223",
+                    "type": "string/=",
+                    "sectionId": "string"
+                }
+            ],
+            "auto_apply_filters": true,
+            "created_at": "2025-09-12T13:54:09.462801Z",
+            "public_uuid": null,
+            "points_of_interest": null
+        },
+        {
+            "description": null,
+            "archived": false,
+            "view_count": 15,
+            "collection_position": null,
+            "creator": {
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_login": "2025-09-12T17:33:58.554104Z",
+                "is_qbnewb": false,
+                "is_superuser": true,
+                "id": 1,
+                "last_name": null,
+                "date_joined": "2025-09-11T20:38:53.313457Z",
+                "common_name": "Ryan"
+            },
+            "initially_published_at": null,
+            "enable_embedding": false,
+            "collection_id": 4,
+            "show_in_getting_started": false,
+            "name": "Tracks Played Dashboard",
+            "width": "fixed",
+            "caveats": null,
+            "creator_id": 1,
+            "updated_at": "2025-09-12T17:36:08.742515Z",
+            "made_public_by_id": null,
+            "embedding_params": null,
+            "cache_ttl": null,
+            "id": 4,
+            "last_viewed_at": "2025-09-12T17:36:26.809293Z",
+            "position": null,
+            "archived_directly": false,
+            "entity_id": "SMnIynskzUEDB8p88NfrR",
+            "last-edit-info": {
+                "id": 1,
+                "email": "rwschofield@gmail.com",
+                "first_name": "Ryan",
+                "last_name": null,
+                "timestamp": "2025-09-12T17:36:08.77017Z"
+            },
+            "parameters": [
+                {
+                    "name": "Date",
+                    "slug": "date",
+                    "id": "798a8f",
+                    "type": "date/all-options",
+                    "sectionId": "date"
+                },
+                {
+                    "name": "Primary Genre",
+                    "slug": "primary_genre",
+                    "id": "3d6b5493",
+                    "type": "string/=",
+                    "sectionId": "string"
+                },
+                {
+                    "name": "Country",
+                    "slug": "country",
+                    "id": "390f3995",
+                    "type": "string/=",
+                    "sectionId": "location"
+                },
+                {
+                    "name": "Time of Day",
+                    "slug": "time_of_day",
+                    "id": "ce1b8b75",
+                    "type": "string/=",
+                    "sectionId": "string"
+                }
+            ],
+            "auto_apply_filters": true,
+            "created_at": "2025-09-12T13:04:09.480725Z",
+            "public_uuid": null,
+            "points_of_interest": null
+        }
+    ]
+}
