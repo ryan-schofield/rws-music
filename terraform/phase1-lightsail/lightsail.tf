@@ -1,6 +1,6 @@
 # Create SSH key pair
 resource "aws_lightsail_key_pair" "music_tracker" {
-  name = "music-tracker-key"
+  name = "music-tracker-kp"
 }
 
 # Lightsail instance

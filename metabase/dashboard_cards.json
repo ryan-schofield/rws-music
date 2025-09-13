@@ -10,314 +10,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 24,
+                "view_count": 9,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 10,
-                "result_metadata": [
-                    {
-                        "display_name": "Minutes Played",
-                        "field_ref": [
-                            "aggregation",
-                            0
-                        ],
-                        "base_type": "type/Float",
-                        "effective_type": "type/Float",
-                        "name": "Minutes Played",
-                        "semantic_type": null,
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 1,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Number": {
-                                    "min": 392.0,
-                                    "q1": 392.0,
-                                    "q3": 392.0,
-                                    "max": 392.0,
-                                    "sd": null,
-                                    "avg": 392.0
-                                }
-                            }
-                        }
-                    }
-                ],
-                "initially_published_at": null,
-                "can_write": true,
-                "database_id": 2,
-                "enable_embedding": false,
-                "collection_id": 6,
-                "query_type": "query",
-                "name": "Minutes Played",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
-                "type": "question",
-                "query_average_duration": 44,
-                "creator_id": 1,
-                "moderation_reviews": [],
-                "updated_at": "2025-09-12T14:01:50.450664Z",
-                "made_public_by_id": null,
-                "embedding_params": null,
-                "cache_ttl": null,
-                "dataset_query": {
-                    "database": 2,
-                    "type": "query",
-                    "query": {
-                        "aggregation": [
-                            [
-                                "aggregation-options",
-                                [
-                                    "round",
-                                    [
-                                        "/",
-                                        [
-                                            "sum",
-                                            [
-                                                "field",
-                                                164,
-                                                {
-                                                    "base-type": "type/BigInteger"
-                                                }
-                                            ]
-                                        ],
-                                        60000
-                                    ]
-                                ],
-                                {
-                                    "name": "Minutes Played",
-                                    "display-name": "Minutes Played"
-                                }
-                            ]
-                        ],
-                        "source-table": 10,
-                        "aggregation-idents": {
-                            "0": "l15Jx5hdFw_lG442OiHtk"
-                        },
-                        "filter": [
-                            "time-interval",
-                            [
-                                "field",
-                                163,
-                                {
-                                    "base-type": "type/DateTimeWithTZ"
-                                }
-                            ],
-                            -1,
-                            "day",
-                            {
-                                "include-current": true
-                            }
-                        ]
-                    }
-                },
-                "id": 64,
-                "parameter_mappings": [],
-                "display": "scalar",
-                "archived_directly": false,
-                "entity_id": "11BhYGCncF3A4TsbC73GB",
-                "collection_preview": true,
-                "visualization_settings": {},
-                "metabase_version": "v0.53.7 (1cd6e9d)",
-                "parameters": [],
-                "dashboard_id": null,
-                "created_at": "2025-09-12T13:51:56.912026Z",
-                "public_uuid": null
-            },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
-            "col": 0,
-            "id": 47,
-            "parameter_mappings": [
-                {
-                    "parameter_id": "f581b7fa",
-                    "card_id": 64,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            163,
-                            {
-                                "base-type": "type/DateTimeWithTZ"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "c9875223",
-                    "card_id": 64,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            165,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                }
-            ],
-            "card_id": 64,
-            "entity_id": "ys1jO0tvj__mMinQeozpa",
-            "visualization_settings": {},
-            "size_y": 3,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:54:57.547812Z",
-            "row": 0
-        },
-        {
-            "size_x": 6,
-            "dashboard_tab_id": null,
-            "series": [],
-            "action_id": null,
-            "collection_authority_level": null,
-            "card": {
-                "cache_invalidated_at": null,
-                "description": null,
-                "archived": false,
-                "view_count": 27,
-                "collection_position": null,
-                "source_card_id": null,
-                "table_id": 10,
-                "result_metadata": [
-                    {
-                        "display_name": "Count",
-                        "semantic_type": "type/Quantity",
-                        "field_ref": [
-                            "aggregation",
-                            0
-                        ],
-                        "base_type": "type/BigInteger",
-                        "effective_type": "type/BigInteger",
-                        "name": "count",
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 1,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Number": {
-                                    "min": 99.0,
-                                    "q1": 99.0,
-                                    "q3": 99.0,
-                                    "max": 99.0,
-                                    "sd": null,
-                                    "avg": 99.0
-                                }
-                            }
-                        }
-                    }
-                ],
-                "initially_published_at": null,
-                "can_write": true,
-                "database_id": 2,
-                "enable_embedding": false,
-                "collection_id": 6,
-                "query_type": "query",
-                "name": "Recently Played Tracks",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
-                "type": "question",
-                "query_average_duration": 91,
-                "creator_id": 1,
-                "moderation_reviews": [],
-                "updated_at": "2025-09-12T17:34:57.937414Z",
-                "made_public_by_id": null,
-                "embedding_params": null,
-                "cache_ttl": null,
-                "dataset_query": {
-                    "database": 2,
-                    "type": "query",
-                    "query": {
-                        "source-table": 10,
-                        "aggregation": [
-                            [
-                                "count"
-                            ]
-                        ],
-                        "aggregation-idents": {
-                            "0": "2bz8WpxSk8BBv28OrPfDm"
-                        }
-                    }
-                },
-                "id": 65,
-                "parameter_mappings": [],
-                "display": "scalar",
-                "archived_directly": false,
-                "entity_id": "-TDeusGoiDlfNCyGMT3Qf",
-                "collection_preview": true,
-                "visualization_settings": {},
-                "metabase_version": "v0.53.7 (1cd6e9d)",
-                "parameters": [],
-                "dashboard_id": null,
-                "created_at": "2025-09-12T13:52:32.756422Z",
-                "public_uuid": null
-            },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
-            "col": 0,
-            "id": 49,
-            "parameter_mappings": [
-                {
-                    "parameter_id": "f581b7fa",
-                    "card_id": 65,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            163,
-                            {
-                                "base-type": "type/DateTimeWithTZ"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "c9875223",
-                    "card_id": 65,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            165,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                }
-            ],
-            "card_id": 65,
-            "entity_id": "ljlVFhbxV_ToH41CVjYb0",
-            "visualization_settings": {},
-            "size_y": 3,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:54:57.547812Z",
-            "row": 3
-        },
-        {
-            "size_x": 6,
-            "dashboard_tab_id": null,
-            "series": [],
-            "action_id": null,
-            "collection_authority_level": null,
-            "card": {
-                "cache_invalidated_at": null,
-                "description": null,
-                "archived": false,
-                "view_count": 27,
-                "collection_position": null,
-                "source_card_id": null,
-                "table_id": 10,
+                "table_id": 11,
                 "result_metadata": [
                     {
                         "display_name": "Artists Played",
@@ -337,12 +33,12 @@
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 42.0,
-                                    "q1": 42.0,
-                                    "q3": 42.0,
-                                    "max": 42.0,
+                                    "min": 15.0,
+                                    "q1": 15.0,
+                                    "q3": 15.0,
+                                    "max": 15.0,
                                     "sd": null,
-                                    "avg": 42.0
+                                    "avg": 15.0
                                 }
                             }
                         }
@@ -355,12 +51,12 @@
                 "collection_id": 6,
                 "query_type": "query",
                 "name": "Recently Played Artists",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
                 "type": "question",
-                "query_average_duration": 70,
-                "creator_id": 1,
+                "query_average_duration": 580,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T17:35:28.778734Z",
+                "updated_at": "2025-09-13T02:39:48.588489Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -368,7 +64,7 @@
                     "database": 2,
                     "type": "query",
                     "query": {
-                        "source-table": 10,
+                        "source-table": 11,
                         "aggregation": [
                             [
                                 "aggregation-options",
@@ -376,7 +72,7 @@
                                     "distinct",
                                     [
                                         "field",
-                                        165,
+                                        238,
                                         {
                                             "base-type": "type/Text"
                                         }
@@ -393,31 +89,31 @@
                         }
                     }
                 },
-                "id": 66,
+                "id": 45,
                 "parameter_mappings": [],
                 "display": "scalar",
                 "archived_directly": false,
-                "entity_id": "fJjzJgN9f-Y1ed1j4nM_F",
+                "entity_id": "_pNRjcuG2GcwLMlQv102B",
                 "collection_preview": true,
                 "visualization_settings": {},
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T13:53:41.666294Z",
+                "created_at": "2025-09-13T02:39:48.588489Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
+            "updated_at": "2025-09-13T02:43:40.280781Z",
             "col": 0,
-            "id": 48,
+            "id": 42,
             "parameter_mappings": [
                 {
                     "parameter_id": "f581b7fa",
-                    "card_id": 66,
+                    "card_id": 45,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            163,
+                            236,
                             {
                                 "base-type": "type/DateTimeWithTZ"
                             }
@@ -429,12 +125,12 @@
                 },
                 {
                     "parameter_id": "c9875223",
-                    "card_id": 66,
+                    "card_id": 45,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            165,
+                            238,
                             {
                                 "base-type": "type/Text"
                             }
@@ -445,12 +141,12 @@
                     ]
                 }
             ],
-            "card_id": 66,
-            "entity_id": "jZRPawm0DS2mJWyJqmAez",
+            "card_id": 45,
+            "entity_id": "JmeWiCdA1dTt4kMGqgJat",
             "visualization_settings": {},
             "size_y": 3,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:54:57.547812Z",
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
             "row": 6
         },
         {
@@ -463,325 +159,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 17,
+                "view_count": 9,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 10,
-                "result_metadata": [
-                    {
-                        "display_name": "Artist/Track",
-                        "field_ref": [
-                            "expression",
-                            "Artist/Track"
-                        ],
-                        "base_type": "type/Text",
-                        "effective_type": "type/Text",
-                        "name": "Artist/Track",
-                        "semantic_type": null,
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 4,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Text": {
-                                    "percent-json": 0.0,
-                                    "percent-url": 0.0,
-                                    "percent-email": 0.0,
-                                    "percent-state": 0.0,
-                                    "average-length": 23.75
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "description": null,
-                        "semantic_type": null,
-                        "coercion_strategy": null,
-                        "unit": "day",
-                        "name": "played_at",
-                        "settings": null,
-                        "fk_target_field_id": null,
-                        "field_ref": [
-                            "field",
-                            163,
-                            {
-                                "base-type": "type/DateTimeWithTZ",
-                                "temporal-unit": "day"
-                            }
-                        ],
-                        "effective_type": "type/DateTimeWithTZ",
-                        "id": 163,
-                        "visibility_type": "normal",
-                        "display_name": "Played At: Day",
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 187,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/DateTime": {
-                                    "earliest": "2025-09-07T01:04:52.659Z",
-                                    "latest": "2025-09-11T18:44:16.997Z"
-                                }
-                            }
-                        },
-                        "base_type": "type/DateTimeWithTZ"
-                    },
-                    {
-                        "display_name": "Played At (UTC)",
-                        "field_ref": [
-                            "expression",
-                            "Played At (UTC)"
-                        ],
-                        "base_type": "type/Text",
-                        "effective_type": "type/Text",
-                        "name": "Played At (UTC)",
-                        "semantic_type": null,
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 4,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Text": {
-                                    "percent-json": 0.0,
-                                    "percent-url": 0.0,
-                                    "percent-email": 0.0,
-                                    "percent-state": 0.0,
-                                    "average-length": 5.0
-                                }
-                            }
-                        }
-                    }
-                ],
-                "initially_published_at": null,
-                "can_write": true,
-                "database_id": 2,
-                "enable_embedding": false,
-                "collection_id": 6,
-                "query_type": "query",
-                "name": "Last 4",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
-                "type": "question",
-                "query_average_duration": 75,
-                "creator_id": 1,
-                "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:58:41.063876Z",
-                "made_public_by_id": null,
-                "embedding_params": null,
-                "cache_ttl": null,
-                "dataset_query": {
-                    "database": 2,
-                    "type": "query",
-                    "query": {
-                        "source-table": 10,
-                        "expressions": {
-                            "Artist/Track": [
-                                "concat",
-                                [
-                                    "field",
-                                    165,
-                                    {
-                                        "base-type": "type/Text"
-                                    }
-                                ],
-                                " - ",
-                                [
-                                    "field",
-                                    166,
-                                    {
-                                        "base-type": "type/Text"
-                                    }
-                                ]
-                            ],
-                            "Played At (UTC)": [
-                                "concat",
-                                [
-                                    "get-hour",
-                                    [
-                                        "field",
-                                        163,
-                                        {
-                                            "base-type": "type/DateTimeWithTZ"
-                                        }
-                                    ]
-                                ],
-                                ":",
-                                [
-                                    "expression",
-                                    "Played at Minute",
-                                    {
-                                        "base-type": "type/Text"
-                                    }
-                                ]
-                            ],
-                            "Played at Minute": [
-                                "concat",
-                                [
-                                    "if",
-                                    [
-                                        [
-                                            [
-                                                "<",
-                                                [
-                                                    "get-minute",
-                                                    [
-                                                        "field",
-                                                        163,
-                                                        {
-                                                            "base-type": "type/DateTimeWithTZ"
-                                                        }
-                                                    ]
-                                                ],
-                                                10
-                                            ],
-                                            "0"
-                                        ]
-                                    ],
-                                    {
-                                        "default": ""
-                                    }
-                                ],
-                                [
-                                    "get-minute",
-                                    [
-                                        "field",
-                                        163,
-                                        {
-                                            "base-type": "type/DateTimeWithTZ"
-                                        }
-                                    ]
-                                ]
-                            ]
-                        },
-                        "breakout": [
-                            [
-                                "expression",
-                                "Artist/Track",
-                                {
-                                    "base-type": "type/Text"
-                                }
-                            ],
-                            [
-                                "field",
-                                163,
-                                {
-                                    "base-type": "type/DateTimeWithTZ",
-                                    "temporal-unit": "day"
-                                }
-                            ],
-                            [
-                                "expression",
-                                "Played At (UTC)",
-                                {
-                                    "base-type": "type/Text"
-                                }
-                            ]
-                        ],
-                        "limit": 4,
-                        "order-by": [
-                            [
-                                "desc",
-                                [
-                                    "field",
-                                    163,
-                                    {
-                                        "base-type": "type/DateTimeWithTZ",
-                                        "temporal-unit": "day"
-                                    }
-                                ]
-                            ],
-                            [
-                                "desc",
-                                [
-                                    "expression",
-                                    "Played At (UTC)",
-                                    {
-                                        "base-type": "type/Text"
-                                    }
-                                ]
-                            ]
-                        ],
-                        "breakout-idents": {
-                            "0": "MBBMoJVu0-ztzGFrfmI97",
-                            "1": "8F0MNgKna08ivjeTShLHW",
-                            "2": "wvTCA0lCt_IBz23POkztK"
-                        },
-                        "expression-idents": {
-                            "Artist/Track": "ecQMTL6R81PnI1w0sgAGa",
-                            "Played At (UTC)": "AmcLbfKZgQX1GFRIvOErp",
-                            "Played at Minute": "vhsKJygA1-OBZa1RRQbIV"
-                        }
-                    }
-                },
-                "id": 62,
-                "parameter_mappings": [],
-                "display": "table",
-                "archived_directly": false,
-                "entity_id": "ulaHJ22hj6MGoKuAcyznO",
-                "collection_preview": true,
-                "visualization_settings": {
-                    "table.pivot_column": "Played",
-                    "table.cell_column": "Artist/Track",
-                    "column_settings": {
-                        "[\"name\",\"played_at\"]": {
-                            "date_style": "MMMM D, YYYY",
-                            "date_separator": "-",
-                            "date_abbreviate": true
-                        }
-                    }
-                },
-                "metabase_version": "v0.53.7 (1cd6e9d)",
-                "parameters": [],
-                "dashboard_id": null,
-                "created_at": "2025-09-12T13:45:06.790789Z",
-                "public_uuid": null
-            },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
-            "col": 12,
-            "id": 52,
-            "parameter_mappings": [
-                {
-                    "parameter_id": "f581b7fa",
-                    "card_id": 62,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            163,
-                            {
-                                "base-type": "type/DateTimeWithTZ"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                }
-            ],
-            "card_id": 62,
-            "entity_id": "9ehPFamXkmsU4U0kiLJlM",
-            "visualization_settings": {},
-            "size_y": 6,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:57:40.799838Z",
-            "row": 9
-        },
-        {
-            "size_x": 12,
-            "dashboard_tab_id": null,
-            "series": [],
-            "action_id": null,
-            "collection_authority_level": null,
-            "card": {
-                "cache_invalidated_at": null,
-                "description": null,
-                "archived": false,
-                "view_count": 16,
-                "collection_position": null,
-                "source_card_id": null,
-                "table_id": 10,
+                "table_id": 11,
                 "result_metadata": [
                     {
                         "display_name": "Artist - Album",
@@ -826,12 +207,12 @@
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 10.0,
-                                    "q1": 10.5,
-                                    "q3": 13.5,
-                                    "max": 15.0,
-                                    "sd": 2.160246899469287,
-                                    "avg": 12.0
+                                    "min": 4.0,
+                                    "q1": 4.5,
+                                    "q3": 11.5,
+                                    "max": 13.0,
+                                    "sd": 4.242640687119285,
+                                    "avg": 8.0
                                 }
                             }
                         }
@@ -844,12 +225,12 @@
                 "collection_id": 6,
                 "query_type": "query",
                 "name": "Top Albums",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
                 "type": "question",
-                "query_average_duration": 128,
-                "creator_id": 1,
+                "query_average_duration": 1034,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T17:21:40.869271Z",
+                "updated_at": "2025-09-13T02:39:49.512556Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -869,7 +250,7 @@
                             "Artist Short": "qTovSoLETXR7SbLneZ4Wc",
                             "Artist - Album": "pm_ELmYJe7dM3zR7FR6f9"
                         },
-                        "source-table": 10,
+                        "source-table": 11,
                         "expressions": {
                             "Album Short": [
                                 "if",
@@ -881,7 +262,7 @@
                                                 "length",
                                                 [
                                                     "field",
-                                                    167,
+                                                    240,
                                                     {
                                                         "base-type": "type/Text"
                                                     }
@@ -895,7 +276,7 @@
                                                 "substring",
                                                 [
                                                     "field",
-                                                    167,
+                                                    240,
                                                     {
                                                         "base-type": "type/Text"
                                                     }
@@ -910,7 +291,7 @@
                                 {
                                     "default": [
                                         "field",
-                                        167,
+                                        240,
                                         {
                                             "base-type": "type/Text"
                                         }
@@ -927,7 +308,7 @@
                                                 "length",
                                                 [
                                                     "field",
-                                                    165,
+                                                    238,
                                                     {
                                                         "base-type": "type/Text"
                                                     }
@@ -941,7 +322,7 @@
                                                 "substring",
                                                 [
                                                     "field",
-                                                    165,
+                                                    238,
                                                     {
                                                         "base-type": "type/Text"
                                                     }
@@ -956,7 +337,7 @@
                                 {
                                     "default": [
                                         "field",
-                                        165,
+                                        238,
                                         {
                                             "base-type": "type/Text"
                                         }
@@ -1007,11 +388,11 @@
                         ]
                     }
                 },
-                "id": 63,
+                "id": 49,
                 "parameter_mappings": [],
                 "display": "table",
                 "archived_directly": false,
-                "entity_id": "AJWg_IIA91z3tyd5uuEUE",
+                "entity_id": "c9SlxM10bYSB3j5aNLe48",
                 "collection_preview": true,
                 "visualization_settings": {
                     "table.cell_column": "count",
@@ -1025,21 +406,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T13:50:40.215206Z",
+                "created_at": "2025-09-13T02:39:49.512556Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
+            "updated_at": "2025-09-13T02:43:40.280781Z",
             "col": 0,
-            "id": 51,
+            "id": 44,
             "parameter_mappings": [
                 {
                     "parameter_id": "f581b7fa",
-                    "card_id": 63,
+                    "card_id": 49,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            163,
+                            236,
                             {
                                 "base-type": "type/DateTimeWithTZ"
                             }
@@ -1048,14 +429,667 @@
                             "stage-number": 0
                         }
                     ]
+                },
+                {
+                    "parameter_id": "c9875223",
+                    "card_id": 49,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            238,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
                 }
             ],
-            "card_id": 63,
-            "entity_id": "mVaob068xrXh-40FiD4Le",
+            "card_id": 49,
+            "entity_id": "DUYpHh3WAPQFfg0yv1VcC",
             "visualization_settings": {},
             "size_y": 6,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:57:40.799838Z",
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
+            "row": 9
+        },
+        {
+            "size_x": 6,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 9,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 11,
+                "result_metadata": [
+                    {
+                        "display_name": "Count",
+                        "semantic_type": "type/Quantity",
+                        "field_ref": [
+                            "aggregation",
+                            0
+                        ],
+                        "base_type": "type/BigInteger",
+                        "effective_type": "type/BigInteger",
+                        "name": "count",
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 1,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Number": {
+                                    "min": 50.0,
+                                    "q1": 50.0,
+                                    "q3": 50.0,
+                                    "max": 50.0,
+                                    "sd": null,
+                                    "avg": 50.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 6,
+                "query_type": "query",
+                "name": "Recently Played Tracks",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
+                "type": "question",
+                "query_average_duration": 546,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-13T02:39:49.057952Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "source-table": 11,
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "2bz8WpxSk8BBv28OrPfDm"
+                        }
+                    }
+                },
+                "id": 47,
+                "parameter_mappings": [],
+                "display": "scalar",
+                "archived_directly": false,
+                "entity_id": "CayQpWd0crbKqI4XnV54Y",
+                "collection_preview": true,
+                "visualization_settings": {},
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-13T02:39:49.057952Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-13T02:43:40.280781Z",
+            "col": 0,
+            "id": 41,
+            "parameter_mappings": [
+                {
+                    "parameter_id": "f581b7fa",
+                    "card_id": 47,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            236,
+                            {
+                                "base-type": "type/DateTimeWithTZ"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "c9875223",
+                    "card_id": 47,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            238,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                }
+            ],
+            "card_id": 47,
+            "entity_id": "uYeTEgNbdCVRPEQHYG-lD",
+            "visualization_settings": {},
+            "size_y": 3,
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
+            "row": 3
+        },
+        {
+            "size_x": 6,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 9,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 11,
+                "result_metadata": [
+                    {
+                        "display_name": "Minutes Played",
+                        "field_ref": [
+                            "aggregation",
+                            0
+                        ],
+                        "base_type": "type/Float",
+                        "effective_type": "type/Float",
+                        "name": "Minutes Played",
+                        "semantic_type": null,
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 1,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Number": {
+                                    "min": 176.0,
+                                    "q1": 176.0,
+                                    "q3": 176.0,
+                                    "max": 176.0,
+                                    "sd": null,
+                                    "avg": 176.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 6,
+                "query_type": "query",
+                "name": "Minutes Played",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
+                "type": "question",
+                "query_average_duration": 626,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-13T02:39:48.392726Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "aggregation": [
+                            [
+                                "aggregation-options",
+                                [
+                                    "round",
+                                    [
+                                        "/",
+                                        [
+                                            "sum",
+                                            [
+                                                "field",
+                                                237,
+                                                {
+                                                    "base-type": "type/BigInteger"
+                                                }
+                                            ]
+                                        ],
+                                        60000
+                                    ]
+                                ],
+                                {
+                                    "name": "Minutes Played",
+                                    "display-name": "Minutes Played"
+                                }
+                            ]
+                        ],
+                        "source-table": 11,
+                        "aggregation-idents": {
+                            "0": "l15Jx5hdFw_lG442OiHtk"
+                        },
+                        "filter": [
+                            "time-interval",
+                            [
+                                "field",
+                                236,
+                                {
+                                    "base-type": "type/DateTimeWithTZ"
+                                }
+                            ],
+                            -1,
+                            "day",
+                            {
+                                "include-current": true
+                            }
+                        ]
+                    }
+                },
+                "id": 44,
+                "parameter_mappings": [],
+                "display": "scalar",
+                "archived_directly": false,
+                "entity_id": "7C-SysQfuP6Y87GpvmXaR",
+                "collection_preview": true,
+                "visualization_settings": {},
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-13T02:39:48.392726Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-13T02:43:40.280781Z",
+            "col": 0,
+            "id": 40,
+            "parameter_mappings": [
+                {
+                    "parameter_id": "f581b7fa",
+                    "card_id": 44,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            236,
+                            {
+                                "base-type": "type/DateTimeWithTZ"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "c9875223",
+                    "card_id": 44,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            238,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                }
+            ],
+            "card_id": 44,
+            "entity_id": "1EI9YWMUgUMt9zGBxuPcA",
+            "visualization_settings": {},
+            "size_y": 3,
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
+            "row": 0
+        },
+        {
+            "size_x": 12,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 9,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 11,
+                "result_metadata": [
+                    {
+                        "display_name": "Artist/Track",
+                        "field_ref": [
+                            "expression",
+                            "Artist/Track"
+                        ],
+                        "base_type": "type/Text",
+                        "effective_type": "type/Text",
+                        "name": "Artist/Track",
+                        "semantic_type": null,
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 4,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Text": {
+                                    "percent-json": 0.0,
+                                    "percent-url": 0.0,
+                                    "percent-email": 0.0,
+                                    "percent-state": 0.0,
+                                    "average-length": 16.5
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "description": null,
+                        "semantic_type": null,
+                        "coercion_strategy": null,
+                        "unit": "day",
+                        "name": "played_at",
+                        "settings": null,
+                        "fk_target_field_id": null,
+                        "field_ref": [
+                            "field",
+                            236,
+                            {
+                                "base-type": "type/DateTimeWithTZ",
+                                "temporal-unit": "day"
+                            }
+                        ],
+                        "effective_type": "type/DateTimeWithTZ",
+                        "id": 236,
+                        "visibility_type": "normal",
+                        "display_name": "Played At: Day",
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 285,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/DateTime": {
+                                    "earliest": "2025-09-03T01:31:22.554Z",
+                                    "latest": "2025-09-09T22:57:10.281Z"
+                                }
+                            }
+                        },
+                        "base_type": "type/DateTimeWithTZ"
+                    },
+                    {
+                        "display_name": "Played At (UTC)",
+                        "field_ref": [
+                            "expression",
+                            "Played At (UTC)"
+                        ],
+                        "base_type": "type/Text",
+                        "effective_type": "type/Text",
+                        "name": "Played At (UTC)",
+                        "semantic_type": null,
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 4,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Text": {
+                                    "percent-json": 0.0,
+                                    "percent-url": 0.0,
+                                    "percent-email": 0.0,
+                                    "percent-state": 0.0,
+                                    "average-length": 5.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 6,
+                "query_type": "query",
+                "name": "Last 4",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
+                "type": "question",
+                "query_average_duration": 1065,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-13T02:39:48.179553Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "source-table": 11,
+                        "expressions": {
+                            "Artist/Track": [
+                                "concat",
+                                [
+                                    "field",
+                                    238,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ],
+                                " - ",
+                                [
+                                    "field",
+                                    239,
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            ],
+                            "Played At (UTC)": [
+                                "concat",
+                                [
+                                    "get-hour",
+                                    [
+                                        "field",
+                                        236,
+                                        {
+                                            "base-type": "type/DateTimeWithTZ"
+                                        }
+                                    ]
+                                ],
+                                ":",
+                                [
+                                    "expression",
+                                    "Played at Minute",
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            ],
+                            "Played at Minute": [
+                                "concat",
+                                [
+                                    "if",
+                                    [
+                                        [
+                                            [
+                                                "<",
+                                                [
+                                                    "get-minute",
+                                                    [
+                                                        "field",
+                                                        236,
+                                                        {
+                                                            "base-type": "type/DateTimeWithTZ"
+                                                        }
+                                                    ]
+                                                ],
+                                                10
+                                            ],
+                                            "0"
+                                        ]
+                                    ],
+                                    {
+                                        "default": ""
+                                    }
+                                ],
+                                [
+                                    "get-minute",
+                                    [
+                                        "field",
+                                        236,
+                                        {
+                                            "base-type": "type/DateTimeWithTZ"
+                                        }
+                                    ]
+                                ]
+                            ]
+                        },
+                        "breakout": [
+                            [
+                                "expression",
+                                "Artist/Track",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            [
+                                "field",
+                                236,
+                                {
+                                    "base-type": "type/DateTimeWithTZ",
+                                    "temporal-unit": "day"
+                                }
+                            ],
+                            [
+                                "expression",
+                                "Played At (UTC)",
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "limit": 4,
+                        "order-by": [
+                            [
+                                "desc",
+                                [
+                                    "field",
+                                    236,
+                                    {
+                                        "base-type": "type/DateTimeWithTZ",
+                                        "temporal-unit": "day"
+                                    }
+                                ]
+                            ],
+                            [
+                                "desc",
+                                [
+                                    "expression",
+                                    "Played At (UTC)",
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "breakout-idents": {
+                            "0": "MBBMoJVu0-ztzGFrfmI97",
+                            "1": "8F0MNgKna08ivjeTShLHW",
+                            "2": "wvTCA0lCt_IBz23POkztK"
+                        },
+                        "expression-idents": {
+                            "Artist/Track": "ecQMTL6R81PnI1w0sgAGa",
+                            "Played At (UTC)": "AmcLbfKZgQX1GFRIvOErp",
+                            "Played at Minute": "vhsKJygA1-OBZa1RRQbIV"
+                        }
+                    }
+                },
+                "id": 43,
+                "parameter_mappings": [],
+                "display": "table",
+                "archived_directly": false,
+                "entity_id": "okB2JgZQ-my5ajfmwlZA-",
+                "collection_preview": true,
+                "visualization_settings": {
+                    "table.pivot_column": "Played",
+                    "table.cell_column": "Artist/Track",
+                    "column_settings": {
+                        "[\"name\",\"played_at\"]": {
+                            "date_style": "MMMM D, YYYY",
+                            "date_separator": "-",
+                            "date_abbreviate": true
+                        }
+                    }
+                },
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-13T02:39:48.179553Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-13T02:43:40.280781Z",
+            "col": 12,
+            "id": 43,
+            "parameter_mappings": [
+                {
+                    "parameter_id": "f581b7fa",
+                    "card_id": 43,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            236,
+                            {
+                                "base-type": "type/DateTimeWithTZ"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "c9875223",
+                    "card_id": 43,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            238,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                }
+            ],
+            "card_id": 43,
+            "entity_id": "O970KcwIZ5LiqNN22gt_D",
+            "visualization_settings": {},
+            "size_y": 6,
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
             "row": 9
         },
         {
@@ -1068,10 +1102,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 23,
+                "view_count": 9,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 10,
+                "table_id": 11,
                 "result_metadata": [
                     {
                         "description": null,
@@ -1082,18 +1116,18 @@
                         "fk_target_field_id": null,
                         "field_ref": [
                             "field",
-                            165,
+                            238,
                             {
                                 "base-type": "type/Text"
                             }
                         ],
                         "effective_type": "type/Text",
-                        "id": 165,
+                        "id": 238,
                         "visibility_type": "normal",
                         "display_name": "Artist",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 59,
+                                "distinct-count": 63,
                                 "nil%": 0.0
                             },
                             "type": {
@@ -1102,7 +1136,7 @@
                                     "percent-url": 0.0,
                                     "percent-email": 0.0,
                                     "percent-state": 0.0,
-                                    "average-length": 9.133689839572192
+                                    "average-length": 9.796352583586627
                                 }
                             }
                         },
@@ -1125,12 +1159,12 @@
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 5.0,
-                                    "q1": 6.375,
-                                    "q3": 31.75,
-                                    "max": 83.0,
-                                    "sd": 21.95731790369237,
-                                    "avg": 20.866666666666667
+                                    "min": 3.0,
+                                    "q1": 3.8786796564403576,
+                                    "q3": 12.25,
+                                    "max": 37.0,
+                                    "sd": 11.306550987728098,
+                                    "avg": 11.533333333333333
                                 }
                             }
                         }
@@ -1143,12 +1177,12 @@
                 "collection_id": 6,
                 "query_type": "query",
                 "name": "Recently Played by Artist",
-                "last_used_at": "2025-09-12T17:35:42.355613Z",
+                "last_used_at": "2025-09-13T02:43:50.684768Z",
                 "type": "question",
-                "query_average_duration": 70,
-                "creator_id": 1,
+                "query_average_duration": 1071,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:23:31.009078Z",
+                "updated_at": "2025-09-13T02:39:48.87152Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -1166,7 +1200,7 @@
                         "expression-idents": {
                             "Duration Minutes": "fj8m6vN0Dp9Vy1zFaPpgS"
                         },
-                        "source-table": 10,
+                        "source-table": 11,
                         "expressions": {
                             "Duration Minutes": [
                                 "round",
@@ -1174,7 +1208,7 @@
                                     "/",
                                     [
                                         "field",
-                                        164,
+                                        237,
                                         {
                                             "base-type": "type/BigInteger"
                                         }
@@ -1186,7 +1220,7 @@
                         "breakout": [
                             [
                                 "field",
-                                165,
+                                238,
                                 {
                                     "base-type": "type/Text"
                                 }
@@ -1215,11 +1249,11 @@
                         ]
                     }
                 },
-                "id": 61,
+                "id": 46,
                 "parameter_mappings": [],
                 "display": "row",
                 "archived_directly": false,
-                "entity_id": "2ZUVRCPnFLCyE-RSKnytv",
+                "entity_id": "oWdL0sc0TlePv6WxCG51t",
                 "collection_preview": true,
                 "visualization_settings": {
                     "series_settings": {
@@ -1241,21 +1275,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T13:20:09.831444Z",
+                "created_at": "2025-09-13T02:39:48.87152Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T14:00:47.38885Z",
+            "updated_at": "2025-09-13T02:43:40.280781Z",
             "col": 6,
-            "id": 50,
+            "id": 45,
             "parameter_mappings": [
                 {
                     "parameter_id": "f581b7fa",
-                    "card_id": 61,
+                    "card_id": 46,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            163,
+                            236,
                             {
                                 "base-type": "type/DateTimeWithTZ"
                             }
@@ -1267,12 +1301,12 @@
                 },
                 {
                     "parameter_id": "c9875223",
-                    "card_id": 61,
+                    "card_id": 46,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            165,
+                            238,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1283,8 +1317,8 @@
                     ]
                 }
             ],
-            "card_id": 61,
-            "entity_id": "BCpekkfFzYyLyyXhQyZ9C",
+            "card_id": 46,
+            "entity_id": "55LvxLAdWfxAyBgtyQX3h",
             "visualization_settings": {
                 "click_behavior": {
                     "type": "crossfilter",
@@ -1305,9 +1339,368 @@
                 }
             },
             "size_y": 9,
-            "dashboard_id": 5,
-            "created_at": "2025-09-12T13:57:40.799838Z",
+            "dashboard_id": 4,
+            "created_at": "2025-09-13T02:39:50.999953Z",
             "row": 0
+        },
+        {
+            "size_x": 4,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 12,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 10,
+                "result_metadata": [
+                    {
+                        "display_name": "Sum of Tracks Played",
+                        "semantic_type": "type/Category",
+                        "settings": null,
+                        "field_ref": [
+                            "aggregation",
+                            0
+                        ],
+                        "base_type": "type/BigInteger",
+                        "effective_type": "type/BigInteger",
+                        "name": "sum",
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 1,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Number": {
+                                    "min": 8004.0,
+                                    "q1": 8004.0,
+                                    "q3": 8004.0,
+                                    "max": 8004.0,
+                                    "sd": null,
+                                    "avg": 8004.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 5,
+                "query_type": "query",
+                "name": "Tracks Played",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
+                "type": "question",
+                "query_average_duration": 56,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-13T02:39:50.335991Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "source-table": 10,
+                        "aggregation": [
+                            [
+                                "sum",
+                                [
+                                    "field",
+                                    168,
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "vXr633_AWVplV8QJSdTLn"
+                        }
+                    }
+                },
+                "id": 53,
+                "parameter_mappings": [],
+                "display": "scalar",
+                "archived_directly": false,
+                "entity_id": "zVA9_p1mXG0R6-rune1jG",
+                "collection_preview": true,
+                "visualization_settings": {},
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-13T02:39:50.335991Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-13T02:46:06.733289Z",
+            "col": 0,
+            "id": 48,
+            "parameter_mappings": [
+                {
+                    "parameter_id": "798a8f",
+                    "card_id": 53,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            217,
+                            {
+                                "base-type": "type/Date"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "3d6b5493",
+                    "card_id": 53,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            210,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "390f3995",
+                    "card_id": 53,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            189,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "ce1b8b75",
+                    "card_id": 53,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            224,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                }
+            ],
+            "card_id": 53,
+            "entity_id": "Q37QD2z4oSMrwBbwbBe79",
+            "visualization_settings": {},
+            "size_y": 3,
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
+            "row": 10
+        },
+        {
+            "size_x": 4,
+            "dashboard_tab_id": null,
+            "series": [],
+            "action_id": null,
+            "collection_authority_level": null,
+            "card": {
+                "cache_invalidated_at": null,
+                "description": null,
+                "archived": false,
+                "view_count": 12,
+                "collection_position": null,
+                "source_card_id": null,
+                "table_id": 10,
+                "result_metadata": [
+                    {
+                        "display_name": "Artists Played",
+                        "semantic_type": "type/Quantity",
+                        "settings": null,
+                        "field_ref": [
+                            "aggregation",
+                            0
+                        ],
+                        "base_type": "type/BigInteger",
+                        "effective_type": "type/BigInteger",
+                        "name": "Artists Played",
+                        "fingerprint": {
+                            "global": {
+                                "distinct-count": 1,
+                                "nil%": 0.0
+                            },
+                            "type": {
+                                "type/Number": {
+                                    "min": 1147.0,
+                                    "q1": 1147.0,
+                                    "q3": 1147.0,
+                                    "max": 1147.0,
+                                    "sd": null,
+                                    "avg": 1147.0
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initially_published_at": null,
+                "can_write": true,
+                "database_id": 2,
+                "enable_embedding": false,
+                "collection_id": 5,
+                "query_type": "query",
+                "name": "Artists Played",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
+                "type": "question",
+                "query_average_duration": 319,
+                "creator_id": 2,
+                "moderation_reviews": [],
+                "updated_at": "2025-09-13T02:39:47.915946Z",
+                "made_public_by_id": null,
+                "embedding_params": null,
+                "cache_ttl": null,
+                "dataset_query": {
+                    "database": 2,
+                    "type": "query",
+                    "query": {
+                        "source-table": 10,
+                        "aggregation": [
+                            [
+                                "aggregation-options",
+                                [
+                                    "distinct",
+                                    [
+                                        "field",
+                                        179,
+                                        {
+                                            "base-type": "type/Text"
+                                        }
+                                    ]
+                                ],
+                                {
+                                    "name": "Artists Played",
+                                    "display-name": "Artists Played"
+                                }
+                            ]
+                        ],
+                        "aggregation-idents": {
+                            "0": "Wt3k6mKc3RIOzrLguT_j2"
+                        }
+                    }
+                },
+                "id": 42,
+                "parameter_mappings": [],
+                "display": "scalar",
+                "archived_directly": false,
+                "entity_id": "CRfFE7WEbVtKMxLoFPYxt",
+                "collection_preview": true,
+                "visualization_settings": {},
+                "metabase_version": "v0.53.7 (1cd6e9d)",
+                "parameters": [],
+                "dashboard_id": null,
+                "created_at": "2025-09-13T02:39:47.915946Z",
+                "public_uuid": null
+            },
+            "updated_at": "2025-09-13T02:46:06.733289Z",
+            "col": 0,
+            "id": 49,
+            "parameter_mappings": [
+                {
+                    "parameter_id": "798a8f",
+                    "card_id": 42,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            217,
+                            {
+                                "base-type": "type/Date"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "3d6b5493",
+                    "card_id": 42,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            210,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "390f3995",
+                    "card_id": 42,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            189,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                },
+                {
+                    "parameter_id": "ce1b8b75",
+                    "card_id": 42,
+                    "target": [
+                        "dimension",
+                        [
+                            "field",
+                            224,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        {
+                            "stage-number": 0
+                        }
+                    ]
+                }
+            ],
+            "card_id": 42,
+            "entity_id": "zSN6YjvCKIVocxO8NDzpd",
+            "visualization_settings": {},
+            "size_y": 3,
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
+            "row": 13
         },
         {
             "size_x": 13,
@@ -1319,10 +1712,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 22,
+                "view_count": 12,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 11,
+                "table_id": 10,
                 "result_metadata": [
                     {
                         "description": null,
@@ -1333,19 +1726,19 @@
                         "fk_target_field_id": null,
                         "field_ref": [
                             "field",
-                            195,
+                            189,
                             {
                                 "base-type": "type/Text"
                             }
                         ],
                         "effective_type": "type/Text",
-                        "id": 195,
+                        "id": 189,
                         "visibility_type": "normal",
                         "display_name": "Country",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 51,
-                                "nil%": 0.0899
+                                "distinct-count": 31,
+                                "nil%": 0.0003
                             },
                             "type": {
                                 "type/Text": {
@@ -1353,7 +1746,7 @@
                                     "percent-url": 0.0,
                                     "percent-email": 0.0,
                                     "percent-state": 0.0,
-                                    "average-length": 10.31
+                                    "average-length": 10.3328
                                 }
                             }
                         },
@@ -1372,17 +1765,17 @@
                         "name": "sum",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 30,
+                                "distinct-count": 27,
                                 "nil%": 0.0
                             },
                             "type": {
                                 "type/Number": {
                                     "min": 1.0,
-                                    "q1": 2.1666666666666665,
-                                    "q3": 58.5,
-                                    "max": 3823.0,
-                                    "sd": 614.7415936394369,
-                                    "avg": 179.58333333333334
+                                    "q1": 2.1921134470680457,
+                                    "q3": 53.75,
+                                    "max": 3553.0,
+                                    "sd": 578.0914970040799,
+                                    "avg": 170.29787234042553
                                 }
                             }
                         }
@@ -1395,12 +1788,12 @@
                 "collection_id": 5,
                 "query_type": "query",
                 "name": "Tracks by Country",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
                 "type": "question",
-                "query_average_duration": 36,
-                "creator_id": 1,
+                "query_average_duration": 77,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:03:52.031782Z",
+                "updated_at": "2025-09-13T02:39:49.934333Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -1408,13 +1801,13 @@
                     "database": 2,
                     "type": "query",
                     "query": {
-                        "source-table": 11,
+                        "source-table": 10,
                         "aggregation": [
                             [
                                 "sum",
                                 [
                                     "field",
-                                    183,
+                                    168,
                                     {
                                         "base-type": "type/Integer"
                                     }
@@ -1424,7 +1817,7 @@
                         "breakout": [
                             [
                                 "field",
-                                195,
+                                189,
                                 {
                                     "base-type": "type/Text"
                                 }
@@ -1438,11 +1831,11 @@
                         }
                     }
                 },
-                "id": 59,
+                "id": 51,
                 "parameter_mappings": [],
                 "display": "map",
                 "archived_directly": false,
-                "entity_id": "_ykmsDk1POOKHPaIcPczz",
+                "entity_id": "HnQFeb7B_zU5ve2Gi8gNV",
                 "collection_preview": true,
                 "visualization_settings": {
                     "map.type": "region",
@@ -1458,21 +1851,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T13:00:15.775683Z",
+                "created_at": "2025-09-13T02:39:49.934333Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
+            "updated_at": "2025-09-13T02:46:06.733289Z",
             "col": 4,
-            "id": 45,
+            "id": 46,
             "parameter_mappings": [
                 {
                     "parameter_id": "798a8f",
-                    "card_id": 59,
+                    "card_id": 51,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            186,
+                            217,
                             {
                                 "base-type": "type/Date"
                             }
@@ -1484,12 +1877,12 @@
                 },
                 {
                     "parameter_id": "3d6b5493",
-                    "card_id": 59,
+                    "card_id": 51,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            239,
+                            210,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1501,12 +1894,12 @@
                 },
                 {
                     "parameter_id": "390f3995",
-                    "card_id": 59,
+                    "card_id": 51,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            195,
+                            189,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1518,12 +1911,12 @@
                 },
                 {
                     "parameter_id": "ce1b8b75",
-                    "card_id": 59,
+                    "card_id": 51,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            213,
+                            224,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1534,8 +1927,8 @@
                     ]
                 }
             ],
-            "card_id": 59,
-            "entity_id": "e0Dkgcn187_FTTORR3iYl",
+            "card_id": 51,
+            "entity_id": "EWi0ebo7uUR4J9jEAxeFz",
             "visualization_settings": {
                 "click_behavior": {
                     "type": "crossfilter",
@@ -1556,8 +1949,8 @@
                 }
             },
             "size_y": 6,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:07:19.064688Z",
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
             "row": 10
         },
         {
@@ -1570,10 +1963,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 25,
+                "view_count": 12,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 11,
+                "table_id": 10,
                 "result_metadata": [
                     {
                         "description": null,
@@ -1584,19 +1977,19 @@
                         "fk_target_field_id": null,
                         "field_ref": [
                             "field",
-                            239,
+                            210,
                             {
                                 "base-type": "type/Text"
                             }
                         ],
                         "effective_type": "type/Text",
-                        "id": 239,
+                        "id": 210,
                         "visibility_type": "normal",
                         "display_name": "Primary Genre",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 370,
-                                "nil%": 0.0067
+                                "distinct-count": 141,
+                                "nil%": 0.0
                             },
                             "type": {
                                 "type/Text": {
@@ -1604,7 +1997,7 @@
                                     "percent-url": 0.0,
                                     "percent-email": 0.0,
                                     "percent-state": 0.0,
-                                    "average-length": 12.1794
+                                    "average-length": 10.1448
                                 }
                             }
                         },
@@ -1625,17 +2018,17 @@
                         "name": "sum",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 13,
+                                "distinct-count": 14,
                                 "nil%": 0.0
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 109.0,
-                                    "q1": 139.0,
-                                    "q3": 328.75,
-                                    "max": 683.0,
-                                    "sd": 158.17034796180658,
-                                    "avg": 264.7692307692308
+                                    "min": 107.0,
+                                    "q1": 117.0,
+                                    "q3": 290.0,
+                                    "max": 635.0,
+                                    "sd": 143.24665579204424,
+                                    "avg": 235.71428571428572
                                 }
                             }
                         }
@@ -1648,12 +2041,12 @@
                 "collection_id": 5,
                 "query_type": "query",
                 "name": "Tracks by Primary Genre",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
                 "type": "question",
-                "query_average_duration": 50,
-                "creator_id": 1,
+                "query_average_duration": 367,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:11:58.949497Z",
+                "updated_at": "2025-09-13T02:39:50.133829Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -1686,13 +2079,13 @@
                             ]
                         ],
                         "source-query": {
-                            "source-table": 11,
+                            "source-table": 10,
                             "aggregation": [
                                 [
                                     "sum",
                                     [
                                         "field",
-                                        183,
+                                        168,
                                         {
                                             "base-type": "type/Integer"
                                         }
@@ -1712,7 +2105,7 @@
                             "breakout": [
                                 [
                                     "field",
-                                    239,
+                                    210,
                                     {
                                         "base-type": "type/Text"
                                     }
@@ -1727,11 +2120,11 @@
                         }
                     }
                 },
-                "id": 56,
+                "id": 52,
                 "parameter_mappings": [],
                 "display": "row",
                 "archived_directly": false,
-                "entity_id": "N-eb3WRaO3choeeWdlgIj",
+                "entity_id": "4q14t4D08THfOsuxHuGO1",
                 "collection_preview": true,
                 "visualization_settings": {
                     "graph.dimensions": [
@@ -1752,21 +2145,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T12:55:14.919107Z",
+                "created_at": "2025-09-13T02:39:50.133829Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
+            "updated_at": "2025-09-13T02:46:06.733289Z",
             "col": 12,
-            "id": 42,
+            "id": 47,
             "parameter_mappings": [
                 {
                     "parameter_id": "798a8f",
-                    "card_id": 56,
+                    "card_id": 52,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            186,
+                            217,
                             {
                                 "base-type": "type/Date"
                             }
@@ -1778,12 +2171,12 @@
                 },
                 {
                     "parameter_id": "3d6b5493",
-                    "card_id": 56,
+                    "card_id": 52,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            239,
+                            210,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1795,12 +2188,12 @@
                 },
                 {
                     "parameter_id": "390f3995",
-                    "card_id": 56,
+                    "card_id": 52,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            195,
+                            189,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1812,12 +2205,12 @@
                 },
                 {
                     "parameter_id": "ce1b8b75",
-                    "card_id": 56,
+                    "card_id": 52,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            213,
+                            224,
                             {
                                 "base-type": "type/Text"
                             }
@@ -1828,8 +2221,8 @@
                     ]
                 }
             ],
-            "card_id": 56,
-            "entity_id": "L8alvECT45-sM0Sb4yWJS",
+            "card_id": 52,
+            "entity_id": "tB04XI2TO5cwK1sAoegYQ",
             "visualization_settings": {
                 "click_behavior": {
                     "type": "crossfilter",
@@ -1850,368 +2243,9 @@
                 }
             },
             "size_y": 10,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:07:19.064688Z",
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
             "row": 0
-        },
-        {
-            "size_x": 4,
-            "dashboard_tab_id": null,
-            "series": [],
-            "action_id": null,
-            "collection_authority_level": null,
-            "card": {
-                "cache_invalidated_at": null,
-                "description": null,
-                "archived": false,
-                "view_count": 22,
-                "collection_position": null,
-                "source_card_id": null,
-                "table_id": 11,
-                "result_metadata": [
-                    {
-                        "display_name": "Sum of Tracks Played",
-                        "semantic_type": "type/Category",
-                        "settings": null,
-                        "field_ref": [
-                            "aggregation",
-                            0
-                        ],
-                        "base_type": "type/BigInteger",
-                        "effective_type": "type/BigInteger",
-                        "name": "sum",
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 1,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Number": {
-                                    "min": 8620.0,
-                                    "q1": 8620.0,
-                                    "q3": 8620.0,
-                                    "max": 8620.0,
-                                    "sd": null,
-                                    "avg": 8620.0
-                                }
-                            }
-                        }
-                    }
-                ],
-                "initially_published_at": null,
-                "can_write": true,
-                "database_id": 2,
-                "enable_embedding": false,
-                "collection_id": 5,
-                "query_type": "query",
-                "name": "Tracks Played",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
-                "type": "question",
-                "query_average_duration": 192,
-                "creator_id": 1,
-                "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:03:52.049476Z",
-                "made_public_by_id": null,
-                "embedding_params": null,
-                "cache_ttl": null,
-                "dataset_query": {
-                    "database": 2,
-                    "type": "query",
-                    "query": {
-                        "source-table": 11,
-                        "aggregation": [
-                            [
-                                "sum",
-                                [
-                                    "field",
-                                    183,
-                                    {
-                                        "base-type": "type/Integer"
-                                    }
-                                ]
-                            ]
-                        ],
-                        "aggregation-idents": {
-                            "0": "vXr633_AWVplV8QJSdTLn"
-                        }
-                    }
-                },
-                "id": 57,
-                "parameter_mappings": [],
-                "display": "scalar",
-                "archived_directly": false,
-                "entity_id": "G-SI0VimWI3edMyQvdJ0j",
-                "collection_preview": true,
-                "visualization_settings": {},
-                "metabase_version": "v0.53.7 (1cd6e9d)",
-                "parameters": [],
-                "dashboard_id": null,
-                "created_at": "2025-09-12T12:57:28.965123Z",
-                "public_uuid": null
-            },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
-            "col": 0,
-            "id": 40,
-            "parameter_mappings": [
-                {
-                    "parameter_id": "798a8f",
-                    "card_id": 57,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            186,
-                            {
-                                "base-type": "type/Date"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "3d6b5493",
-                    "card_id": 57,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            239,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "390f3995",
-                    "card_id": 57,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            195,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "ce1b8b75",
-                    "card_id": 57,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            213,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                }
-            ],
-            "card_id": 57,
-            "entity_id": "tZQU1kv_jbcohyhrpgBTz",
-            "visualization_settings": {},
-            "size_y": 3,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:07:19.064688Z",
-            "row": 10
-        },
-        {
-            "size_x": 4,
-            "dashboard_tab_id": null,
-            "series": [],
-            "action_id": null,
-            "collection_authority_level": null,
-            "card": {
-                "cache_invalidated_at": null,
-                "description": null,
-                "archived": false,
-                "view_count": 22,
-                "collection_position": null,
-                "source_card_id": null,
-                "table_id": 11,
-                "result_metadata": [
-                    {
-                        "display_name": "Artists Played",
-                        "semantic_type": "type/Quantity",
-                        "settings": null,
-                        "field_ref": [
-                            "aggregation",
-                            0
-                        ],
-                        "base_type": "type/BigInteger",
-                        "effective_type": "type/BigInteger",
-                        "name": "Artists Played",
-                        "fingerprint": {
-                            "global": {
-                                "distinct-count": 1,
-                                "nil%": 0.0
-                            },
-                            "type": {
-                                "type/Number": {
-                                    "min": 1206.0,
-                                    "q1": 1206.0,
-                                    "q3": 1206.0,
-                                    "max": 1206.0,
-                                    "sd": null,
-                                    "avg": 1206.0
-                                }
-                            }
-                        }
-                    }
-                ],
-                "initially_published_at": null,
-                "can_write": true,
-                "database_id": 2,
-                "enable_embedding": false,
-                "collection_id": 5,
-                "query_type": "query",
-                "name": "Artists Played",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
-                "type": "question",
-                "query_average_duration": 31,
-                "creator_id": 1,
-                "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:03:52.030885Z",
-                "made_public_by_id": null,
-                "embedding_params": null,
-                "cache_ttl": null,
-                "dataset_query": {
-                    "database": 2,
-                    "type": "query",
-                    "query": {
-                        "source-table": 11,
-                        "aggregation": [
-                            [
-                                "aggregation-options",
-                                [
-                                    "distinct",
-                                    [
-                                        "field",
-                                        188,
-                                        {
-                                            "base-type": "type/Text"
-                                        }
-                                    ]
-                                ],
-                                {
-                                    "name": "Artists Played",
-                                    "display-name": "Artists Played"
-                                }
-                            ]
-                        ],
-                        "aggregation-idents": {
-                            "0": "Wt3k6mKc3RIOzrLguT_j2"
-                        }
-                    }
-                },
-                "id": 58,
-                "parameter_mappings": [],
-                "display": "scalar",
-                "archived_directly": false,
-                "entity_id": "Sz6e0w6i5iM4h0n3M8kn7",
-                "collection_preview": true,
-                "visualization_settings": {},
-                "metabase_version": "v0.53.7 (1cd6e9d)",
-                "parameters": [],
-                "dashboard_id": null,
-                "created_at": "2025-09-12T12:58:40.158368Z",
-                "public_uuid": null
-            },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
-            "col": 0,
-            "id": 43,
-            "parameter_mappings": [
-                {
-                    "parameter_id": "798a8f",
-                    "card_id": 58,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            186,
-                            {
-                                "base-type": "type/Date"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "3d6b5493",
-                    "card_id": 58,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            239,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "390f3995",
-                    "card_id": 58,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            195,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                },
-                {
-                    "parameter_id": "ce1b8b75",
-                    "card_id": 58,
-                    "target": [
-                        "dimension",
-                        [
-                            "field",
-                            213,
-                            {
-                                "base-type": "type/Text"
-                            }
-                        ],
-                        {
-                            "stage-number": 0
-                        }
-                    ]
-                }
-            ],
-            "card_id": 58,
-            "entity_id": "82a3aIrpz3R5rp709RC0i",
-            "visualization_settings": {},
-            "size_y": 3,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:07:19.064688Z",
-            "row": 13
         },
         {
             "size_x": 12,
@@ -2223,10 +2257,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 26,
+                "view_count": 12,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 11,
+                "table_id": 10,
                 "result_metadata": [
                     {
                         "description": null,
@@ -2237,18 +2271,18 @@
                         "fk_target_field_id": null,
                         "field_ref": [
                             "field",
-                            188,
+                            179,
                             {
                                 "base-type": "type/Text"
                             }
                         ],
                         "effective_type": "type/Text",
-                        "id": 188,
+                        "id": 179,
                         "visibility_type": "normal",
                         "display_name": "Artist Name",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 1799,
+                                "distinct-count": 395,
                                 "nil%": 0.0
                             },
                             "type": {
@@ -2256,8 +2290,8 @@
                                     "percent-json": 0.0,
                                     "percent-url": 0.0,
                                     "percent-email": 0.0,
-                                    "percent-state": 0.0005,
-                                    "average-length": 9.9532
+                                    "percent-state": 0.0001,
+                                    "average-length": 8.8542
                                 }
                             }
                         },
@@ -2276,17 +2310,17 @@
                         "name": "sum",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 13,
+                                "distinct-count": 14,
                                 "nil%": 0.0
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 58.0,
-                                    "q1": 66.375,
-                                    "q3": 106.25,
+                                    "min": 54.0,
+                                    "q1": 59.674234614174765,
+                                    "q3": 103.25,
                                     "max": 161.0,
-                                    "sd": 32.20204075165778,
-                                    "avg": 85.4
+                                    "sd": 32.78472350406658,
+                                    "avg": 80.46666666666667
                                 }
                             }
                         }
@@ -2299,12 +2333,12 @@
                 "collection_id": 5,
                 "query_type": "query",
                 "name": "Tracks by Artist",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
                 "type": "question",
-                "query_average_duration": 46,
-                "creator_id": 1,
+                "query_average_duration": 328,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:12:46.455086Z",
+                "updated_at": "2025-09-13T02:39:49.745021Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -2312,13 +2346,13 @@
                     "database": 2,
                     "type": "query",
                     "query": {
-                        "source-table": 11,
+                        "source-table": 10,
                         "aggregation": [
                             [
                                 "sum",
                                 [
                                     "field",
-                                    183,
+                                    168,
                                     {
                                         "base-type": "type/Integer"
                                     }
@@ -2328,7 +2362,7 @@
                         "breakout": [
                             [
                                 "field",
-                                188,
+                                179,
                                 {
                                     "base-type": "type/Text"
                                 }
@@ -2352,11 +2386,11 @@
                         }
                     }
                 },
-                "id": 55,
+                "id": 50,
                 "parameter_mappings": [],
                 "display": "row",
                 "archived_directly": false,
-                "entity_id": "YWmDmHGOG7wpmPn0a9Mx4",
+                "entity_id": "C7v7DVcVwy_qOSb9DwGXv",
                 "collection_preview": true,
                 "visualization_settings": {
                     "graph.dimensions": [
@@ -2372,21 +2406,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T12:54:31.991454Z",
+                "created_at": "2025-09-13T02:39:49.745021Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
+            "updated_at": "2025-09-13T02:46:06.733289Z",
             "col": 0,
-            "id": 41,
+            "id": 50,
             "parameter_mappings": [
                 {
                     "parameter_id": "798a8f",
-                    "card_id": 55,
+                    "card_id": 50,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            186,
+                            217,
                             {
                                 "base-type": "type/Date"
                             }
@@ -2398,12 +2432,12 @@
                 },
                 {
                     "parameter_id": "3d6b5493",
-                    "card_id": 55,
+                    "card_id": 50,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            239,
+                            210,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2415,12 +2449,12 @@
                 },
                 {
                     "parameter_id": "390f3995",
-                    "card_id": 55,
+                    "card_id": 50,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            195,
+                            189,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2432,12 +2466,12 @@
                 },
                 {
                     "parameter_id": "ce1b8b75",
-                    "card_id": 55,
+                    "card_id": 50,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            213,
+                            224,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2448,12 +2482,12 @@
                     ]
                 }
             ],
-            "card_id": 55,
-            "entity_id": "Gabf4m5eWiwIPpJb3R8kA",
+            "card_id": 50,
+            "entity_id": "zvOM8JoEMQWjFtjNjwYM6",
             "visualization_settings": {},
             "size_y": 10,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:07:19.064688Z",
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
             "row": 0
         },
         {
@@ -2466,10 +2500,10 @@
                 "cache_invalidated_at": null,
                 "description": null,
                 "archived": false,
-                "view_count": 26,
+                "view_count": 12,
                 "collection_position": null,
                 "source_card_id": null,
-                "table_id": 11,
+                "table_id": 10,
                 "result_metadata": [
                     {
                         "description": null,
@@ -2480,18 +2514,18 @@
                         "fk_target_field_id": null,
                         "field_ref": [
                             "field",
-                            213,
+                            224,
                             {
                                 "base-type": "type/Text"
                             }
                         ],
                         "effective_type": "type/Text",
-                        "id": 213,
+                        "id": 224,
                         "visibility_type": "normal",
                         "display_name": "Time Of Day Label",
                         "fingerprint": {
                             "global": {
-                                "distinct-count": 4,
+                                "distinct-count": 1,
                                 "nil%": 0.0
                             },
                             "type": {
@@ -2500,7 +2534,7 @@
                                     "percent-url": 0.0,
                                     "percent-email": 0.0,
                                     "percent-state": 0.0,
-                                    "average-length": 11.7834
+                                    "average-length": 3.0
                                 }
                             }
                         },
@@ -2526,12 +2560,12 @@
                             },
                             "type": {
                                 "type/Number": {
-                                    "min": 109.0,
-                                    "q1": 1249.5,
-                                    "q3": 3060.5,
-                                    "max": 3442.0,
-                                    "sd": 1434.3739633256966,
-                                    "avg": 2155.0
+                                    "min": 99.0,
+                                    "q1": 1148.5,
+                                    "q3": 2853.5,
+                                    "max": 3231.0,
+                                    "sd": 1341.0118070571439,
+                                    "avg": 2001.0
                                 }
                             }
                         }
@@ -2544,12 +2578,12 @@
                 "collection_id": 5,
                 "query_type": "query",
                 "name": "Time of Day",
-                "last_used_at": "2025-09-12T17:36:26.878065Z",
+                "last_used_at": "2025-09-13T02:46:29.68799Z",
                 "type": "question",
-                "query_average_duration": 61,
-                "creator_id": 1,
+                "query_average_duration": 371,
+                "creator_id": 2,
                 "moderation_reviews": [],
-                "updated_at": "2025-09-12T13:08:18.562908Z",
+                "updated_at": "2025-09-13T02:39:49.261386Z",
                 "made_public_by_id": null,
                 "embedding_params": null,
                 "cache_ttl": null,
@@ -2581,13 +2615,13 @@
                             " - "
                         ],
                         "source-query": {
-                            "source-table": 11,
+                            "source-table": 10,
                             "aggregation": [
                                 [
                                     "sum",
                                     [
                                         "field",
-                                        183,
+                                        168,
                                         {
                                             "base-type": "type/Integer"
                                         }
@@ -2597,7 +2631,7 @@
                             "breakout": [
                                 [
                                     "field",
-                                    213,
+                                    224,
                                     {
                                         "base-type": "type/Text"
                                     }
@@ -2612,11 +2646,11 @@
                         }
                     }
                 },
-                "id": 60,
+                "id": 48,
                 "parameter_mappings": [],
                 "display": "row",
                 "archived_directly": false,
-                "entity_id": "5K0EXZfEB-5Y6fe_LAEyV",
+                "entity_id": "PBOdp_xdC8CaFMP7UAIUq",
                 "collection_preview": true,
                 "visualization_settings": {
                     "series_settings": {
@@ -2637,21 +2671,21 @@
                 "metabase_version": "v0.53.7 (1cd6e9d)",
                 "parameters": [],
                 "dashboard_id": null,
-                "created_at": "2025-09-12T13:03:00.021293Z",
+                "created_at": "2025-09-13T02:39:49.261386Z",
                 "public_uuid": null
             },
-            "updated_at": "2025-09-12T13:15:55.741171Z",
+            "updated_at": "2025-09-13T02:46:06.733289Z",
             "col": 17,
-            "id": 46,
+            "id": 51,
             "parameter_mappings": [
                 {
                     "parameter_id": "798a8f",
-                    "card_id": 60,
+                    "card_id": 48,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            186,
+                            217,
                             {
                                 "base-type": "type/Date"
                             }
@@ -2663,12 +2697,12 @@
                 },
                 {
                     "parameter_id": "3d6b5493",
-                    "card_id": 60,
+                    "card_id": 48,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            239,
+                            210,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2680,12 +2714,12 @@
                 },
                 {
                     "parameter_id": "390f3995",
-                    "card_id": 60,
+                    "card_id": 48,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            195,
+                            189,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2697,12 +2731,12 @@
                 },
                 {
                     "parameter_id": "ce1b8b75",
-                    "card_id": 60,
+                    "card_id": 48,
                     "target": [
                         "dimension",
                         [
                             "field",
-                            213,
+                            224,
                             {
                                 "base-type": "type/Text"
                             }
@@ -2713,8 +2747,8 @@
                     ]
                 }
             ],
-            "card_id": 60,
-            "entity_id": "2T_Ja7FM_hnwGssxgpjHn",
+            "card_id": 48,
+            "entity_id": "gO88SP6_GF0Azs02-Vo2X",
             "visualization_settings": {
                 "click_behavior": {
                     "type": "crossfilter",
@@ -2735,8 +2769,8 @@
                 }
             },
             "size_y": 6,
-            "dashboard_id": 4,
-            "created_at": "2025-09-12T13:10:37.640064Z",
+            "dashboard_id": 5,
+            "created_at": "2025-09-13T02:39:51.499758Z",
             "row": 10
         }
     ]

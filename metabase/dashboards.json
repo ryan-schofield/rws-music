@@ -3,18 +3,18 @@
         {
             "description": null,
             "archived": false,
-            "view_count": 17,
+            "view_count": 7,
             "collection_position": null,
             "creator": {
-                "email": "rwschofield@gmail.com",
-                "first_name": "Ryan",
-                "last_login": "2025-09-12T17:33:58.554104Z",
-                "is_qbnewb": false,
+                "email": "api-key-user-9430feaf-99a8-4cc9-8d1f-5b0b2b0caced@api-key.invalid",
+                "first_name": "metabase_importer",
+                "last_login": null,
+                "is_qbnewb": true,
                 "is_superuser": true,
-                "id": 1,
-                "last_name": null,
-                "date_joined": "2025-09-11T20:38:53.313457Z",
-                "common_name": "Ryan"
+                "id": 2,
+                "last_name": "",
+                "date_joined": "2025-09-13T02:33:25.845785Z",
+                "common_name": "metabase_importer"
             },
             "initially_published_at": null,
             "enable_embedding": false,
@@ -23,22 +23,22 @@
             "name": "Recently Played Dashboard",
             "width": "fixed",
             "caveats": null,
-            "creator_id": 1,
-            "updated_at": "2025-09-12T17:35:49.67691Z",
+            "creator_id": 2,
+            "updated_at": "2025-09-13T02:43:40.280781Z",
             "made_public_by_id": null,
             "embedding_params": null,
             "cache_ttl": null,
-            "id": 5,
-            "last_viewed_at": "2025-09-12T17:35:42.071387Z",
+            "id": 4,
+            "last_viewed_at": "2025-09-13T02:43:50.26363Z",
             "position": null,
             "archived_directly": false,
-            "entity_id": "PUpJaSt2c6XJJqoLo8CeZ",
+            "entity_id": "UhmQ8TWAtziHjYqJvINeU",
             "last-edit-info": {
                 "id": 1,
-                "email": "rwschofield@gmail.com",
+                "email": "ryan@rwschofield.com",
                 "first_name": "Ryan",
                 "last_name": null,
-                "timestamp": "2025-09-12T17:35:49.711956Z"
+                "timestamp": "2025-09-13T02:43:40.533583Z"
             },
             "parameters": [
                 {
@@ -57,25 +57,25 @@
                 }
             ],
             "auto_apply_filters": true,
-            "created_at": "2025-09-12T13:54:09.462801Z",
+            "created_at": "2025-09-13T02:37:01.03309Z",
             "public_uuid": null,
             "points_of_interest": null
         },
         {
             "description": null,
             "archived": false,
-            "view_count": 15,
+            "view_count": 5,
             "collection_position": null,
             "creator": {
-                "email": "rwschofield@gmail.com",
-                "first_name": "Ryan",
-                "last_login": "2025-09-12T17:33:58.554104Z",
-                "is_qbnewb": false,
+                "email": "api-key-user-9430feaf-99a8-4cc9-8d1f-5b0b2b0caced@api-key.invalid",
+                "first_name": "metabase_importer",
+                "last_login": null,
+                "is_qbnewb": true,
                 "is_superuser": true,
-                "id": 1,
-                "last_name": null,
-                "date_joined": "2025-09-11T20:38:53.313457Z",
-                "common_name": "Ryan"
+                "id": 2,
+                "last_name": "",
+                "date_joined": "2025-09-13T02:33:25.845785Z",
+                "common_name": "metabase_importer"
             },
             "initially_published_at": null,
             "enable_embedding": false,
@@ -84,22 +84,22 @@
             "name": "Tracks Played Dashboard",
             "width": "fixed",
             "caveats": null,
-            "creator_id": 1,
-            "updated_at": "2025-09-12T17:36:08.742515Z",
+            "creator_id": 2,
+            "updated_at": "2025-09-13T02:46:06.733289Z",
             "made_public_by_id": null,
             "embedding_params": null,
             "cache_ttl": null,
-            "id": 4,
-            "last_viewed_at": "2025-09-12T17:36:26.809293Z",
+            "id": 5,
+            "last_viewed_at": "2025-09-13T02:46:29.515872Z",
             "position": null,
             "archived_directly": false,
-            "entity_id": "SMnIynskzUEDB8p88NfrR",
+            "entity_id": "Dqf51u7uJ7hVffnrSuokV",
             "last-edit-info": {
                 "id": 1,
-                "email": "rwschofield@gmail.com",
+                "email": "ryan@rwschofield.com",
                 "first_name": "Ryan",
                 "last_name": null,
-                "timestamp": "2025-09-12T17:36:08.77017Z"
+                "timestamp": "2025-09-13T02:46:06.951231Z"
             },
             "parameters": [
                 {
@@ -132,7 +132,7 @@
                 }
             ],
             "auto_apply_filters": true,
-            "created_at": "2025-09-12T13:04:09.480725Z",
+            "created_at": "2025-09-13T02:37:01.663059Z",
             "public_uuid": null,
             "points_of_interest": null
         }
