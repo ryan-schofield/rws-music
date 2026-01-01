@@ -1,4 +1,4 @@
-FROM openjdk:21-buster
+FROM eclipse-temurin:21-jdk-jammy
 
 ENV MB_PLUGINS_DIR=/home/plugins/
 
@@ -11,4 +11,8 @@ ADD https://github.com/MotherDuck-Open-Source/metabase_duckdb_driver/releases/do
 # Set permissions
 RUN chmod 744 /home/plugins/duckdb.metabase-driver.jar
 
-CMD ["java", "-jar", "/home/metabase.jar"]
+# Optimize JVM memory usage for 2GB RAM Synology NAS
+# Limit heap to 512MB max, 256MB initial with G1 garbage collector
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+CMD java $JAVA_OPTS -jar /home/metabase.jar

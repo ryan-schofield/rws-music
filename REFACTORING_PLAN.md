@@ -152,6 +152,63 @@ Refactor the music tracking application to run efficiently on a Synology NAS wit
   - Add `mem_reservation: 128m`
 
 #### 4.2 Optimize Prefect Database
+- [ ] Architect a minimal‑Postgres Prefect Server deployment
+
+```yaml
+# Example config. This is a starting point and is not meant to be replicated completely.
+version: "3.9"
+
+services:
+  prefect-server:
+    image: prefecthq/prefect:2-latest
+    command: prefect server start
+    environment:
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:prefect@postgres:5432/prefect
+
+      # Keep UI logs enabled
+      PREFECT_LOGGING_SERVER_ENABLED: "true"
+
+      # Use a custom logging config file
+      PREFECT_LOGGING_CONFIG_PATH: /etc/prefect/logging.yml
+
+      # Optional: externalize results as well
+      PREFECT_RESULTS_DEFAULT_STORAGE_BLOCK: "local-disk-storage"
+
+    volumes:
+      - ./logging.yml:/etc/prefect/logging.yml:ro
+      - ./external-logs:/var/log/prefect-external
+    depends_on:
+      - postgres
+    ports:
+      - "4200:4200"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: prefect
+      POSTGRES_PASSWORD: prefect
+      POSTGRES_DB: prefect
+    command: >
+      postgres
+      -c max_connections=20
+      -c shared_buffers=64MB
+      -c effective_cache_size=128MB
+      -c maintenance_work_mem=64MB
+      -c wal_buffers=4MB
+      -c max_wal_size=128MB
+      -c min_wal_size=32MB
+      -c log_min_duration_statement=500
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  pgdata:
+```
+
 - [ ] Consider PostgreSQL tuning in prefect-db service:
   ```yaml
   command: postgres -c shared_buffers=64MB -c max_connections=50
@@ -174,18 +231,18 @@ Refactor the music tracking application to run efficiently on a Synology NAS wit
 ### Tasks
 
 #### 5.1 Update Data Pipeline Service
-- [ ] Add memory limits to `docker-compose.yml` data-pipeline:
+- [x] Add memory limits to `docker-compose.yml` data-pipeline:
   - Add `mem_limit: 400m`
   - Add `mem_reservation: 250m`
 
 #### 5.2 Add Global Docker Compose Settings
-- [ ] Consider adding default memory limits at compose level
-- [ ] Document memory allocation strategy in comments
+- [x] Consider adding default memory limits at compose level
+- [x] Document memory allocation strategy in comments
 
 #### 5.3 Update Dockerfile
-- [ ] Review `Dockerfile` for any optimization opportunities
-- [ ] Ensure multi-stage build minimizes final image size
-- [ ] Consider removing unnecessary build dependencies
+- [x] Review `Dockerfile` for any optimization opportunities
+- [x] Ensure multi-stage build minimizes final image size
+- [x] Consider removing unnecessary build dependencies
 
 ---
 

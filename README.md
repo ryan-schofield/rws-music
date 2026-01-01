@@ -1,6 +1,6 @@
 # Music Tracker
 
-A modern, open-source music tracking and analytics platform built with DuckDB, Polars, and Metabase for cost-effective music listening analytics.
+A modern, open-source music tracking and analytics platform built with DuckDB, Polars, and Metabase for cost-effective music listening analytics. Optimized for local-only deployment on Synology NAS with 2GB RAM.
 
 ## Overview
 
@@ -34,9 +34,9 @@ The application consists of several containerized services:
 
 #### Reporting & Database Services
 - **DuckDB**: Analytical database for data warehousing and analytics (in-app file storage)
-- **Metabase**: Business intelligence platform (port 3000)
-- **PostgreSQL (Metabase)**: Metadata storage for Metabase
-- **PostgreSQL (Prefect)**: Workflow state and history storage
+- **Metabase**: Business intelligence platform (port 3000, local-only access)
+- **H2 Database (Metabase)**: Embedded file-based metadata storage (no separate container)
+- **PostgreSQL (Prefect)**: Workflow state and history storage (optimized for 2GB RAM)
 
 ### Data Architecture
 
@@ -97,15 +97,14 @@ data/
 ## Configuration
 
 ### Environment Variables
-Create a `.env` file with the following required variables:
+Create a `.env` file with the following required variables (copy from `.env.example`):
 
 ```bash
-# Spotify API Credentials
+# Spotify API Credentials (Required)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 
-# Database Passwords
-METABASE_DB_PASSWORD=secure_password_here
+# Database Passwords (Required)
 PREFECT_DB_PASSWORD=another_secure_password
 
 # Optional Configuration
@@ -113,6 +112,8 @@ ENVIRONMENT=development  # or production
 DUCKDB_PATH=/app/data/music_tracker.duckdb
 LOG_LEVEL=INFO
 ```
+
+**Note**: Metabase now uses embedded H2 database - no separate database password needed.
 
 ### Flow Configuration
 The system supports environment-specific configuration through `flows/orchestrate/flow_config.py`:
@@ -219,14 +220,62 @@ The application is designed for simple local deployment using Docker Compose:
 2. **Start**: `docker compose up -d` to launch all services
 3. **Access**: Applications available at localhost ports
 
-#### Synology NAS Deployment
-For Synology NAS deployment using Container Manager:
+#### Synology NAS Deployment (Recommended)
+For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
 
-1. **Volume Mapping**: Map `/volume1/docker/music-tracker` for persistent storage
-2. **Port Configuration**: Expose ports 3000 (Metabase) and 4200 (Prefect)
-3. **Memory Limits**: Configure container memory limits to stay under 2GB total
-4. **Access**: Use `http://<synology-ip>:3000` for Metabase and `http://<synology-ip>:4200` for Prefect
-5. **Monitoring**: Use Synology Resource Monitor to track memory usage
+**Complete Deployment Guide**: See [SYNOLOGY_DEPLOYMENT_GUIDE.md](SYNOLOGY_DEPLOYMENT_GUIDE.md) for comprehensive step-by-step instructions including screenshots, troubleshooting, and performance tuning.
+
+**Quick Start**:
+
+1. **Prepare NAS**:
+   - Install Container Manager from Package Center
+   - Create shared folder: `/volume1/docker/music-tracker`
+   - Set proper permissions for your user account
+
+2. **Transfer Files**:
+   - Copy entire project to `/volume1/docker/music-tracker`
+   - Ensure all subdirectories are preserved
+
+3. **Container Manager Setup**:
+   - Open Container Manager > Project > Create from docker-compose.yml
+   - Browse to `/volume1/docker/music-tracker/docker-compose.yml`
+   - Configure environment variables (copy from `.env.example`)
+   - Set volume mappings to persistent storage locations
+
+4. **Memory Configuration**:
+   - Prefect Server: 300-400MB limit
+   - Prefect Worker: 200-300MB limit
+   - Prefect PostgreSQL: 128-200MB limit
+   - Metabase: 400-512MB limit with JVM heap constraints
+   - Data Pipeline: 250-400MB limit
+   - **Total**: ~1,300-1,800MB (within 2GB budget)
+
+5. **Access Applications**:
+   - Metabase: `http://<synology-ip>:3000` (LAN only)
+   - Prefect UI: `http://<synology-ip>:4200` (LAN only)
+   - No external DNS or SSL required for local deployment
+
+6. **Monitoring & Maintenance**:
+   - Use Synology Resource Monitor for real-time tracking
+   - Set up Container Manager notifications for alerts
+   - Configure Hyper Backup for automated data protection
+   - Regularly check memory usage stays under 1.8GB
+
+**Storage Optimization**:
+- Use SSD cache for DuckDB files if available
+- Implement backup strategy for `data/music_tracker.duckdb`
+- Configure log rotation in Synology Log Center
+
+**Optional Reverse Proxy**:
+- Set up Synology Reverse Proxy for custom domains on LAN
+- Configure `metabase.yourdomain.local` and `prefect.yourdomain.local`
+- Update hosts files on client devices or use Synology DNS Server
+
+**Performance Tips**:
+- Monitor memory usage during initial data loads
+- Adjust Metabase JVM heap size if queries are slow
+- Use wired network connection for stability
+- Regularly compact DuckDB database for optimal performance
 
 ## Monitoring & Observability
 
@@ -238,9 +287,10 @@ For Synology NAS deployment using Container Manager:
 
 ## Resource Requirements
 
-- **Memory**: 2GB RAM minimum (optimized for Synology NAS)
+- **Memory**: 2GB RAM minimum (optimized for Synology NAS, tested under 1.8GB usage)
 - **Storage**: 1GB+ for Docker images and data files
 - **CPU**: 2+ cores recommended for smooth operation
+- **Network**: Local LAN access only (no external/internet exposure required)
 
 ## Contributing
 
