@@ -18,7 +18,7 @@ This project provides a complete data pipeline for ingesting, processing, and an
 - **📈 Metabase**: Business intelligence and reporting platform
 - **🐳 Docker**: Containerized deployment with Docker Compose
 - **🛠️ dbt**: Data transformation and modeling
-- **🏗️ Terraform**: Infrastructure as Code for cloud deployment
+- **🐳 Docker**: Containerized deployment with Docker Compose
 
 ### System Components
 
@@ -126,7 +126,7 @@ The system supports environment-specific configuration through `flows/orchestrat
 ### Prerequisites
 - Docker and Docker Compose
 - Spotify Developer Account (for API credentials)
-- 4GB+ RAM recommended
+- 2GB RAM minimum (optimized for Synology NAS)
 
 ### Local Development Setup
 
@@ -171,8 +171,7 @@ The Prefect deployer will automatically deploy flows. Monitor execution in the P
 ├── data/                    # Data storage and caching
 ├── docs/                    # Documentation
 ├── scripts/                 # Utility scripts
-├── terraform/               # Infrastructure as Code for cloud deployment
-│   └── phase1-lightsail/    # AWS Lightsail deployment configuration
+├── terraform/               # Historical cloud deployment (no longer used)
 ├── pyproject.toml           # Python project configuration and dependencies
 ├── uv.lock                  # Locked dependency versions for reproducible builds
 ├── docker-compose.yml       # Multi-container application orchestration
@@ -206,35 +205,28 @@ The project uses **uv** as the Python package manager for several key advantages
 ### Local Development
 Use Docker Compose for local development and testing with uv handling all Python dependencies.
 
-### Production Deployment with Terraform
+### Deployment
 
-The project includes comprehensive **Terraform** Infrastructure as Code for AWS deployment:
+The application is designed for simple local deployment using Docker Compose:
 
-#### Terraform Configuration (`terraform/phase1-lightsail/`)
-- **`main.tf`**: Provider configuration and module orchestration
-- **`lightsail.tf`**: AWS Lightsail instance configuration with Docker setup
-- **`dns.tf`**: Domain and DNS management for public access
-- **`variables.tf`**: Configurable deployment parameters
-- **`outputs.tf`**: Important deployment information (IP addresses, domains)
-- **`user_data.sh`**: Automated server setup script for Docker and application deployment
-
-#### Infrastructure Features:
-- **AWS Lightsail Instance**: Cost-effective VPS with predictable pricing
-- **Automated Setup**: User data scripts handle Docker installation and application deployment
-- **DNS Management**: Configurable domain setup for public Metabase access
-- **Security**: Proper firewall configuration and SSH key management
-- **Monitoring**: Instance health monitoring and alerting
+#### Local Deployment
+- **Docker Compose**: Simple multi-container orchestration
+- **Local Access**: Services accessible on localhost ports
+- **Easy Setup**: Single command to start all services
 
 #### Deployment Process:
-1. **Configure**: Set variables in `terraform.tfvars`
-2. **Plan**: `terraform plan` to review infrastructure changes
-3. **Deploy**: `terraform apply` to provision AWS resources
-4. **Access**: Automated DNS setup for public dashboard access
+1. **Configure**: Set environment variables in `.env` file (copy from `.env.example`)
+2. **Start**: `docker compose up -d` to launch all services
+3. **Access**: Applications available at localhost ports
 
-#### Cost Structure:
-- **Infrastructure**: $5-15/month (AWS Lightsail instances)
-- **Predictable Pricing**: No surprise charges from compute or storage usage
-- **Scalability**: Easy instance upgrades through Terraform configuration updates
+#### Synology NAS Deployment
+For Synology NAS deployment using Container Manager:
+
+1. **Volume Mapping**: Map `/volume1/docker/music-tracker` for persistent storage
+2. **Port Configuration**: Expose ports 3000 (Metabase) and 4200 (Prefect)
+3. **Memory Limits**: Configure container memory limits to stay under 2GB total
+4. **Access**: Use `http://<synology-ip>:3000` for Metabase and `http://<synology-ip>:4200` for Prefect
+5. **Monitoring**: Use Synology Resource Monitor to track memory usage
 
 ## Monitoring & Observability
 
@@ -244,12 +236,11 @@ The project includes comprehensive **Terraform** Infrastructure as Code for AWS 
 - **Health Checks**: Container health monitoring
 - **Alerting**: Configurable notifications for failures
 
-## Cost Analysis
+## Resource Requirements
 
-- **Infrastructure**: $5-15/month (AWS Lightsail)
-- **API Costs**: Free (Spotify Web API, MusicBrainz)
-- **Software**: $0 (fully open-source stack)
-- **Scalability**: Linear cost scaling with infrastructure needs
+- **Memory**: 2GB RAM minimum (optimized for Synology NAS)
+- **Storage**: 1GB+ for Docker images and data files
+- **CPU**: 2+ cores recommended for smooth operation
 
 ## Contributing
 

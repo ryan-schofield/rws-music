@@ -48,7 +48,7 @@ dmypy.json
 *.tfvars
 *.tar.gz
 
-# Terraform
+# Terraform (historical, no longer used)
 */.terraform
 *.tfstate
 *.tfstate.backup
