@@ -11,7 +11,6 @@ from typing import List, Dict, Any
 import json
 from pathlib import Path
 import base64
-import csv
 import glob
 
 import requests
@@ -279,10 +278,11 @@ class SpotifyDataIngestion:
             df = pl.DataFrame(all_data)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
+            # Use strict=False to handle parsing errors gracefully
             df = df.with_columns(
                 [
                     pl.col("played_at")
-                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ")
+                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
                     .alias("played_at_dt"),
                     (pl.col("duration_ms") / 1000).alias("duration_sec"),
                 ]
@@ -304,18 +304,25 @@ class SpotifyDataIngestion:
             step1_count = len(df_step1)
             step1_removed = len(df) - step1_count
 
-            # Step 2: Remove duplicates where same track_id and request_after have plays within track duration
+            # Step 2: Remove duplicates where same track_id have plays within track duration
+            # Filter out rows with null values in critical columns before sorting
+            # Note: request_after may be null, which is expected - don't filter on it
+            df_filtered = df_step1.filter(
+                (pl.col("track_id").is_not_null())
+                & (pl.col("played_at_dt").is_not_null())
+            )
+            
             df_unique = (
-                df_step1.sort(["track_id", "request_after", "played_at_dt"])
+                df_filtered.sort(["track_id", "played_at_dt"])
                 .with_columns(
                     [
                         pl.col("played_at_dt")
                         .shift(1)
-                        .over(["track_id", "request_after"])
+                        .over(["track_id"])
                         .alias("prev_played_at"),
                         pl.col("duration_sec")
                         .shift(1)
-                        .over(["track_id", "request_after"])
+                        .over(["track_id"])
                         .alias("prev_duration_sec"),
                     ]
                 )
@@ -347,8 +354,12 @@ class SpotifyDataIngestion:
 
             # Log deduplication results
             original_count = len(all_data)
+            step1_count = len(df_step1)
+            filtered_count = len(df_filtered)
             unique_count = len(df_unique)
-            step2_removed = step1_count - unique_count
+            step1_removed = original_count - step1_count
+            filtered_removed = step1_count - filtered_count
+            step2_removed = filtered_count - unique_count
             total_removed = original_count - unique_count
 
             if total_removed > 0:
@@ -356,6 +367,10 @@ class SpotifyDataIngestion:
                 logger.info(
                     f"  - Step 1 (exact duplicates): {step1_removed} records removed"
                 )
+                if filtered_removed > 0:
+                    logger.info(
+                        f"  - Filtered (null values): {filtered_removed} records removed"
+                    )
                 logger.info(
                     f"  - Step 2 (duration-based): {step2_removed} records removed"
                 )

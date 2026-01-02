@@ -7,7 +7,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Artists Played",
@@ -66,7 +66,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 10,
+                    "source-table": 69,
                     "aggregation": [
                         [
                             "aggregation-options",
@@ -135,7 +135,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Artist/Track",
@@ -252,7 +252,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 11,
+                    "source-table": 97,
                     "expressions": {
                         "Artist/Track": [
                             "concat",
@@ -446,7 +446,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Minutes Played",
@@ -530,7 +530,7 @@
                             }
                         ]
                     ],
-                    "source-table": 11,
+                    "source-table": 97,
                     "aggregation-idents": {
                         "0": "l15Jx5hdFw_lG442OiHtk"
                     },
@@ -595,7 +595,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Artists Played",
@@ -654,7 +654,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 11,
+                    "source-table": 97,
                     "aggregation": [
                         [
                             "aggregation-options",
@@ -723,7 +723,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "description": null,
@@ -826,7 +826,7 @@
                     "expression-idents": {
                         "Duration Minutes": "fj8m6vN0Dp9Vy1zFaPpgS"
                     },
-                    "source-table": 11,
+                    "source-table": 97,
                     "expressions": {
                         "Duration Minutes": [
                             "round",
@@ -935,7 +935,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Count",
@@ -993,7 +993,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 11,
+                    "source-table": 97,
                     "aggregation": [
                         [
                             "count"
@@ -1048,7 +1048,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "description": null,
@@ -1168,7 +1168,7 @@
                         " - "
                     ],
                     "source-query": {
-                        "source-table": 10,
+                        "source-table": 69,
                         "aggregation": [
                             [
                                 "sum",
@@ -1258,7 +1258,7 @@
             "view_count": 9,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 11,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Artist - Album",
@@ -1354,7 +1354,7 @@
                         "Artist Short": "qTovSoLETXR7SbLneZ4Wc",
                         "Artist - Album": "pm_ELmYJe7dM3zR7FR6f9"
                     },
-                    "source-table": 11,
+                    "source-table": 97,
                     "expressions": {
                         "Album Short": [
                             "if",
@@ -1544,7 +1544,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "description": null,
@@ -1638,7 +1638,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 10,
+                    "source-table": 69,
                     "aggregation": [
                         [
                             "sum",
@@ -1732,7 +1732,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "description": null,
@@ -1826,7 +1826,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 10,
+                    "source-table": 69,
                     "aggregation": [
                         [
                             "sum",
@@ -1910,7 +1910,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "description": null,
@@ -2031,7 +2031,7 @@
                         ]
                     ],
                     "source-query": {
-                        "source-table": 10,
+                        "source-table": 69,
                         "aggregation": [
                             [
                                 "sum",
@@ -2131,7 +2131,7 @@
             "view_count": 12,
             "collection_position": null,
             "source_card_id": null,
-            "table_id": 10,
+            "table_id": 97,
             "result_metadata": [
                 {
                     "display_name": "Sum of Tracks Played",
@@ -2190,7 +2190,7 @@
                 "database": 2,
                 "type": "query",
                 "query": {
-                    "source-table": 10,
+                    "source-table": 69,
                     "aggregation": [
                         [
                             "sum",

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 METABASE_PORT = os.getenv("METABASE_PORT")
-METABASE_HOST = "http://127.0.0.1:" + METABASE_PORT
+METABASE_HOST = f"http://127.0.0.1:{METABASE_PORT}"
 METABASE_API_KEY = os.getenv("METABASE_API_KEY")
 
 
@@ -31,7 +31,7 @@ def get_existing_items(endpoint, headers):
         return []
 
 
-def import_or_update_item(item, item_type, endpoint, existing_items, headers):
+def import_or_update_item(item, item_type, endpoint, existing_items, headers, target_tables=None):
     """Import or update an item, returning the item's ID."""
     name = item.get("name", "Unknown")
     existing_item = find_existing_item_by_name(existing_items, name)
@@ -39,7 +39,7 @@ def import_or_update_item(item, item_type, endpoint, existing_items, headers):
     if existing_item:
         # Update existing item
         item_id = existing_item["id"]
-        cleaned_payload = clean_payload(item, item_type)
+        cleaned_payload = clean_payload(item, item_type, target_tables)
         try:
             response = requests.put(
                 f"{METABASE_HOST}/api/{endpoint}/{item_id}",
@@ -54,17 +54,25 @@ def import_or_update_item(item, item_type, endpoint, existing_items, headers):
             return None
     else:
         # Create new item
-        cleaned_payload = clean_payload(item, item_type)
+        cleaned_payload = clean_payload(item, item_type, target_tables)
+        url = f"{METABASE_HOST}/api/{endpoint}"
         try:
             response = requests.post(
-                f"{METABASE_HOST}/api/{endpoint}", headers=headers, json=cleaned_payload
+                url, headers=headers, json=cleaned_payload
             )
+            
+            if response.status_code != 201:
+                print(f"  Response status: {response.status_code}")
+                print(f"  Response text: {response.text[:500]}")
+            
             response.raise_for_status()
             new_item = response.json()
             print(f"Created {item_type}: {name}")
             return new_item["id"]
         except HTTPError as e:
             print(f"Failed to create {item_type} '{name}': {e}")
+            if hasattr(e, 'response') and e.response:
+                print(f"  Response body: {e.response.text[:500]}")
             return None
 
 
@@ -212,7 +220,7 @@ def update_dashboard_with_cards(dashboard_id, dashboard_cards, headers):
         return False
 
 
-def clean_payload(item, item_type="card"):
+def clean_payload(item, item_type="card", target_tables=None):
     """Clean the payload to only include fields allowed for creation/update."""
     if item_type == "card":
         allowed_fields = {
@@ -220,7 +228,8 @@ def clean_payload(item, item_type="card"):
             "dataset_query",
             "display",
             "visualization_settings",
-            "collection_id",
+            # Note: collection_id is excluded to avoid "Collection does not exist" errors
+            # when importing to a different Metabase. Cards will go to default collection.
             "description",
             "parameters",
             "parameter_mappings",
@@ -235,6 +244,7 @@ def clean_payload(item, item_type="card"):
             "query_type",
             "table_id",
             "result_metadata",
+            "database_id",  # Include database_id to avoid referential integrity errors
         }
         # Ensure required fields
         cleaned = {k: v for k, v in item.items() if k in allowed_fields}
@@ -246,6 +256,26 @@ def clean_payload(item, item_type="card"):
             cleaned["display"] = item.get("display", "table")
         if "type" not in cleaned:
             cleaned["type"] = "question"
+        # Ensure visualization_settings is always a dict (required by Metabase API)
+        # See: https://github.com/metabase/metabase/issues/... (visualization_settings is mandatory)
+        # This field must be present even if empty for card creation to succeed
+        if "visualization_settings" not in cleaned or cleaned["visualization_settings"] is None:
+            cleaned["visualization_settings"] = {}
+        
+        # Fix database_id by looking it up from the table_id in target tables
+        # This avoids "database not found" errors when importing to a different Metabase
+        if target_tables and "table_id" in cleaned:
+            table_id = cleaned["table_id"]
+            for target_table in target_tables:
+                if target_table.get("id") == table_id:
+                    new_db_id = target_table.get("db_id")
+                    cleaned["database_id"] = new_db_id
+                    
+                    # Also update the database reference in the dataset_query
+                    if "dataset_query" in cleaned and isinstance(cleaned["dataset_query"], dict):
+                        if "database" in cleaned["dataset_query"]:
+                            cleaned["dataset_query"]["database"] = new_db_id
+                    break
     elif item_type == "dashboard":
         allowed_fields = {
             "name",
@@ -513,7 +543,7 @@ def import_metabase_content():
 
     for query in queries:
         import_or_update_item(
-            query, "query_snippet", "native-query-snippet", existing_queries, headers
+            query, "query_snippet", "native-query-snippet", existing_queries, headers, target_tables
         )
 
     # Import questions second (dependencies for dashboards)
@@ -533,7 +563,7 @@ def import_metabase_content():
 
         old_question_id = question.get("id")
         new_question_id = import_or_update_item(
-            updated_question, "card", "card", existing_questions, headers
+            updated_question, "card", "card", existing_questions, headers, target_tables
         )
         if old_question_id and new_question_id:
             question_id_mapping[old_question_id] = new_question_id
@@ -550,7 +580,7 @@ def import_metabase_content():
     for dashboard in dashboards:
         old_dashboard_id = dashboard.get("id")
         new_dashboard_id = import_or_update_item(
-            dashboard, "dashboard", "dashboard", existing_dashboards, headers
+            dashboard, "dashboard", "dashboard", existing_dashboards, headers, target_tables
         )
         if old_dashboard_id and new_dashboard_id:
             dashboard_id_mapping[old_dashboard_id] = new_dashboard_id
