@@ -26,8 +26,6 @@ services:
       - LOG_LEVEL=INFO
     networks:
       - music-tracker
-    depends_on:
-      - metabase
     restart: unless-stopped
     # Memory limits for 2GB RAM Synology NAS
     # 400MB max, 250MB reservation for data processing overhead
@@ -59,136 +57,33 @@ services:
     mem_limit: 600m
     mem_reservation: 400m
 
-
-  # Prefect for orchestration
-  prefect-server:
-    image: prefecthq/prefect:3.4.0-python3.11
-    container_name: music-tracker-prefect
+  # n8n for workflow orchestration
+  n8n:
+    image: n8n:latest
+    container_name: music-tracker-n8n
     ports:
-      - "4200:4200"
-    env_file: .env
+      - "5678:5678"
     environment:
-      - PREFECT_API_URL=http://localhost:4200/api
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_SERVER_API_PORT=4200
-      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect:${PREFECT_DB_PASSWORD}@prefect-db:5432/prefect
-      - PREFECT_SERVER_ANALYTICS_ENABLED=false
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
+      - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
     volumes:
-      - prefect-data:/opt/prefect
+      - n8n-data:/home/node/.n8n
+      - ./n8n-workflows:/workflows
     networks:
       - music-tracker
-    depends_on:
-      - prefect-db
-    restart: unless-stopped
-    command: prefect server start --host 0.0.0.0 --port 4200
-    # Memory limits for 2GB RAM Synology NAS
-    mem_limit: 400m
-    mem_reservation: 300m
-
-  prefect-worker:
-    build: .
-    container_name: music-tracker-prefect-worker
-    env_file: .env
-    environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-      - PREFECT_WORK_POOL_NAME=default-agent-pool
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
-      - LOG_LEVEL=INFO
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./flows:/app/flows
-    networks:
-      - music-tracker
-    depends_on:
-      - prefect-server
     restart: unless-stopped
     # Memory limits for 2GB RAM Synology NAS
+    # ~300MB for n8n (improvement over Prefect's 400MB server + 200MB DB)
     mem_limit: 300m
     mem_reservation: 200m
-    command: >
-      bash -c "
-        echo 'Waiting for Prefect server to be ready...';
-        until curl -f http://prefect-server:4200/api/health > /dev/null 2>&1; do
-          echo 'Prefect server not ready, waiting...';
-          sleep 5;
-        done;
-        echo 'Prefect server is ready!';
-        sleep 5;
-        echo 'Starting Prefect worker...';
-        prefect worker start --pool default-agent-pool
-      "
-
-  prefect-deployer:
-    build: .
-    container_name: music-tracker-prefect-deployer
-    env_file: .env
-    environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-      - PREFECT_WORK_POOL_NAME=default-agent-pool
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
-      - LOG_LEVEL=INFO
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./flows:/app/flows
-    networks:
-      - music-tracker
-    depends_on:
-      - prefect-worker
-    restart: "no"
-    command: >
-      bash -c "
-        echo 'Waiting for Prefect server to be ready...';
-        until curl -f http://prefect-server:4200/api/health > /dev/null 2>&1; do
-          echo 'Prefect server not ready, waiting...';
-          sleep 5;
-        done;
-        echo 'Prefect server is ready!';
-        echo 'Waiting for worker to be ready...';
-        sleep 15;
-        echo 'Deploying flows...';
-        cd /app && PYTHONPATH=/app uv run python flows/orchestrate/deploy_flows.py;
-        echo 'Flow deployment completed!';
-      "
-
-  # PostgreSQL for Prefect
-  prefect-db:
-    image: postgres:15-alpine
-    container_name: music-tracker-prefect-db
-    env_file: .env
-    environment:
-      - POSTGRES_DB=prefect
-      - POSTGRES_USER=prefect
-      - POSTGRES_PASSWORD=${PREFECT_DB_PASSWORD}
-    volumes:
-      - prefect-db-data:/var/lib/postgresql/data
-    networks:
-      - music-tracker
-    restart: unless-stopped
-    # Memory limits for 2GB RAM Synology NAS
-    mem_limit: 200m
-    mem_reservation: 128m
-    # PostgreSQL tuning for minimal memory usage
-    command: >
-      postgres
-      -c max_connections=20
-      -c shared_buffers=64MB
-      -c effective_cache_size=128MB
-      -c maintenance_work_mem=64MB
-      -c wal_buffers=4MB
-      -c max_wal_size=128MB
-      -c min_wal_size=32MB
-      -c log_min_duration_statement=500
 
 volumes:
   metabase-data:
-  prefect-data:
-  prefect-db-data:
+  n8n-data:
 
 networks:
   music-tracker:
