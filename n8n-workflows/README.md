@@ -1,170 +1,256 @@
 # n8n Workflows
 
-This directory contains workflow definitions for the Music Tracker application's orchestration layer using n8n.
+This directory contains n8n workflow definitions for the music tracker ETL pipeline.
 
 ## Overview
 
-The n8n workflows replace the previous Prefect orchestration system. All Python data processing code and dbt transformations remain unchanged - n8n is only responsible for scheduling and coordinating the execution of these existing scripts.
+Two main workflows orchestrate the complete data pipeline:
 
-### Architecture
+1. **Spotify Ingestion** (`spotify_ingestion_workflow.json`)
+   - Scheduled every 6 hours
+   - Fetches recently played tracks from Spotify API
+   - Loads and validates raw data
+   
+2. **Daily ETL** (`daily_etl_workflow.json`)
+   - Scheduled daily at 2 AM UTC
+   - Complete enrichment and transformation pipeline
+   - Ingests → Enriches (Spotify, MusicBrainz, Geography) → Transforms (dbt)
 
-- **Main Workflows**: Top-level workflows that define the complete ETL pipelines
-- **Sub-workflows**: Reusable sub-workflows that handle specific data processing domains
-- **Version Control**: All workflow definitions are exported as JSON for Git tracking
+## Quick Start
 
-### Workflow Structure
+### Deploy Workflows
+
+```bash
+# Deploy all workflows to n8n instance
+python flows/cli/deploy_n8n_workflows.py --action deploy
+
+# Verify deployment
+python flows/cli/deploy_n8n_workflows.py --action status
+
+# Export for version control
+python flows/cli/deploy_n8n_workflows.py --action export
+```
+
+### Access n8n UI
+
+Open browser to: **http://localhost:5678**
+
+- View workflow definitions
+- Monitor execution history
+- Manually trigger workflows
+- Check for errors
+
+### Manage Workflows
+
+```bash
+# Check status
+python flows/cli/deploy_n8n_workflows.py --action status
+
+# Activate workflow
+python flows/cli/deploy_n8n_workflows.py --action activate --workflow "Spotify Ingestion"
+
+# Deactivate workflow
+python flows/cli/deploy_n8n_workflows.py --action deactivate --workflow "Spotify Ingestion"
+```
+
+## Workflow Definitions
+
+### Spotify Ingestion (Every 6h)
+
+**File**: `spotify_ingestion_workflow.json`
+
+**Schedule**: Every 6 hours (0, 6, 12, 18 UTC)
+
+**Pipeline**:
+1. Trigger on cron schedule
+2. Ingest recently played tracks from Spotify
+3. Load raw data into structured format
+4. Validate data quality
+
+**Typical Duration**: 5-10 minutes
+
+**Purpose**: Keep recently played tracks data fresh (max 6 hours old)
+
+### Daily ETL (2 AM UTC)
+
+**File**: `daily_etl_workflow.json`
+
+**Schedule**: Daily at 2 AM UTC
+
+**Pipeline**:
+1. Trigger on cron schedule
+2. Ingest Spotify tracks
+3. Load raw data
+4. Validate data quality
+5. Enrich Spotify artists & albums (parallel)
+6. Wait for enrichment to complete
+7. Discover missing MusicBrainz artists
+8. Fetch MusicBrainz artist data
+9. Parse MusicBrainz JSON
+10. Process geographic hierarchy
+11. Enrich geographic data
+12. Update Spotify artists with MBID
+13. Run dbt transformations
+
+**Typical Duration**: 45-90 minutes
+
+**Purpose**: Complete data enrichment and transformation
+
+## File Structure
 
 ```
 n8n-workflows/
-├── README.md                              # This file
-├── metadata.json                          # Auto-generated workflow metadata
-├── spotify_ingestion_workflow.json         # Main: Daily Spotify data ingestion
-├── daily_etl_workflow.json                 # Main: Complete daily ETL pipeline
-├── subflows/
-│   ├── data_preparation_workflow.json      # Load and validate raw data
-│   ├── spotify_enrichment_workflow.json     # Enrich Spotify data (artists, albums, MBIDs)
-│   ├── musicbrainz_enrichment_workflow.json # Enrich MusicBrainz data (artists, hierarchy, areas)
-│   ├── geographic_enrichment_workflow.json  # Geographic enrichment
-│   └── transformation_workflow.json         # Run dbt transformations
+├── README.md                           # This file
+├── PHASE_3_GUIDE.md                   # Detailed Phase 3 documentation
+├── spotify_ingestion_workflow.json      # Spotify ingestion workflow
+├── daily_etl_workflow.json             # Daily ETL workflow
 └── utils/
-    ├── export_workflows.py                 # Export all workflows from n8n to JSON
-    ├── import_workflows.py                 # Import workflows from JSON to n8n
-    └── __init__.py
+    ├── __init__.py
+    ├── export_workflows.py             # Export workflows to JSON
+    └── import_workflows.py             # Import workflows from JSON
 ```
 
-## Workflows
+## Utilities
 
-### Main Workflows
-
-#### Spotify Ingestion Workflow (`spotify_ingestion_workflow.json`)
-- **Purpose**: Daily ingestion of recently played tracks from Spotify API
-- **Schedule**: Configured via n8n UI
-- **Python CLI**: `flows/cli/ingest_spotify.py`
-- **Output**: Raw CSV file and DuckDB table
-
-#### Daily ETL Workflow (`daily_etl_workflow.json`)
-- **Purpose**: Complete daily data pipeline combining all enrichment and transformation tasks
-- **Sequence**: Data Prep → Spotify Enrichment → MusicBrainz Enrichment → Geographic Enrichment → dbt Transformations
-- **Sub-workflows**: Orchestrates all four sub-workflows in sequence
-- **Estimated Duration**: 30-45 minutes depending on data volume
-
-### Sub-workflows
-
-#### Data Preparation (`subflows/data_preparation_workflow.json`)
-- **Tasks**:
-  1. Load raw tracks from CSV to DuckDB
-  2. Validate data quality
-- **Python CLIs**: `flows/cli/load_raw_tracks.py`, `flows/cli/validate_data.py`
-- **Retry**: 3 attempts, 60s delay
-- **Timeout**: 5 minutes
-
-#### Spotify Enrichment (`subflows/spotify_enrichment_workflow.json`)
-- **Tasks**:
-  1. Enrich Spotify artists (parallel)
-  2. Enrich Spotify albums (parallel)
-  3. Update MusicBrainz IDs from Spotify data
-- **Python CLIs**: `flows/cli/enrich_spotify_artists.py`, `flows/cli/enrich_spotify_albums.py`, `flows/cli/update_mbids.py`
-- **Retry**: 3 attempts, 60s delay
-- **Timeout**: 10 minutes
-- **Note**: Artist and album enrichment run in parallel for efficiency
-
-#### MusicBrainz Enrichment (`subflows/musicbrainz_enrichment_workflow.json`)
-- **Tasks**:
-  1. Discover artists needing enrichment
-  2. Fetch MusicBrainz artist data (skipped if no work)
-  3. Parse JSON responses
-  4. Process area hierarchy
-- **Python CLIs**: `flows/cli/discover_mbz_artists.py`, `flows/cli/fetch_mbz_artists.py`, `flows/cli/parse_mbz_data.py`, `flows/cli/process_mbz_hierarchy.py`
-- **Retry**: 3 attempts for fetch, 2 for processing
-- **Timeout**: 900s fetch, 600s others
-
-#### Geographic Enrichment (`subflows/geographic_enrichment_workflow.json`)
-- **Task**: Enrich tracks with geographic data based on artist locations
-- **Python CLI**: `flows/cli/enrich_geography.py`
-- **Retry**: 0 (fail fast for data integrity)
-- **Timeout**: 30 minutes
-
-#### Transformation (`subflows/transformation_workflow.json`)
-- **Task**: Run dbt to build dimensional and reporting models
-- **Python CLI**: `flows/cli/run_dbt.py`
-- **Retry**: 2 attempts, 30s delay
-- **Timeout**: 20 minutes
-
-## Workflow Management
-
-### Exporting Workflows
-
-Export all workflows from n8n to JSON files for version control:
+### Export Workflows
 
 ```bash
-cd n8n-workflows/utils
-python export_workflows.py --host localhost --port 5678 --output ..
+# Export all workflows to JSON files
+python n8n-workflows/utils/export_workflows.py
 ```
 
-**Options**:
-- `--host`: n8n host (default: localhost, env: N8N_HOST)
-- `--port`: n8n port (default: 5678, env: N8N_PORT)
-- `--api-key`: API key for authentication (env: N8N_API_KEY)
-- `--output`: Output directory (default: current directory)
+This is useful for:
+- Backing up workflow definitions
+- Version control
+- Sharing workflows
+- Disaster recovery
 
-**Output**:
-- Individual workflow JSON files (e.g., `spotify_ingestion_workflow_123.json`)
-- `metadata.json` with workflow list and export timestamp
-
-### Importing Workflows
-
-Import workflows from JSON files to n8n:
+### Import Workflows
 
 ```bash
-# Import single workflow
-cd n8n-workflows/utils
-python import_workflows.py --workflow-file ../spotify_ingestion_workflow.json
-
-# Import all workflows from directory
-python import_workflows.py --workflow-dir ..
-
-# Update existing workflows
-python import_workflows.py --workflow-dir .. --update
+# Import workflows from JSON files
+python n8n-workflows/utils/import_workflows.py
 ```
 
-**Options**:
-- `--host`: n8n host (default: localhost, env: N8N_HOST)
-- `--port`: n8n port (default: 5678, env: N8N_PORT)
-- `--api-key`: API key for authentication (env: N8N_API_KEY)
-- `--workflow-file`: Single workflow JSON file to import
-- `--workflow-dir`: Directory with workflow JSON files (default: current)
-- `--update`: Update existing workflows (default: skip existing)
-
-## Python CLI Scripts
-
-All workflows execute Python CLI scripts located in `flows/cli/`. These scripts:
-- Accept command-line arguments
-- Output JSON results to stdout
-- Exit with code 0 on success, 1 on failure
-- Include retry logic and timeouts as configured per workflow
-
-### CLI Naming Convention
-- `ingest_*`: Data ingestion from external sources
-- `load_*`: Loading data into DuckDB
-- `enrich_*`: Data enrichment tasks
-- `validate_*`: Data quality validation
-- `run_*`: Complex operations (e.g., dbt runs)
-
-### CLI Base Class
-All CLI scripts inherit from `flows/cli/base.py` which provides:
-- Standardized argument parsing
-- JSON output formatting
-- Error handling and reporting
-- Logging configuration
+Use when:
+- Deploying to new n8n instance
+- Restoring from backup
+- Migrating between environments
 
 ## Configuration
 
 ### Environment Variables
 
-Required in `.env` or Docker environment:
-- `N8N_HOST`: n8n hostname (default: localhost)
-- `N8N_PORT`: n8n port (default: 5678)
-- `N8N_API_KEY`: API key for programmatic access (optional)
+Set in `.env`:
+
+```bash
+# n8n instance URL
+N8N_BASE_URL=http://localhost:5678
+
+# Optional: API key for authentication
+N8N_API_KEY=your_api_key_here
+```
+
+### Workflow Settings
+
+Default settings are configured in `flows/cli/workflow_builders.py`:
+
+- **Timeout**: 1 hour (daily ETL), 15 min (Spotify ingestion)
+- **Retries**: 1-3 depending on task criticality
+- **Retry delay**: 60 seconds
+- **Error handling**: Continue on error (non-blocking)
+
+## Monitoring
+
+### Check Execution History
+
+1. Open http://localhost:5678
+2. Click on workflow name
+3. View "Executions" tab
+4. Click on execution to see details
+
+### Common Issues
+
+**Workflow doesn't start**: 
+- Check if workflow is active (blue toggle)
+- Verify cron expression is correct
+- Check n8n logs: `docker logs music-tracker-n8n`
+
+**CLI script fails**:
+- Run CLI manually to debug
+- Check stderr output in n8n UI
+- Verify environment variables are set
+
+**Workflow times out**:
+- Check system resources
+- Review n8n memory limits
+- Consider reducing data volume
+
+## Version Control
+
+Workflow definitions are stored as JSON in version control:
+
+```bash
+# Track workflow changes
+git add n8n-workflows/*.json
+git commit -m "Update n8n workflows"
+git push
+```
+
+To update from version control:
+
+```bash
+# Fetch latest workflow definitions
+git pull
+
+# Re-deploy to n8n
+python flows/cli/deploy_n8n_workflows.py --action deploy
+```
+
+## Development
+
+### Create New Workflow
+
+1. Build workflow in `flows/cli/workflow_builders.py`:
+   ```python
+   def build_my_workflow():
+       workflow = N8NWorkflow("My Workflow")
+       # Add nodes
+       return workflow.to_dict()
+   ```
+
+2. Register in `WorkflowDeployer`
+3. Deploy: `python flows/cli/deploy_n8n_workflows.py --action deploy`
+4. Export: `python flows/cli/deploy_n8n_workflows.py --action export`
+
+### Modify Existing Workflow
+
+1. Update builder function in `workflow_builders.py`
+2. Re-deploy: `python flows/cli/deploy_n8n_workflows.py --action deploy`
+3. Verify in n8n UI
+4. Export: `python flows/cli/deploy_n8n_workflows.py --action export`
+5. Commit changes: `git add n8n-workflows/*.json && git commit`
+
+## Documentation
+
+- **PHASE_3_GUIDE.md**: Complete Phase 3 implementation guide
+- **flows/cli/README.md**: CLI command documentation
+- **PREFECT_TO_N8N_MIGRATION_PLAN.md**: Migration plan and rationale
+
+## Related
+
+- **Phase 1**: Infrastructure (docker-compose, n8n setup)
+- **Phase 2**: CLI wrappers (standalone scripts)
+- **Phase 3**: This directory (workflow orchestration)
+- **Phase 4**: Testing & cutover (data validation, gradual migration)
+
+## Support
+
+For detailed information, see:
+- PHASE_3_GUIDE.md (this directory)
+- flows/cli/README.md (CLI documentation)
+- http://localhost:5678 (n8n web interface)
+- `docker logs music-tracker-n8n` (n8n logs)
 - `TIMEZONE`: Timezone for scheduling (default: UTC)
 
 ### Workflow IDs
