@@ -7,7 +7,7 @@ Constructs n8n workflow definitions for:
 - Daily ETL: Full data pipeline (ingestion → enrichment → transformation)
 """
 
-from flows.cli.workflow_definitions import (
+from workflow_definitions import (
     N8NWorkflow,
     create_cli_execution_node,
     create_cron_trigger_node,
@@ -19,16 +19,16 @@ from flows.cli.workflow_definitions import (
 def build_spotify_ingestion_workflow() -> dict:
     """
     Build Spotify ingestion workflow.
-    
+
     Scheduled to run every 30 minutes to fetch recently played tracks.
-    
+
     Nodes:
     1. Cron trigger (every 30 minutes)
     2. Ingest Spotify tracks
     3. Load raw tracks
     4. Validate data
     5. Return result
-    
+
     Returns:
         Workflow JSON definition
     """
@@ -37,11 +37,11 @@ def build_spotify_ingestion_workflow() -> dict:
         description="Scheduled ingestion of recently played tracks from Spotify API every 30 minutes",
         active=True,
     )
-    
+
     # Node positions (x, y)
     x_spacing = 300
     y_spacing = 100
-    
+
     # 1. Cron trigger - every 30 minutes
     workflow.add_node(
         create_cron_trigger_node(
@@ -50,7 +50,7 @@ def build_spotify_ingestion_workflow() -> dict:
             position=[0, 100],
         )
     )
-    
+
     # 2. Ingest Spotify tracks
     workflow.add_node(
         create_cli_execution_node(
@@ -60,7 +60,7 @@ def build_spotify_ingestion_workflow() -> dict:
             position=[x_spacing, 100],
         )
     )
-    
+
     # 3. Load raw tracks
     workflow.add_node(
         create_cli_execution_node(
@@ -69,7 +69,7 @@ def build_spotify_ingestion_workflow() -> dict:
             position=[x_spacing * 2, 100],
         )
     )
-    
+
     # 4. Validate data
     workflow.add_node(
         create_cli_execution_node(
@@ -78,40 +78,40 @@ def build_spotify_ingestion_workflow() -> dict:
             position=[x_spacing * 3, 100],
         )
     )
-    
+
     # Connect nodes in sequence
     workflow.connect("Trigger - Every 30min", "Ingest Spotify Tracks")
     workflow.connect("Ingest Spotify Tracks", "Load Raw Tracks")
     workflow.connect("Load Raw Tracks", "Validate Data")
-    
+
     # Set workflow settings
-    workflow.set_settings({
-        "errorHandler": {
-            "stopOnError": False,
-            "retries": 1,
-            "retryInterval": 60,
-        },
-        "executionData": {
-            "timeout": 300,  # 5 minutes - quick execution
-        },
-    })
-        },
-    })
-    
+    workflow.set_settings(
+        {
+            "errorHandler": {
+                "stopOnError": False,
+                "retries": 1,
+                "retryInterval": 60,
+            },
+            "executionData": {
+                "timeout": 300,  # 5 minutes - quick execution
+            },
+        }
+    )
+
     return workflow.to_dict()
 
 
 def build_daily_etl_workflow() -> dict:
     """
     Build daily ETL workflow.
-    
+
     Scheduled to run daily at 2 AM. Runs complete data pipeline:
     - Ingestion (Spotify tracks)
     - Loading (raw data)
     - Validation (data quality)
     - Enrichment (Spotify, MusicBrainz, Geographic)
     - Transformation (dbt build)
-    
+
     Nodes:
     1. Cron trigger (daily at 2 AM)
     2. Ingest Spotify
@@ -127,7 +127,7 @@ def build_daily_etl_workflow() -> dict:
     12. Update MBIDs
     13. Run dbt build
     14. Check result and notify
-    
+
     Returns:
         Workflow JSON definition
     """
@@ -136,7 +136,7 @@ def build_daily_etl_workflow() -> dict:
         description="Complete daily ETL pipeline: ingest, enrich, and transform data (runs daily at 2 AM UTC)",
         active=True,
     )
-    
+
     # Node positions for layout
     x_ingestion = 0
     x_loading = 300
@@ -150,7 +150,7 @@ def build_daily_etl_workflow() -> dict:
     x_mbid_update = 2700
     x_dbt = 3000
     x_result = 3300
-    
+
     # 1. Cron trigger - daily at 2 AM UTC
     workflow.add_node(
         create_cron_trigger_node(
@@ -159,7 +159,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_ingestion, 100],
         )
     )
-    
+
     # 2. Ingest Spotify tracks
     workflow.add_node(
         create_cli_execution_node(
@@ -169,7 +169,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_loading, 100],
         )
     )
-    
+
     # 3. Load raw tracks
     workflow.add_node(
         create_cli_execution_node(
@@ -178,7 +178,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_validation, 100],
         )
     )
-    
+
     # 4. Validate data
     workflow.add_node(
         create_cli_execution_node(
@@ -187,7 +187,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_spotify_enrich, 100],
         )
     )
-    
+
     # 5. Enrich Spotify artists (parallel 1)
     workflow.add_node(
         create_cli_execution_node(
@@ -197,7 +197,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_spotify_enrich, 200],
         )
     )
-    
+
     # 6. Enrich Spotify albums (parallel 2)
     workflow.add_node(
         create_cli_execution_node(
@@ -207,7 +207,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_spotify_enrich, 300],
         )
     )
-    
+
     # Wait node to ensure Spotify enrichment is complete
     workflow.add_node(
         create_wait_node(
@@ -217,7 +217,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_mbz_discover, 250],
         )
     )
-    
+
     # 7. Discover MusicBrainz artists (sequential after Spotify)
     workflow.add_node(
         create_cli_execution_node(
@@ -226,7 +226,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_mbz_fetch, 100],
         )
     )
-    
+
     # 8. Fetch MusicBrainz artists
     workflow.add_node(
         create_cli_execution_node(
@@ -236,7 +236,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_mbz_parse, 100],
         )
     )
-    
+
     # 9. Parse MusicBrainz data
     workflow.add_node(
         create_cli_execution_node(
@@ -245,7 +245,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_mbz_hierarchy, 100],
         )
     )
-    
+
     # 10. Process MusicBrainz hierarchy
     workflow.add_node(
         create_cli_execution_node(
@@ -254,7 +254,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_geo, 100],
         )
     )
-    
+
     # 11. Enrich geography
     workflow.add_node(
         create_cli_execution_node(
@@ -263,7 +263,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_mbid_update, 100],
         )
     )
-    
+
     # 12. Update MBIDs
     workflow.add_node(
         create_cli_execution_node(
@@ -272,7 +272,7 @@ def build_daily_etl_workflow() -> dict:
             position=[x_dbt, 100],
         )
     )
-    
+
     # 13. Run dbt build
     workflow.add_node(
         create_cli_execution_node(
@@ -282,45 +282,47 @@ def build_daily_etl_workflow() -> dict:
             position=[x_result, 100],
         )
     )
-    
+
     # Connect nodes in sequence
     # Ingestion pipeline
     workflow.connect("Trigger - Daily 2 AM", "Ingest Spotify")
     workflow.connect("Ingest Spotify", "Load Raw Tracks")
     workflow.connect("Load Raw Tracks", "Validate Data")
-    
+
     # Validation splits to parallel Spotify enrichment
     workflow.connect("Validate Data", "Enrich Spotify Artists")
     workflow.connect("Validate Data", "Enrich Spotify Albums")
-    
+
     # Both Spotify enrichment tasks connect to wait
     workflow.connect("Enrich Spotify Artists", "Wait for Spotify")
     workflow.connect("Enrich Spotify Albums", "Wait for Spotify")
-    
+
     # Sequential MusicBrainz pipeline
     workflow.connect("Wait for Spotify", "Discover MBZ Artists")
     workflow.connect("Discover MBZ Artists", "Fetch MBZ Artists")
     workflow.connect("Fetch MBZ Artists", "Parse MBZ Data")
     workflow.connect("Parse MBZ Data", "Process MBZ Hierarchy")
-    
+
     # Geographic enrichment
     workflow.connect("Process MBZ Hierarchy", "Enrich Geography")
-    
+
     # MBID update then transformation
     workflow.connect("Enrich Geography", "Update MBIDs")
     workflow.connect("Update MBIDs", "Run dbt Build")
-    
+
     # Set workflow settings
-    workflow.set_settings({
-        "errorHandler": {
-            "stopOnError": False,
-            "retries": 1,
-            "retryInterval": 60,
-        },
-        "executionData": {
-            "timeout": 3600,  # 1 hour total timeout
-            "maxConcurrentExecutions": 1,
-        },
-    })
-    
+    workflow.set_settings(
+        {
+            "errorHandler": {
+                "stopOnError": False,
+                "retries": 1,
+                "retryInterval": 60,
+            },
+            "executionData": {
+                "timeout": 3600,  # 1 hour total timeout
+                "maxConcurrentExecutions": 1,
+            },
+        }
+    )
+
     return workflow.to_dict()

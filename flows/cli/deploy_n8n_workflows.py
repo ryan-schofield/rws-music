@@ -2,17 +2,18 @@
 """
 n8n workflow deployment script.
 
-Programmatically creates and manages n8n workflows via API.
-Handles workflow deployment, updates, exports to version control, and imports.
+Imports and deploys n8n workflows from JSON files.
+Handles workflow deployment, updates, and status checking.
+
+Workflow JSON files are source-controlled in n8n-workflows/ directory.
 
 Usage:
     python flows/cli/deploy_n8n_workflows.py --action deploy
-    python flows/cli/deploy_n8n_workflows.py --action export
-    python flows/cli/deploy_n8n_workflows.py --action import
     python flows/cli/deploy_n8n_workflows.py --action status
 """
 
 import sys
+import json
 import argparse
 import logging
 from pathlib import Path
@@ -23,10 +24,6 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from flows.cli.n8n_client import N8NClient
-from flows.cli.workflow_builders import (
-    build_spotify_ingestion_workflow,
-    build_daily_etl_workflow,
-)
 
 # Configure logging
 logging.basicConfig(
@@ -37,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowDeployer:
-    """Manages n8n workflow deployment and synchronization."""
+    """Manages n8n workflow deployment from JSON files."""
 
     def __init__(
         self,
@@ -49,24 +46,46 @@ class WorkflowDeployer:
         
         Args:
             n8n_client: N8NClient instance (default: creates new)
-            workflows_dir: Directory for workflow exports (default: n8n-workflows/)
+            workflows_dir: Directory containing workflow JSON files (default: n8n-workflows/)
         """
         self.client = n8n_client or N8NClient()
         self.workflows_dir = workflows_dir or Path("n8n-workflows")
         
-        # Define workflow builders
-        self.workflow_builders = {
-            "spotify_ingestion": {
-                "builder": build_spotify_ingestion_workflow,
-                "filename": "spotify_ingestion_workflow.json",
-                "description": "Ingests recently played tracks every 6 hours",
-            },
-            "daily_etl": {
-                "builder": build_daily_etl_workflow,
-                "filename": "daily_etl_workflow.json",
-                "description": "Complete ETL pipeline running daily at 2 AM",
-            },
-        }
+        # Discover JSON workflow files
+        self.workflows = self._discover_workflows()
+
+    def _discover_workflows(self) -> Dict[str, Path]:
+        """
+        Discover all workflow JSON files.
+        
+        Returns:
+            Dict mapping workflow name to file path
+        """
+        workflows = {}
+        
+        if not self.workflows_dir.exists():
+            logger.warning(f"Workflows directory not found: {self.workflows_dir}")
+            return workflows
+        
+        for json_file in self.workflows_dir.glob("*.json"):
+            workflow_name = json_file.stem
+            workflows[workflow_name] = json_file
+            logger.debug(f"Found workflow: {workflow_name} -> {json_file}")
+        
+        return workflows
+
+    def load_workflow(self, workflow_path: Path) -> Dict[str, Any]:
+        """
+        Load workflow definition from JSON file.
+        
+        Args:
+            workflow_path: Path to workflow JSON file
+            
+        Returns:
+            Workflow definition dict
+        """
+        with open(workflow_path, "r") as f:
+            return json.load(f)
 
     def check_connectivity(self) -> bool:
         """
@@ -87,7 +106,7 @@ class WorkflowDeployer:
 
     def deploy_all_workflows(self) -> Dict[str, Any]:
         """
-        Deploy or update all workflows.
+        Deploy or update all workflows from JSON files.
         
         Returns:
             Deployment results
@@ -99,24 +118,29 @@ class WorkflowDeployer:
         if not self.check_connectivity():
             return {"status": "error", "message": "n8n not accessible"}
         
+        if not self.workflows:
+            logger.warning(f"No workflow files found in {self.workflows_dir}")
+            return {"status": "error", "message": "No workflows found"}
+        
         results = {
             "status": "success",
             "workflows": {},
         }
         
-        for workflow_key, workflow_info in self.workflow_builders.items():
+        for workflow_key, workflow_path in self.workflows.items():
             logger.info(f"\nDeploying workflow: {workflow_key}")
-            logger.info(f"  Description: {workflow_info['description']}")
+            logger.info(f"  File: {workflow_path}")
             
-            # Build workflow definition
+            # Load workflow definition from JSON file
             try:
-                workflow_def = workflow_info["builder"]()
-                logger.info(f"  ✓ Workflow definition built")
+                workflow_def = self.load_workflow(workflow_path)
+                logger.info(f"  ✓ Loaded workflow from file")
+                logger.info(f"    Nodes: {len(workflow_def.get('nodes', []))}")
             except Exception as e:
-                logger.error(f"  ✗ Failed to build workflow: {str(e)}")
+                logger.error(f"  ✗ Failed to load workflow: {str(e)}")
                 results["workflows"][workflow_key] = {
                     "status": "error",
-                    "message": f"Failed to build workflow: {str(e)}",
+                    "message": f"Failed to load workflow: {str(e)}",
                 }
                 results["status"] = "partial"
                 continue
@@ -126,45 +150,38 @@ class WorkflowDeployer:
             existing = self.client.find_workflow_by_name(workflow_name)
             
             if existing:
-                # Update existing workflow
-                logger.info(f"  Updating existing workflow (ID: {existing['id']})")
-                updated = self.client.update_workflow(existing["id"], workflow_def)
+                # Delete existing workflow first (some n8n versions don't support PATCH update)
+                logger.info(f"  Deleting existing workflow (ID: {existing['id']})")
+                deleted = self.client.delete_workflow(existing["id"])
                 
-                if updated:
-                    logger.info(f"  ✓ Updated workflow {existing['id']}")
-                    results["workflows"][workflow_key] = {
-                        "status": "updated",
-                        "id": existing["id"],
-                        "name": workflow_name,
-                    }
-                else:
-                    logger.error(f"  ✗ Failed to update workflow")
+                if not deleted:
+                    logger.error(f"  ✗ Failed to delete existing workflow")
                     results["workflows"][workflow_key] = {
                         "status": "error",
-                        "message": "Failed to update workflow",
+                        "message": "Failed to delete existing workflow",
                     }
                     results["status"] = "partial"
                     continue
+            
+            # Create new/replacement workflow
+            logger.info(f"  Creating workflow")
+            created = self.client.create_workflow(workflow_def)
+            
+            if created:
+                logger.info(f"  ✓ Created workflow {created.get('id')}")
+                results["workflows"][workflow_key] = {
+                    "status": "created",
+                    "id": created.get("id"),
+                    "name": workflow_name,
+                }
             else:
-                # Create new workflow
-                logger.info(f"  Creating new workflow")
-                created = self.client.create_workflow(workflow_def)
-                
-                if created:
-                    logger.info(f"  ✓ Created workflow {created.get('id')}")
-                    results["workflows"][workflow_key] = {
-                        "status": "created",
-                        "id": created.get("id"),
-                        "name": workflow_name,
-                    }
-                else:
-                    logger.error(f"  ✗ Failed to create workflow")
-                    results["workflows"][workflow_key] = {
-                        "status": "error",
-                        "message": "Failed to create workflow",
-                    }
-                    results["status"] = "partial"
-                    continue
+                logger.error(f"  ✗ Failed to create workflow")
+                results["workflows"][workflow_key] = {
+                    "status": "error",
+                    "message": "Failed to create workflow",
+                }
+                results["status"] = "partial"
+                continue
         
         return results
 

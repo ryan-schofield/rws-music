@@ -14,11 +14,10 @@ This project provides a complete data pipeline for ingesting, processing, and an
 - **⚡️ uv**: Ultra-fast Python package manager and dependency resolver
 - **📊 DuckDB**: Analytical database for efficient data storage and querying
 - **⚡ Polars**: High-performance DataFrame library for data processing
-- **🔄 Prefect**: Workflow orchestration and scheduling
+- **🔄 n8n**: Workflow orchestration and scheduling
 - **📈 Metabase**: Business intelligence and reporting platform
 - **🐳 Docker**: Containerized deployment with Docker Compose
 - **🛠️ dbt**: Data transformation and modeling
-- **🐳 Docker**: Containerized deployment with Docker Compose
 
 ### System Components
 
@@ -28,15 +27,15 @@ The application consists of several containerized services:
 - **Data Pipeline Container**: Main application with Python flows, dbt models, and data processing
   - Built with uv for fast dependency resolution and virtual environment management
   - Contains all Python dependencies defined in `pyproject.toml` and locked in `uv.lock`
-- **Prefect Server**: Workflow orchestration and monitoring UI (port 4200)
-- **Prefect Worker**: Executes scheduled flows and tasks
-- **Prefect Deployer**: Automatically deploys flows on startup
+- **n8n**: Workflow orchestration and monitoring UI (port 5678)
+  - Executes data workflows, scheduling, and monitoring
+  - Node-based visual workflow editor with REST API
+  - Manages both Spotify ingestion and daily ETL workflows
 
 #### Reporting & Database Services
 - **DuckDB**: Analytical database for data warehousing and analytics (in-app file storage)
 - **Metabase**: Business intelligence platform (port 3000, local-only access)
 - **H2 Database (Metabase)**: Embedded file-based metadata storage (no separate container)
-- **PostgreSQL (Prefect)**: Workflow state and history storage (optimized for 2GB RAM)
 
 ### Data Architecture
 
@@ -88,11 +87,12 @@ data/
 - **Business Metrics**: Pre-calculated aggregations and KPIs
 - **Data Quality Tests**: Automated validation of data integrity
 
-### 5. Orchestration (`flows/orchestrate/`)
-- **Daily ETL Flow**: Comprehensive pipeline with concurrent execution
-- **Spotify Ingestion Flow**: Frequent data collection from Spotify API
-- **Monitoring**: Performance metrics and alerting
-- **Configuration Management**: Environment-specific settings
+### 5. Orchestration (n8n Workflows)
+- **CLI Wrappers** (`flows/cli/`): Standalone Python scripts callable by n8n tasks
+- **Daily ETL Workflow**: Comprehensive pipeline with concurrent execution (runs daily at 2 AM UTC)
+- **Spotify Ingestion Workflow**: Frequent data collection from Spotify API (runs every 30 minutes)
+- **Monitoring**: n8n workflow execution history and logs
+- **Version Control**: Exported workflow JSON files in `n8n-workflows/` directory
 
 ## Configuration
 
@@ -103,9 +103,11 @@ Create a `.env` file with the following required variables (copy from `.env.exam
 # Spotify API Credentials (Required)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REFRESH_TOKEN=your_spotify_refresh_token
 
-# Database Passwords (Required)
-PREFECT_DB_PASSWORD=another_secure_password
+# n8n Configuration (Required)
+N8N_HOST=localhost
+TIMEZONE=UTC
 
 # Optional Configuration
 ENVIRONMENT=development  # or production
@@ -113,13 +115,15 @@ DUCKDB_PATH=/app/data/music_tracker.duckdb
 LOG_LEVEL=INFO
 ```
 
-**Note**: Metabase now uses embedded H2 database - no separate database password needed.
+**Note**: Metabase uses embedded H2 database and n8n stores its data in a dedicated volume.
 
-### Flow Configuration
-The system supports environment-specific configuration through `flows/orchestrate/flow_config.py`:
+### Workflow Configuration
+The system supports environment-specific configuration through CLI scripts and n8n workflow definitions:
 
+- **CLI Scripts** (`flows/cli/`): Configure retry logic, timeouts, and parameters
+- **n8n Workflows**: Define scheduling (cron expressions), dependencies, and error handling
 - **Development**: No processing limits, verbose logging
-- **Testing**: Small data limits for fast execution
+- **Testing**: Small data limits for fast execution via `--limit` parameters
 - **Production**: Optimized batch sizes and API limits
 
 ## Getting Started
@@ -144,11 +148,15 @@ docker compose up -d
 ```
 
 3. **Access Applications**:
-- Prefect UI: http://localhost:4200
+- n8n UI: http://localhost:5678
 - Metabase: http://localhost:3000
 
-4. **Run Initial Data Load**:
-The Prefect deployer will automatically deploy flows. Monitor execution in the Prefect UI.
+4. **Deploy n8n Workflows**:
+Deploy workflows using the CLI deployment script:
+```bash
+python flows/cli/deploy_n8n_workflows.py --action deploy
+```
+Monitor execution in the n8n UI.
 
 ### Data Flow Execution
 
@@ -160,19 +168,22 @@ The Prefect deployer will automatically deploy flows. Monitor execution in the P
 
 ### Project Structure
 ```
-├── flows/                    # Prefect workflows and data processing
+├── flows/                    # Data processing flows and n8n CLI wrappers
+│   ├── cli/                 # CLI wrapper scripts for n8n workflow execution
 │   ├── ingest/              # Data ingestion from APIs
 │   ├── enrich/              # Data enrichment and processing
 │   ├── load/                # Data loading utilities
-│   └── orchestrate/         # Flow coordination and scheduling
+│   └── orchestrate/         # Legacy Prefect flows (deprecated)
 ├── dbt/                     # Data transformation models
 │   ├── models/              # dbt SQL models (staging, intermediate, marts)
 │   ├── macros/              # Reusable SQL macros
 │   └── seeds/               # Reference data
 ├── data/                    # Data storage and caching
+├── n8n-workflows/           # n8n workflow JSON exports (version control)
+│   ├── utils/               # Export/import utility scripts
+│   └── subflows/            # Workflow JSON definitions
 ├── docs/                    # Documentation
 ├── scripts/                 # Utility scripts
-├── terraform/               # Historical cloud deployment (no longer used)
 ├── pyproject.toml           # Python project configuration and dependencies
 ├── uv.lock                  # Locked dependency versions for reproducible builds
 ├── docker-compose.yml       # Multi-container application orchestration
@@ -196,10 +207,10 @@ The project uses **uv** as the Python package manager for several key advantages
 ### Key Dependencies
 - **dbt-duckdb**: dbt adapter for DuckDB integration
 - **polars**: High-performance DataFrame operations
-- **prefect**: Workflow orchestration framework
 - **httpx**: Async HTTP client for API calls
 - **musicbrainzngs**: MusicBrainz API client
 - **pydantic**: Data validation and settings management
+- **n8n** (runs in Docker container, not a Python dependency)
 
 ## Deployment
 
@@ -242,17 +253,20 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
    - Configure environment variables (copy from `.env.example`)
    - Set volume mappings to persistent storage locations
 
-4. **Memory Configuration**:
-   - Prefect Server: 300-400MB limit
-   - Prefect Worker: 200-300MB limit
-   - Prefect PostgreSQL: 128-200MB limit
-   - Metabase: 400-512MB limit with JVM heap constraints
-   - Data Pipeline: 250-400MB limit
-   - **Total**: ~1,300-1,800MB (within 2GB budget)
+4. **Memory Configuration** (Post-Prefect Migration):
+   - n8n: 300MB limit (workflow orchestration)
+   - Metabase: 600MB limit with JVM heap constraints
+   - Data Pipeline: 400MB limit
+   - **Total**: ~1.3GB (700MB freed from Prefect removal)
 
-5. **Access Applications**:
+5. **Deploy Workflows**:
+   - Access n8n UI: `http://<synology-ip>:5678`
+   - Run deployment script: `python flows/cli/deploy_n8n_workflows.py --action deploy`
+   - Workflows will be created and can be monitored in n8n UI
+
+6. **Access Applications**:
    - Metabase: `http://<synology-ip>:3000` (LAN only)
-   - Prefect UI: `http://<synology-ip>:4200` (LAN only)
+   - n8n: `http://<synology-ip>:5678` (LAN only)
    - No external DNS or SSL required for local deployment
 
 6. **Monitoring & Maintenance**:
@@ -276,21 +290,23 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
 - Adjust Metabase JVM heap size if queries are slow
 - Use wired network connection for stability
 - Regularly compact DuckDB database for optimal performance
+- Monitor n8n workflow execution history for job performance
 
 ## Monitoring & Observability
 
-- **Prefect UI**: Workflow monitoring, logs, and scheduling
-- **Structured Logging**: JSON logs with correlation IDs
-- **Performance Metrics**: Execution timing and resource usage
+- **n8n UI**: Workflow monitoring, execution history, and scheduling
+- **CLI Output**: JSON logs from each task execution
+- **Performance Metrics**: Execution timing and resource usage captured in n8n
 - **Health Checks**: Container health monitoring
-- **Alerting**: Configurable notifications for failures
+- **Error Handling**: Configurable retry logic and error notifications per task
 
 ## Resource Requirements
 
-- **Memory**: 2GB RAM minimum (optimized for Synology NAS, tested under 1.8GB usage)
+- **Memory**: 2GB RAM minimum (optimized for Synology NAS, typical usage ~1.3GB after Prefect removal)
 - **Storage**: 1GB+ for Docker images and data files
 - **CPU**: 2+ cores recommended for smooth operation
 - **Network**: Local LAN access only (no external/internet exposure required)
+- **Internet**: Required for API calls to Spotify, MusicBrainz, and OpenWeather during data processing
 
 ## Contributing
 

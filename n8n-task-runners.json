@@ -1,0 +1,28 @@
+{
+  "task-runners": [
+    {
+      "runner-type": "javascript",
+      "health-check-server-port": "9680",
+      "working-directory": "/tmp/n8n-runners",
+      "launcher": {
+        "working-directory": "/tmp/n8n-runners"
+      },
+      "env-overrides": {
+        "NODE_FUNCTION_ALLOW_BUILTIN": "crypto,path,fs,util"
+      }
+    },
+    {
+      "runner-type": "python",
+      "health-check-server-port": "9681",
+      "working-directory": "/tmp/n8n-runners",
+      "launcher": {
+        "working-directory": "/tmp/n8n-runners"
+      },
+      "env-overrides": {
+        "PYTHONPATH": "/app:/opt/runners/task-runner-python",
+        "N8N_RUNNERS_STDLIB_ALLOW": "json,subprocess,os,sys,re,math,datetime,collections,itertools,urllib",
+        "N8N_RUNNERS_EXTERNAL_ALLOW": "requests,httpx,musicbrainzngs,pycountry,pycountry_convert,python-dateutil,structlog,rich"
+      }
+    }
+  ]
+}

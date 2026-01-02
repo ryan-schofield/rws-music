@@ -1,13 +1,11 @@
 # Docker Compose configuration for music tracking application
 # Optimized for 2GB RAM Synology NAS deployment with local-only access
-# Memory allocation strategy:
-# - Prefect Server: 400MB (orchestration)
-# - Prefect Worker: 300MB (task execution)
-# - Prefect DB: 200MB (PostgreSQL with tuning)
+# Memory allocation strategy (Post-Prefect Migration):
+# - n8n: 300MB (workflow orchestration)
 # - Metabase: 600MB (JVM with 512MB heap)
-# - Data Pipeline: 400MB (ETL processing)
-# - Total: ~1.9GB (within 2GB budget)
-# Local-only access: Metabase on port 3000, Prefect on port 4200 (LAN access only)
+# - Data Pipeline: 400MB (ETL processing - can be increased to 600MB if needed)
+# - Total: ~1.3GB (700MB freed from Prefect removal, available for scaling)
+# Local-only access: Metabase on port 3000, n8n on port 5678 (LAN access only)
 
 services:
   # Main data processing and dbt service
@@ -59,7 +57,9 @@ services:
 
   # n8n for workflow orchestration
   n8n:
-    image: n8n:latest
+    build:
+      context: .
+      dockerfile: n8n.Dockerfile
     container_name: music-tracker-n8n
     ports:
       - "5678:5678"
@@ -70,9 +70,19 @@ services:
       - N8N_SECURE_COOKIE=false
       - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
+      - TZ=${TIMEZONE:-UTC}
+      # Task runner configuration
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+      - N8N_RUNNERS_AUTH_TOKEN=your-secret-runner-token
+      - N8N_NATIVE_PYTHON_RUNNER=true
     volumes:
       - n8n-data:/home/node/.n8n
-      - ./n8n-workflows:/workflows
+      - ./data:/app/data
+      - ./flows:/app/flows
+      - ./dbt:/app/dbt
+      - ./logs:/app/logs
     networks:
       - music-tracker
     restart: unless-stopped
@@ -80,6 +90,33 @@ services:
     # ~300MB for n8n (improvement over Prefect's 400MB server + 200MB DB)
     mem_limit: 300m
     mem_reservation: 200m
+
+  # Task runners for Python and JavaScript code execution
+  task-runners:
+    build:
+      context: .
+      dockerfile: runners.Dockerfile
+    container_name: music-tracker-task-runners
+    volumes:
+      - ./data:/app/data
+      - ./flows:/app/flows
+      - ./dbt:/app/dbt
+      - ./logs:/app/logs
+    environment:
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+      - N8N_RUNNERS_AUTH_TOKEN=your-secret-runner-token
+      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=15
+      - N8N_RUNNERS_CONFIG_FILE=/etc/n8n/task-runners.json
+      - N8N_RUNNERS_LAUNCHER_WORKING_DIRECTORY=/tmp/n8n-runners
+      - N8N_RUNNERS_LAUNCHER_WORK_DIR=/tmp/n8n-runners
+      - N8N_RUNNERS_LAUNCHER_DEFAULT_DIR=/tmp/n8n-runners
+    networks:
+      - music-tracker
+    restart: unless-stopped
+    # Memory limits for task runners
+    # Reserve 200MB for Python/JS task execution
+    mem_limit: 200m
+    mem_reservation: 100m
 
 volumes:
   metabase-data:

@@ -20,6 +20,7 @@ class N8NNode:
         position: tuple = None,
         parameters: Dict[str, Any] = None,
         credentials: Dict[str, Any] = None,
+        typeVersion: int = None,
     ):
         """
         Initialize workflow node.
@@ -30,22 +31,27 @@ class N8NNode:
             position: (x, y) coordinates
             parameters: Node parameters
             credentials: Credential references
+            typeVersion: Node type version (e.g., 1, 2)
         """
         self.name = name
         self.type = type
         self.position = position or [0, 0]
         self.parameters = parameters or {}
         self.credentials = credentials or {}
+        self.typeVersion = typeVersion
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to n8n node JSON."""
-        return {
+        node_dict = {
             "name": self.name,
             "type": self.type,
             "position": self.position,
             "parameters": self.parameters,
             "credentials": self.credentials,
         }
+        if self.typeVersion is not None:
+            node_dict["typeVersion"] = self.typeVersion
+        return node_dict
 
 
 class N8NConnection:
@@ -110,15 +116,27 @@ class N8NWorkflow:
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to n8n workflow JSON."""
-        return {
+        """Convert to n8n workflow JSON for API submission."""
+        # Format connections properly for n8n API
+        # Each node source needs to specify its outputs
+        connections = {}
+        for source_node, targets in self.connections.items():
+            connections[source_node] = {
+                "main": [
+                    [{"node": target["node"], "type": "main", "index": 0} for target in targets]
+                ]
+            }
+        
+        # Build payload for API submission
+        # Note: 'active' is read-only and must NOT be included in POST/PATCH requests
+        payload = {
             "name": self.name,
-            "description": self.description,
-            "active": self.active,
             "nodes": [node.to_dict() for node in self.nodes],
-            "connections": self.connections,
-            "settings": self.settings,
+            "connections": connections,
+            "settings": {},
         }
+        
+        return payload
 
 
 def create_cli_execution_node(
@@ -128,7 +146,7 @@ def create_cli_execution_node(
     position: tuple = None,
 ) -> N8NNode:
     """
-    Create a node that executes a CLI script via n8n shell.
+    Create a node that executes Python code via n8n's Code node with Python runtime.
     
     Args:
         node_name: Node name
@@ -137,26 +155,46 @@ def create_cli_execution_node(
         position: (x, y) position
         
     Returns:
-        Configured N8NNode
+        Configured N8NNode with n8n-nodes-base.code type v2 and pythonNative runtime
     """
-    # Build command with arguments
-    cmd = f"uv run python {cli_script}"
-    if cli_args:
-        for key, value in cli_args.items():
-            if value is True:
-                cmd += f" --{key}"
-            elif value is not False:
-                cmd += f" --{key} {value}"
+    # Build the Python code that will be executed
+    args_dict = cli_args or {}
     
+    python_code = f"""import subprocess
+import os
+
+script_path = "{cli_script}"
+args = {repr(args_dict)}
+
+os.chdir("/app")
+
+# Build command
+cmd = ["uv", "run", "python", script_path]
+for key, value in args.items():
+    if value is True:
+        cmd.append(f"--{{key}}")
+    elif value is not False:
+        cmd.append(f"--{{key}}")
+        cmd.append(str(value))
+
+# Execute script
+result = subprocess.run(cmd, capture_output=True, text=True)
+print(result.stdout)
+if result.stderr:
+    print(f"Error: {{result.stderr}}")
+if result.returncode != 0:
+    raise Exception(f"Script failed with return code {{result.returncode}}")
+"""
+
     return N8NNode(
         name=node_name,
-        type="n8n-nodes-base.executeCommand",
+        type="n8n-nodes-base.code",
         position=position,
         parameters={
-            "command": cmd,
-            "shell": "bash",
-            "workingDirectory": "/app",
+            "language": "pythonNative",
+            "pythonCode": python_code,
         },
+        typeVersion=2,
     )
 
 
@@ -210,12 +248,8 @@ def create_cron_trigger_node(
         type="n8n-nodes-base.cron",
         position=position,
         parameters={
-            "triggerTimes": {
-                "mode": "everyX",
-                "value": 1,
-                "unit": "day",
-                "expression": expression,
-            },
+            "mode": "cron",
+            "expression": expression,
         },
     )
 
@@ -296,7 +330,8 @@ def create_wait_node(
         type="n8n-nodes-base.wait",
         position=position,
         parameters={
-            "unit": wait_type,
-            "amount": amount,
+            "mode": "timeInterval",
+            "timeInterval": amount,
+            "timeUnit": wait_type,
         },
     )

@@ -67,8 +67,14 @@ This guide provides step-by-step instructions for deploying the music tracking a
 1. In the project creation screen, go to **Environment**
 2. Add the following variables (or import from `.env.example`):
    ```
-   # Prefect Configuration
-   PREFECT_API_URL=http://localhost:4200/api
+   # Spotify API Credentials (Required)
+   SPOTIFY_CLIENT_ID=your_spotify_client_id
+   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+   SPOTIFY_REFRESH_TOKEN=your_spotify_refresh_token
+   
+   # n8n Configuration (Required)
+   N8N_HOST=<your-synology-ip>
+   TIMEZONE=UTC
    
    # Metabase Configuration  
    MB_DB_TYPE=h2
@@ -84,10 +90,11 @@ This guide provides step-by-step instructions for deploying the music tracking a
 #### 3.3 Configure Volume Mappings
 1. In the project creation screen, go to **Volume**
 2. Verify the following mappings:
-   - `/volume1/docker/music-tracker/config` → `/config`
    - `/volume1/docker/music-tracker/data` → `/data`
+   - `/volume1/docker/music-tracker/dbt` → `/dbt`
+   - `/volume1/docker/music-tracker/flows` → `/flows`
    - `/volume1/docker/music-tracker/logs` → `/logs`
-   - `/volume1/docker/music-tracker/metabase` → `/metabase`
+   - `/volume1/docker/music-tracker/n8n-workflows` → `/workflows`
 
 ### 4. Start the Services
 
@@ -100,27 +107,39 @@ This guide provides step-by-step instructions for deploying the music tracking a
 #### 4.2 Monitor Startup
 1. Go to **Container** tab in Container Manager
 2. Monitor the logs for each service:
-   - `prefect-server`
-   - `prefect-worker` 
-   - `prefect-db`
-   - `metabase`
-   - `data-pipeline`
+   - `music-tracker-n8n`
+   - `music-tracker-metabase`
+   - `music-tracker-pipeline`
 
-### 5. Access the Applications
+### 5. Access the Applications and Deploy Workflows
 
-#### 5.1 Access Metabase
+#### 5.1 Access n8n
+1. Open a web browser
+2. Navigate to: `http://<your-synology-ip>:5678`
+3. Complete the initial setup:
+   - Create admin account
+   - Configure credentials for API calls
+   - Deploy workflows using the CLI script
+
+#### 5.2 Deploy n8n Workflows
+1. SSH into your Synology NAS (or use Task Scheduler)
+2. Navigate to the project directory:
+   ```bash
+   cd /volume1/docker/music-tracker
+   ```
+3. Deploy workflows:
+   ```bash
+   docker exec music-tracker-pipeline python flows/cli/deploy_n8n_workflows.py --action deploy
+   ```
+4. Verify workflows were created in n8n UI (check Workflows tab)
+
+#### 5.3 Access Metabase
 1. Open a web browser
 2. Navigate to: `http://<your-synology-ip>:3000`
 3. Complete the initial setup:
    - Create admin account
    - Connect to DuckDB database
    - Import dashboards from `metabase/dashboards.json`
-
-#### 5.2 Access Prefect UI
-1. Open a web browser
-2. Navigate to: `http://<your-synology-ip>:4200`
-3. Log in with default credentials (or as configured)
-4. Verify flows are registered and running
 
 ## Storage Optimization
 
@@ -206,6 +225,16 @@ For easier access on your local network:
 2. Go to **Reverse Proxy**
 3. Click **Create**
 
+#### n8n Reverse Proxy
+- Source:
+  - Protocol: **HTTP**
+  - Hostname: `n8n.yourdomain.local`
+  - Port: **80**
+- Destination:
+  - Protocol: **HTTP**
+  - Hostname: `localhost`
+  - Port: **5678**
+
 #### Metabase Reverse Proxy
 - Source:
   - Protocol: **HTTP**
@@ -216,23 +245,13 @@ For easier access on your local network:
   - Hostname: `localhost`
   - Port: **3000**
 
-#### Prefect Reverse Proxy
-- Source:
-  - Protocol: **HTTP**
-  - Hostname: `prefect.yourdomain.local`
-  - Port: **80**
-- Destination:
-  - Protocol: **HTTP**
-  - Hostname: `localhost`
-  - Port: **4200**
-
 ### 2. Configure Custom Domain (Optional)
 
 1. Open **Control Panel** > **Network**
 2. Go to **DNS Server**
 3. Add local DNS entries:
+   - `n8n.yourdomain.local` → `<your-synology-ip>`
    - `metabase.yourdomain.local` → `<your-synology-ip>`
-   - `prefect.yourdomain.local` → `<your-synology-ip>`
 
 ### 3. Update Hosts File (Alternative)
 
@@ -242,8 +261,8 @@ On each device that needs access:
 
 Add:
 ```
+<your-synology-ip> n8n.yourdomain.local
 <your-synology-ip> metabase.yourdomain.local
-<your-synology-ip> prefect.yourdomain.local
 ```
 
 ## Troubleshooting
@@ -379,10 +398,11 @@ docker exec -it <container-name> /bin/bash
 
 ## Version History
 
-- **1.0**: Initial Synology deployment guide
+- **1.0**: Initial Synology deployment guide with Prefect
 - **1.1**: Added SSD cache configuration
 - **1.2**: Enhanced troubleshooting section
 - **1.3**: Added performance tuning tips
+- **2.0**: Migrated from Prefect to n8n orchestration, updated all instructions
 
 ## License
 

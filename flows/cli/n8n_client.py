@@ -29,10 +29,18 @@ class N8NClient:
         Initialize n8n API client.
         
         Args:
-            base_url: n8n instance URL (default: from N8N_BASE_URL env var or http://localhost:5678)
+            base_url: n8n instance URL (default: constructed from N8N_HOST and N8N_PORT env vars)
             api_key: n8n API key (optional, default: from N8N_API_KEY env var)
         """
-        self.base_url = base_url or os.getenv("N8N_BASE_URL", "http://localhost:5678")
+        # If base_url not provided, construct from environment variables
+        if not base_url:
+            n8n_host = os.getenv("N8N_HOST", "localhost")
+            n8n_port = os.getenv("N8N_PORT", "5678")
+            n8n_protocol = os.getenv("N8N_PROTOCOL", "http")
+            # Try N8N_BASE_URL first for backward compatibility
+            base_url = os.getenv("N8N_BASE_URL", f"{n8n_protocol}://{n8n_host}:{n8n_port}")
+        
+        self.base_url = base_url
         self.api_key = api_key or os.getenv("N8N_API_KEY", "")
         
         # Ensure base_url ends with /
@@ -129,6 +137,10 @@ class N8NClient:
             Created workflow metadata or None on failure
         """
         try:
+            # Log the definition for debugging
+            logger.debug(f"Creating workflow with definition: {json.dumps(definition, indent=2)}")
+            logger.info(f"Sending POST /workflows with keys: {list(definition.keys())}")
+            
             response = self.session.post(
                 urljoin(self.base_url, "api/v1/workflows"),
                 json=definition,
@@ -138,6 +150,16 @@ class N8NClient:
             result = response.json()
             logger.info(f"Created workflow: {result.get('id')} ({definition.get('name')})")
             return result
+        except requests.exceptions.HTTPError as e:
+            # Try to get detailed error from response
+            try:
+                error_detail = e.response.json()
+                logger.error(f"Failed to create workflow: {e.response.status_code} - {error_detail}")
+                # Also log the request body that caused the error
+                logger.error(f"Request body keys: {list(definition.keys())}")
+            except:
+                logger.error(f"Failed to create workflow: {str(e)}")
+            return None
         except Exception as e:
             logger.error(f"Failed to create workflow: {str(e)}")
             return None

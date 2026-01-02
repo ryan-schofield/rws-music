@@ -1,0 +1,351 @@
+{
+  "name": "Daily ETL",
+  "nodes": [
+    {
+      "name": "Trigger - Daily 2 AM",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "mode": "cron",
+        "expression": "0 2 * * *"
+      },
+      "credentials": {}
+    },
+    {
+      "name": "Ingest Spotify",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        300,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_spotify import SpotifyIngestionCLI\nreturn SpotifyIngestionCLI().execute(limit=100)"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Load Raw Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        600,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        900,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.validate_data import ValidateDataCLI\nreturn ValidateDataCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Enrich Spotify Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_artists import EnrichSpotifyArtistsCLI\nreturn EnrichSpotifyArtistsCLI().execute(limit=50)"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Enrich Spotify Albums",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums import EnrichSpotifyAlbumsCLI\nreturn EnrichSpotifyAlbumsCLI().execute(limit=50)"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Wait for Spotify",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1200,
+        250
+      ],
+      "parameters": {
+        "mode": "timeInterval",
+        "timeInterval": 30,
+        "timeUnit": "seconds"
+      },
+      "credentials": {}
+    },
+    {
+      "name": "Discover MBZ Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1500,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.discover_mbz_artists import DiscoverMBZArtistsCLI\nreturn DiscoverMBZArtistsCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Fetch MBZ Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1800,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.fetch_mbz_artists import FetchMBZArtistsCLI\nreturn FetchMBZArtistsCLI().execute(limit=100, workers=5)"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Parse MBZ Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2100,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.parse_mbz_data import ParseMBZDataCLI\nreturn ParseMBZDataCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Process MBZ Hierarchy",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2400,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.process_mbz_hierarchy import ProcessMBZHierarchyCLI\nreturn ProcessMBZHierarchyCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Enrich Geography",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2700,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography import EnrichGeographyCLI\nreturn EnrichGeographyCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Update MBIDs",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3000,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.update_mbids import UpdateMBIDsCLI\nreturn UpdateMBIDsCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Run dbt Build",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3300,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build')"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Trigger - Daily 2 AM": {
+      "main": [
+        [
+          {
+            "node": "Ingest Spotify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest Spotify": {
+      "main": [
+        [
+          {
+            "node": "Load Raw Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Raw Tracks": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Enrich Spotify Artists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enrich Spotify Albums",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Spotify Artists": {
+      "main": [
+        [
+          {
+            "node": "Wait for Spotify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Spotify Albums": {
+      "main": [
+        [
+          {
+            "node": "Wait for Spotify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Spotify": {
+      "main": [
+        [
+          {
+            "node": "Discover MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discover MBZ Artists": {
+      "main": [
+        [
+          {
+            "node": "Fetch MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch MBZ Artists": {
+      "main": [
+        [
+          {
+            "node": "Parse MBZ Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse MBZ Data": {
+      "main": [
+        [
+          {
+            "node": "Process MBZ Hierarchy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process MBZ Hierarchy": {
+      "main": [
+        [
+          {
+            "node": "Enrich Geography",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Geography": {
+      "main": [
+        [
+          {
+            "node": "Update MBIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update MBIDs": {
+      "main": [
+        [
+          {
+            "node": "Run dbt Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

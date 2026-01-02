@@ -1,0 +1,96 @@
+{
+  "name": "Spotify Ingestion",
+  "nodes": [
+    {
+      "name": "Trigger - Every 30min",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "mode": "cron",
+        "expression": "*/30 * * * *"
+      },
+      "credentials": {}
+    },
+    {
+      "name": "Ingest Spotify Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        300,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_spotify import SpotifyIngestionCLI\nreturn SpotifyIngestionCLI().execute(limit=50)"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Load Raw Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        600,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    },
+    {
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        900,
+        100
+      ],
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.validate_data import ValidateDataCLI\nreturn ValidateDataCLI().execute()"
+      },
+      "credentials": {},
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Trigger - Every 30min": {
+      "main": [
+        [
+          {
+            "node": "Ingest Spotify Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest Spotify Tracks": {
+      "main": [
+        [
+          {
+            "node": "Load Raw Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Raw Tracks": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

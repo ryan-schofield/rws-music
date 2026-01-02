@@ -26,7 +26,7 @@ COPY . .
 COPY flows/ flows/
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/logs /app/prefect
+RUN mkdir -p /app/data /app/logs
 
 # Add uv's virtual environment bin directory to PATH
 ENV PATH="/app/.venv/bin:$PATH"
@@ -38,5 +38,5 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD uv run python -c "import duckdb; print('Health check passed')" || exit 1
 
-# Keep container running indefinitely for Prefect orchestration
+# Keep container running indefinitely for n8n task execution
 CMD ["tail", "-f", "/dev/null"]
