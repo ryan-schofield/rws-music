@@ -5,17 +5,22 @@ and storing them for further processing.
 """
 
 import os
+import sys
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any
 import json
 from pathlib import Path
-import base64
 import glob
 
-import requests
 from dotenv import load_dotenv
 import polars as pl
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from flows.enrich.utils.api_clients import SpotifyAPIClient
 
 # Load environment variables
 load_dotenv()
@@ -26,103 +31,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-
-class SpotifyAPIClient:
-    """Client for interacting with Spotify Web API."""
-
-    BASE_URL = "https://api.spotify.com/v1"
-    TOKEN_URL = "https://accounts.spotify.com/api/token"
-
-    def __init__(
-        self,
-        client_id: str = None,
-        client_secret: str = None,
-        refresh_token: str = None,
-    ):
-        self.client_id = client_id or os.getenv("SPOTIFY_CLIENT_ID")
-        self.client_secret = client_secret or os.getenv("SPOTIFY_CLIENT_SECRET")
-        self.refresh_token = refresh_token or os.getenv("SPOTIFY_REFRESH_TOKEN")
-        self._access_token = None
-        self._token_expires_at = None
-
-        if not self.client_id or not self.client_secret or not self.refresh_token:
-            raise ValueError("Spotify credentials not found")
-
-    def _get_access_token(self) -> str:
-        """Get or refresh access token."""
-        now = datetime.now(timezone.utc)
-
-        # Check if we have a valid token
-        if (
-            self._access_token
-            and self._token_expires_at
-            and now < self._token_expires_at
-        ):
-            return self._access_token
-
-        # Get new token
-        auth_string = f"{self.client_id}:{self.client_secret}"
-        auth_bytes = auth_string.encode("utf-8")
-        auth_base64 = base64.b64encode(auth_bytes).decode("utf-8")
-
-        headers = {
-            "Authorization": f"Basic {auth_base64}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-
-        data = {"grant_type": "refresh_token", "refresh_token": self.refresh_token}
-
-        try:
-            response = requests.post(self.TOKEN_URL, headers=headers, data=data)
-            response.raise_for_status()
-
-            token_data = response.json()
-            self._access_token = token_data["access_token"]
-            expires_in = token_data["expires_in"]
-
-            # Set expiration time (with 5 minute buffer)
-            self._token_expires_at = now + timedelta(seconds=expires_in - 300)
-
-            logger.info("Successfully obtained Spotify access token")
-            return self._access_token
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to get access token: {e}")
-            raise
-
-    def _make_request(
-        self, endpoint: str, params: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
-        """Make authenticated request to Spotify API."""
-        token = self._get_access_token()
-
-        headers = {"Authorization": f"Bearer {token}"}
-
-        url = f"{self.BASE_URL}{endpoint}"
-
-        try:
-            response = requests.get(url, headers=headers, params=params)
-            response.raise_for_status()
-            logger.debug(f"Spotify API response status: {response.status_code}")
-            logger.debug(f"Spotify API response body: {response.text}")
-            return response.json()
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Spotify API request failed: {e}")
-            if e.response is not None:
-                logger.error(f"Response status code: {e.response.status_code}")
-                logger.error(f"Response body: {e.response.text}")
-            raise
-
-    def get_recently_played(self, after: str = None) -> Dict[str, Any]:
-        """Get recently played tracks."""
-        params = {"limit": 50}
-
-        if after:
-            params["after"] = after
-
-        return self._make_request("/me/player/recently-played", params)
 
 
 class SpotifyDataIngestion:

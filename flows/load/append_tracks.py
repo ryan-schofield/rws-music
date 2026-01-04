@@ -64,15 +64,24 @@ def main():
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         df = pl.DataFrame(data)
-        # Rename columns to match existing schema
-        df = df.rename({"uri": "track_uri", "request_after": "request_cursor"})
-        # Cast played_at to datetime
-        df = df.with_columns(
-            pl.col("played_at")
-            .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.3fZ")
-            .dt.replace_time_zone("UTC")
-            .dt.cast_time_unit("us")
-        )
+        
+        # Rename columns to match existing schema (only if they exist)
+        rename_mapping = {}
+        if "uri" in df.columns:
+            rename_mapping["uri"] = "track_uri"
+        if "request_after" in df.columns:
+            rename_mapping["request_after"] = "request_cursor"
+        if rename_mapping:
+            df = df.rename(rename_mapping)
+        
+        # Cast played_at to datetime (only if it exists)
+        if "played_at" in df.columns:
+            df = df.with_columns(
+                pl.col("played_at")
+                .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.3fZ")
+                .dt.replace_time_zone("UTC")
+                .dt.cast_time_unit("us")
+            )
         new_data_frames.append(df)
 
     if new_data_frames:

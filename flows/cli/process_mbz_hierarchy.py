@@ -41,7 +41,7 @@ class ProcessMBZHierarchyCLI(CLICommand):
             
             result = self.processor.process_area_hierarchy()
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
                     message=f"Processed {result.get('areas_processed', 0)} geographic areas",
                     data=result,
@@ -49,7 +49,7 @@ class ProcessMBZHierarchyCLI(CLICommand):
             else:
                 return self.error_result(
                     message="MusicBrainz area hierarchy processing failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

@@ -45,15 +45,15 @@ class EnrichSpotifyArtistsCLI(CLICommand):
             
             result = self.processor.enrich_artists(limit=limit)
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Enriched {result.get('artists_added', 0)} artists",
+                    message=f"Enriched {result.get('artists_processed', 0)} artists",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="Spotify artist enrichment failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

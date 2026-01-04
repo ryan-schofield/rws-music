@@ -45,15 +45,15 @@ class EnrichSpotifyAlbumsCLI(CLICommand):
             
             result = self.processor.enrich_albums(limit=limit)
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Enriched {result.get('albums_added', 0)} albums",
+                    message=f"Enriched {result.get('albums_processed', 0)} albums",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="Spotify album enrichment failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

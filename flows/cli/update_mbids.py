@@ -39,17 +39,17 @@ class UpdateMBIDsCLI(CLICommand):
         try:
             self.logger.info("Starting MusicBrainz ID update")
             
-            result = self.processor.update_mbids_from_musicbrainz()
+            result = self.processor.update_artist_mbids()
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Updated {result.get('artists_updated', 0)} artists with MBIDs",
+                    message="Updated artist MBIDs successfully",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="MusicBrainz ID update failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

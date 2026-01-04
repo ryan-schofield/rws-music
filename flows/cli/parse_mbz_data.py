@@ -39,17 +39,17 @@ class ParseMBZDataCLI(CLICommand):
         try:
             self.logger.info("Starting MusicBrainz data parsing")
             
-            result = self.processor.parse_json_files()
+            result = self.processor.parse_artist_json_files()
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Parsed {result.get('files_processed', 0)} MusicBrainz JSON files",
+                    message=f"Parsed {result.get('artists_processed', 0)} MusicBrainz artist records",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="MusicBrainz data parsing failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

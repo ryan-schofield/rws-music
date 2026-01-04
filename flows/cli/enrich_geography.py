@@ -40,17 +40,17 @@ class EnrichGeographyCLI(CLICommand):
             self.logger.info("Starting geographic enrichment")
             
             # Note: processor has internal parallelization
-            result = self.processor.process_areas()
+            result = self.processor.run_full_enrichment()
             
-            if result.get("success"):
+            if result.get("overall_status") == "success":
                 return self.success_result(
-                    message=f"Enriched {result.get('areas_processed', 0)} geographic areas",
+                    message="Geographic enrichment completed successfully",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="Geographic enrichment failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

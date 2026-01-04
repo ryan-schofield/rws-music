@@ -43,12 +43,26 @@ class FetchMBZArtistsCLI(CLICommand):
         """
         try:
             self.logger.info(
-                f"Starting MusicBrainz artist fetch with limit={limit}, workers={max_workers}"
+                f"Starting MusicBrainz artist fetch with limit={limit}"
             )
             
-            result = self.processor.fetch_artist_data(limit=limit, max_workers=max_workers)
+            # First discover missing artists
+            discovery = self.processor.discover_missing_artists()
+            if discovery.get("status") != "success":
+                return self.no_updates_result(
+                    message="No artists found to fetch"
+                )
             
-            if result.get("success"):
+            missing_artists_df = discovery.get("missing_artists")
+            if missing_artists_df is None or missing_artists_df.is_empty():
+                return self.no_updates_result(
+                    message="No missing artists to fetch"
+                )
+            
+            # Fetch artist data
+            result = self.processor.fetch_artist_data(missing_artists_df)
+            
+            if result.get("status") == "success":
                 return self.success_result(
                     message=f"Fetched {result.get('artists_fetched', 0)} artists from MusicBrainz",
                     data=result,
@@ -56,7 +70,7 @@ class FetchMBZArtistsCLI(CLICommand):
             else:
                 return self.error_result(
                     message="MusicBrainz artist fetch failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:

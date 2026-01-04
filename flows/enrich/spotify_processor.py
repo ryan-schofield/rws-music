@@ -9,10 +9,16 @@ writing directly to parquet files.
 
 import sys
 import logging
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pathlib import Path
 import polars as pl
+
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent

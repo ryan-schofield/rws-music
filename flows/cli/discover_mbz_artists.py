@@ -41,9 +41,9 @@ class DiscoverMBZArtistsCLI(CLICommand):
             
             result = self.processor.discover_missing_artists()
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Found {result.get('artists_count', 0)} artists needing enrichment",
+                    message=f"Found {result.get('artists_found', 0)} artists needing enrichment",
                     data=result,
                 )
             else:
