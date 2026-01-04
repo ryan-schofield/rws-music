@@ -33,7 +33,11 @@ class RunDBTCLI(CLICommand):
             timeout=1200,  # 20 minutes
             retries=2,
         )
-        self.dbt_dir = Path("dbt")
+        # Use absolute path for task-runner compatibility
+        workspace_dir = Path("/home/runner/workspace")
+        if not workspace_dir.exists():
+            workspace_dir = Path.cwd()
+        self.dbt_dir = workspace_dir / "dbt"
 
     def execute(
         self, 

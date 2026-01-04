@@ -44,8 +44,11 @@ def harmonize_dataframe_schemas(dataframes):
 
 
 def main():
-    # Define paths
-    base_path = Path("data")
+    # Define paths using absolute path for task-runner compatibility
+    workspace_dir = Path("/home/runner/workspace")
+    if not workspace_dir.exists():
+        workspace_dir = Path.cwd()
+    base_path = workspace_dir / "data"
     detail_path = base_path / "raw" / "recently_played" / "detail"
     src_tracks_path = base_path / "src" / "tracks_played"
     processed_path = base_path / "raw" / "recently_played" / "processed"

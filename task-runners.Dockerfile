@@ -42,8 +42,11 @@ RUN useradd -m runner && \
 
 USER root
 
+# Set working directory to workspace so relative paths resolve correctly
+WORKDIR /workspace
+
 # Set environment variables for the runner
 ENV N8N_RUNNER=true
 ENV N8N_RUNNER_FEATURES=python
 
-ENTRYPOINT ["/bin/bash", "-c", "mkdir -p /workspace/data/raw/recently_played/detail /workspace/data/cache/mbz /workspace/data/cursor /workspace/data/src /workspace/logs && chmod -R 777 /workspace/data /workspace/logs && exec /usr/local/bin/task-runner-launcher python"]
+ENTRYPOINT ["/bin/bash", "-c", "mkdir -p /workspace/data/raw/recently_played/detail /workspace/data/cache/mbz /workspace/data/cursor /workspace/data/src /workspace/logs && chmod -R 777 /workspace/data /workspace/logs && chown -R runner:runner /workspace/data /workspace/logs 2>/dev/null || true && ln -sf /workspace /home/runner/workspace 2>/dev/null || true && exec /usr/local/bin/task-runner-launcher python"]

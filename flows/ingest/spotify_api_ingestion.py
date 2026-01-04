@@ -129,7 +129,11 @@ class SpotifyDataIngestion:
     """Handles ingestion of Spotify data."""
 
     def __init__(self):
-        self.data_dir = Path("data")
+        # Use absolute path for task-runner compatibility
+        workspace_dir = Path("/home/runner/workspace")
+        if not workspace_dir.exists():
+            workspace_dir = Path.cwd()
+        self.data_dir = workspace_dir / "data"
         self.raw_data_dir = self.data_dir / "raw" / "recently_played" / "detail"
 
         # Ensure directories exist
@@ -140,7 +144,7 @@ class SpotifyDataIngestion:
 
     def load_cursor(self) -> str:
         """Load cursor from JSON file."""
-        cursor_path = Path("data/cursor/cursor.json")
+        cursor_path = self.data_dir / "cursor" / "cursor.json"
         if cursor_path.exists():
             with open(cursor_path, "r") as f:
                 cursor = json.load(f)
@@ -149,7 +153,8 @@ class SpotifyDataIngestion:
 
     def save_cursor(self, after: str):
         """Save cursor to JSON file."""
-        cursor_path = Path("data/cursor/cursor.json")
+        cursor_path = self.data_dir / "cursor" / "cursor.json"
+        cursor_path.parent.mkdir(parents=True, exist_ok=True)
         cursor = {"user_id": "fffv23", "after": after}
         with open(cursor_path, "w") as f:
             json.dump(cursor, f, indent=2)

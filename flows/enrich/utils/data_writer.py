@@ -22,6 +22,13 @@ class ParquetDataWriter:
     """
 
     def __init__(self, base_path: str = "data/src"):
+        # Use absolute path for task-runner compatibility
+        if not base_path.startswith("/"):
+            workspace_dir = Path("/home/runner/workspace")
+            if not workspace_dir.exists():
+                workspace_dir = Path.cwd()
+            base_path = str(workspace_dir / base_path)
+        
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 

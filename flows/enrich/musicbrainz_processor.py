@@ -47,7 +47,13 @@ class MusicBrainzProcessor:
         self.mbz_client = MusicBrainzClient(cache_dir=cache_dir)
 
         # Cache directory for storing raw JSON data
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("data/cache/mbz")
+        if cache_dir:
+            self.cache_dir = Path(cache_dir)
+        else:
+            workspace_dir = Path("/home/runner/workspace")
+            if not workspace_dir.exists():
+                workspace_dir = Path.cwd()
+            self.cache_dir = workspace_dir / "data" / "cache" / "mbz"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def discover_missing_artists(self) -> Dict[str, Any]:

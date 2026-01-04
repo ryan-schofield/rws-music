@@ -39,10 +39,16 @@ class ValidateDataCLI(CLICommand):
         try:
             self.logger.info("Starting data validation")
             
+            # Use absolute path for task-runner compatibility
+            workspace_dir = Path("/home/runner/workspace")
+            if not workspace_dir.exists():
+                workspace_dir = Path.cwd()
+            base_path = workspace_dir / "data"
+            
             validation_results = {}
             
             # Validate tracks_played table exists and has data
-            tracks_path = Path("data/src/tracks_played")
+            tracks_path = base_path / "src" / "tracks_played"
             if tracks_path.exists():
                 validation_results["tracks_played"] = {
                     "exists": True,
@@ -66,7 +72,7 @@ class ValidateDataCLI(CLICommand):
             ]
             
             for table in enrichment_tables:
-                table_path = Path(f"data/src/{table}")
+                table_path = base_path / "src" / table
                 validation_results[table] = {
                     "exists": table_path.exists(),
                     "path": str(table_path),
