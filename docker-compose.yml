@@ -83,6 +83,7 @@ services:
       - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
       - N8N_PYTHON_ALLOWED_CODE=*
       - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
+      - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
       - PYTHONPATH=/workspace
     volumes:
       - n8n-data:/home/node/.n8n
@@ -121,6 +122,7 @@ services:
       - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
       - N8N_PYTHON_ALLOWED_CODE=*
       - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
+      - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
       # Explicitly pass Spotify credentials to the Python execution environment
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
