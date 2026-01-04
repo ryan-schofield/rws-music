@@ -2,40 +2,46 @@
 Base classes and common functionality for CLI commands.
 """
 
-import sys
 import json
 import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import time
-from functools import wraps
 
 
 class LogCapturingHandler(logging.Handler):
-    """Custom logging handler that captures log records."""
+    """Custom logging handler that captures and prints log records."""
     
     def __init__(self):
         super().__init__()
         self.records = []
     
     def emit(self, record):
-        """Capture log record."""
+        """Capture and print log record."""
         try:
             msg = self.format(record)
             self.records.append(msg)
+            # Print to stdout for n8n console visibility
+            print(msg)
         except Exception:
             self.handleError(record)
 
 
-# Create global capturing handler and attach it before basicConfig
-_global_log_handler = LogCapturingHandler()
-_global_log_handler.setLevel(logging.INFO)  # Capture all levels
-_global_log_handler.setFormatter(logging.Formatter(
+# Create formatter
+log_formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-))
-logging.getLogger().addHandler(_global_log_handler)
-logging.getLogger().setLevel(logging.DEBUG)  # Root logger captures all levels
+)
+
+# Create global capturing handler that also prints
+_global_log_handler = LogCapturingHandler()
+_global_log_handler.setLevel(logging.INFO)
+_global_log_handler.setFormatter(log_formatter)
+
+# Attach handler to root logger
+root_logger = logging.getLogger()
+root_logger.addHandler(_global_log_handler)
+root_logger.setLevel(logging.DEBUG)  # Root logger captures all levels
 
 # Configure logging
 logging.basicConfig(
