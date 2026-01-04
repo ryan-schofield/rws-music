@@ -1,11 +1,12 @@
 # Docker Compose configuration for music tracking application
-# Optimized for 2GB RAM Synology NAS deployment with local-only access
-# Memory allocation strategy (Post-Prefect Migration):
-# - n8n: 300MB (workflow orchestration)
+# Optimized for ~2GB RAM deployments with local-only access
+# Memory allocation strategy (rough guide):
 # - Metabase: 600MB (JVM with 512MB heap)
-# - Data Pipeline: 400MB (ETL processing - can be increased to 600MB if needed)
-# - Total: ~1.3GB (700MB freed from Prefect removal, available for scaling)
-# Local-only access: Metabase on port 3000, n8n on port 5678 (LAN access only)
+# - Data Pipeline: 400MB (ETL processing)
+# - n8n: 300MB (UI + orchestration)
+# - n8n task runners: 350MB (Python Code node runtime)
+# - Total: ~1.65GB (within 2GB budget)
+# Local-only access: Metabase on port 3000, n8n on port 5678
 
 services:
   # Main data processing and dbt service
@@ -57,12 +58,11 @@ services:
 
   # n8n for workflow orchestration
   n8n:
-    build:
-      context: .
-      dockerfile: n8n.Dockerfile
+    image: n8nio/n8n:latest
     container_name: music-tracker-n8n
     ports:
       - "5678:5678"
+    env_file: .env
     environment:
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
@@ -70,19 +70,24 @@ services:
       - N8N_SECURE_COOKIE=false
       - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
-      - TZ=${TIMEZONE:-UTC}
-      # Task runner configuration
       - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
-      - N8N_RUNNERS_AUTH_TOKEN=your-secret-runner-token
-      - N8N_NATIVE_PYTHON_RUNNER=true
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      - N8N_RUNNERS=task-runners
+      - N8N_ENABLE_PYTHON=true
+      - N8N_PYTHON_EXECUTION_ENABLED=true
+      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_RUNNER_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_PYTHON_ALLOWED_CODE=*
+      - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
+      - PYTHONPATH=/workspace
     volumes:
       - n8n-data:/home/node/.n8n
-      - ./data:/app/data
-      - ./flows:/app/flows
-      - ./dbt:/app/dbt
-      - ./logs:/app/logs
+      - ./n8n-workflows:/workflows
+      - ./:/workspace
     networks:
       - music-tracker
     restart: unless-stopped
@@ -91,32 +96,50 @@ services:
     mem_limit: 300m
     mem_reservation: 200m
 
-  # Task runners for Python and JavaScript code execution
+  # n8n task runners (required for Python (Native) Code node)
   task-runners:
     build:
       context: .
-      dockerfile: runners.Dockerfile
-    container_name: music-tracker-task-runners
-    volumes:
-      - ./data:/app/data
-      - ./flows:/app/flows
-      - ./dbt:/app/dbt
-      - ./logs:/app/logs
+      dockerfile: task-runners.Dockerfile
+    container_name: music-tracker-n8n-runners
+    restart: always
+    env_file: .env
     environment:
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
-      - N8N_RUNNERS_AUTH_TOKEN=your-secret-runner-token
-      - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=15
-      - N8N_RUNNERS_CONFIG_FILE=/etc/n8n/task-runners.json
-      - N8N_RUNNERS_LAUNCHER_WORKING_DIRECTORY=/tmp/n8n-runners
-      - N8N_RUNNERS_LAUNCHER_WORK_DIR=/tmp/n8n-runners
-      - N8N_RUNNERS_LAUNCHER_DEFAULT_DIR=/tmp/n8n-runners
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
+      - DBT_PROFILES_DIR=/workspace/dbt
+      - DUCKDB_PATH=/workspace/data/music_tracker.duckdb
+      - PYTHONPATH=/workspace
+      - N8N_RUNNER=true
+      - N8N_RUNNER_FEATURES=python
+      - N8N_ENABLE_PYTHON=true
+      - N8N_PYTHON_EXECUTION_ENABLED=true
+      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_RUNNER_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
+      - N8N_PYTHON_ALLOWED_CODE=*
+      - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
+      # Explicitly pass Spotify credentials to the Python execution environment
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - SPOTIFY_REFRESH_TOKEN=${SPOTIFY_REFRESH_TOKEN}
+    volumes:
+      - ./.env:/workspace/.env:ro
+      - ./data:/workspace/data
+      - ./flows:/workspace/flows
+      - ./dbt:/workspace/dbt
+      - ./scripts:/workspace/scripts
+      - ./logs:/workspace/logs
+      - ./n8n-workflows:/workspace/n8n-workflows
+      - n8n-data:/home/node/.n8n
     networks:
       - music-tracker
-    restart: unless-stopped
-    # Memory limits for task runners
-    # Reserve 200MB for Python/JS task execution
-    mem_limit: 200m
-    mem_reservation: 100m
+    depends_on:
+      - n8n
+    mem_limit: 512m
+    mem_reservation: 256m
 
 volumes:
   metabase-data:

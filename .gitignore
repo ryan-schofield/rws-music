@@ -48,9 +48,5 @@ dmypy.json
 *.tfvars
 *.tar.gz
 
-# Terraform (historical, no longer used)
-*/.terraform
-*.tfstate
-*.tfstate.backup
-*.tfplan
-.terraform.lock.hcl
+# local env
+zz*

@@ -16,7 +16,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from flows.cli.base import CLICommand
-from flows.ingest.spotify_api_ingestion import SpotifyAPIIngestion
+from flows.ingest.spotify_api_ingestion import SpotifyDataIngestion
 
 
 class SpotifyIngestionCLI(CLICommand):
@@ -28,32 +28,29 @@ class SpotifyIngestionCLI(CLICommand):
             timeout=300,  # 5 minutes
             retries=3,
         )
-        self.ingestion = SpotifyAPIIngestion()
+        self.ingestion = SpotifyDataIngestion()
 
-    def execute(self, limit: int = None, **kwargs) -> Dict[str, Any]:
+    def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute Spotify ingestion.
         
-        Args:
-            limit: Maximum number of tracks to ingest per batch
-            
         Returns:
             Result dictionary with status and metrics
         """
         try:
-            self.logger.info(f"Starting Spotify ingestion with limit={limit}")
+            self.logger.info(f"Starting Spotify ingestion")
             
-            result = self.ingestion.ingest_recently_played(limit=limit)
+            result = self.ingestion.run_ingestion()
             
-            if result.get("success"):
+            if result.get("status") == "success":
                 return self.success_result(
-                    message=f"Ingested {result.get('tracks_count', 0)} tracks",
+                    message=f"Ingested {result.get('records_ingested', 0)} tracks",
                     data=result,
                 )
             else:
                 return self.error_result(
                     message="Spotify ingestion failed",
-                    errors=[result.get("error", "Unknown error")],
+                    errors=[result.get("message", "Unknown error")],
                 )
         
         except Exception as e:
@@ -66,17 +63,11 @@ class SpotifyIngestionCLI(CLICommand):
 
 def main():
     parser = argparse.ArgumentParser(description="Ingest recently played tracks from Spotify")
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=None,
-        help="Maximum number of tracks to ingest per batch",
-    )
     
     args = parser.parse_args()
     
     cli = SpotifyIngestionCLI()
-    exit_code = cli.run(limit=args.limit)
+    exit_code = cli.run()
     sys.exit(exit_code)
 
 

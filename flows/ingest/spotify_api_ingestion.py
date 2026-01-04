@@ -363,7 +363,7 @@ class SpotifyDataIngestion:
             total_removed = original_count - unique_count
 
             if total_removed > 0:
-                logger.info(f"Deduplication complete:")
+                logger.info("Deduplication complete:")
                 logger.info(
                     f"  - Step 1 (exact duplicates): {step1_removed} records removed"
                 )

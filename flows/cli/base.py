@@ -12,6 +12,31 @@ import time
 from functools import wraps
 
 
+class LogCapturingHandler(logging.Handler):
+    """Custom logging handler that captures log records."""
+    
+    def __init__(self):
+        super().__init__()
+        self.records = []
+    
+    def emit(self, record):
+        """Capture log record."""
+        try:
+            msg = self.format(record)
+            self.records.append(msg)
+        except Exception:
+            self.handleError(record)
+
+
+# Create global capturing handler and attach it before basicConfig
+_global_log_handler = LogCapturingHandler()
+_global_log_handler.setLevel(logging.INFO)  # Capture all levels
+_global_log_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+))
+logging.getLogger().addHandler(_global_log_handler)
+logging.getLogger().setLevel(logging.DEBUG)  # Root logger captures all levels
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +65,7 @@ class CLICommand(ABC):
         self.timeout = timeout
         self.retries = retries
         self.logger = logging.getLogger(f"cli.{name}")
+        self.log_handler = _global_log_handler
 
     @abstractmethod
     def execute(self, **kwargs) -> Dict[str, Any]:
@@ -77,6 +103,9 @@ class CLICommand(ABC):
                 
                 self.logger.info(f"Command completed with status: {result.get('status')}")
                 
+                # Add captured logs to result
+                result["logs"] = self.log_handler.records
+                
                 # Output JSON result to stdout
                 print(json.dumps(result, indent=2))
                 
@@ -97,6 +126,7 @@ class CLICommand(ABC):
                         "message": f"Command failed after {max_attempts} attempt(s)",
                         "errors": [str(last_error)],
                         "data": None,
+                        "logs": self.log_handler.records,
                     }
                     print(json.dumps(error_result, indent=2))
                     return 1
@@ -132,6 +162,7 @@ class CLICommand(ABC):
             "message": message,
             "data": data,
             "errors": None,
+            "logs": _global_log_handler.records,
         }
 
     @staticmethod
@@ -142,6 +173,7 @@ class CLICommand(ABC):
             "message": message,
             "data": None,
             "errors": errors or [],
+            "logs": _global_log_handler.records,
         }
 
     @staticmethod
@@ -152,4 +184,5 @@ class CLICommand(ABC):
             "message": message,
             "data": None,
             "errors": None,
+            "logs": _global_log_handler.records,
         }
