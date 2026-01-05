@@ -1,18 +1,10 @@
-FROM eclipse-temurin:21-jdk-jammy
+FROM metabase/metabase:latest
 
-ENV MB_PLUGINS_DIR=/home/plugins/
+ENV MB_PLUGINS_DIR=/plugins/
 
-# Download latest Metabase
-ADD https://downloads.metabase.com/v0.53.7/metabase.jar /home
-
-# Download DuckDB driver
-ADD https://github.com/MotherDuck-Open-Source/metabase_duckdb_driver/releases/download/0.4.1/duckdb.metabase-driver.jar /home/plugins/
-
-# Set permissions
-RUN chmod 744 /home/plugins/duckdb.metabase-driver.jar
+# Download and install DuckDB driver with retry logic
+RUN curl -L --retry 3 --retry-delay 2 -o /plugins/duckdb.metabase-driver.jar https://github.com/motherduckdb/metabase_duckdb_driver/releases/download/1.4.3.0/duckdb.metabase-driver.jar && \
+    chmod 744 /plugins/duckdb.metabase-driver.jar
 
 # Optimize JVM memory usage for 2GB RAM Synology NAS
-# Limit heap to 512MB max, 256MB initial with G1 garbage collector
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
-
-CMD java $JAVA_OPTS -jar /home/metabase.jar

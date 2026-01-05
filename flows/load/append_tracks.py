@@ -64,7 +64,7 @@ def main():
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         df = pl.DataFrame(data)
-        
+
         # Rename columns to match existing schema (only if they exist)
         rename_mapping = {}
         if "uri" in df.columns:
@@ -73,7 +73,7 @@ def main():
             rename_mapping["request_after"] = "request_cursor"
         if rename_mapping:
             df = df.rename(rename_mapping)
-        
+
         # Cast played_at to datetime (only if it exists)
         if "played_at" in df.columns:
             df = df.with_columns(

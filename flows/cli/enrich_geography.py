@@ -32,16 +32,16 @@ class EnrichGeographyCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute geographic enrichment.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info("Starting geographic enrichment")
-            
+
             # Note: processor has internal parallelization
             result = self.processor.run_full_enrichment()
-            
+
             if result.get("overall_status") == "success":
                 return self.success_result(
                     message="Geographic enrichment completed successfully",
@@ -52,7 +52,7 @@ class EnrichGeographyCLI(CLICommand):
                     message="Geographic enrichment failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"Geographic enrichment error: {str(e)}")
             return self.error_result(

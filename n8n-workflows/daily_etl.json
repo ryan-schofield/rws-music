@@ -2,256 +2,177 @@
   "name": "Daily ETL",
   "nodes": [
     {
-      "name": "Trigger - Daily 2 AM",
-      "type": "n8n-nodes-base.cron",
-      "position": [
-        0,
-        100
-      ],
-      "parameters": {
-        "mode": "cron",
-        "expression": "0 2 * * *"
-      },
-      "credentials": {}
-    },
-    {
-      "name": "Ingest Spotify",
-      "type": "n8n-nodes-base.code",
-      "position": [
-        300,
-        100
-      ],
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.ingest_spotify import SpotifyIngestionCLI\nreturn SpotifyIngestionCLI().execute(limit=100)"
+        "pythonCode": "from flows.cli.enrich_spotify_artists import EnrichSpotifyArtistsCLI\nreturn EnrichSpotifyArtistsCLI().execute(500)"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Load Raw Tracks",
-      "type": "n8n-nodes-base.code",
-      "position": [
-        600,
-        100
-      ],
-      "parameters": {
-        "language": "pythonNative",
-        "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
-      },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Validate Data",
-      "type": "n8n-nodes-base.code",
-      "position": [
-        900,
-        100
-      ],
-      "parameters": {
-        "language": "pythonNative",
-        "pythonCode": "from flows.cli.validate_data import ValidateDataCLI\nreturn ValidateDataCLI().execute()"
-      },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
       "name": "Enrich Spotify Artists",
       "type": "n8n-nodes-base.code",
       "position": [
-        900,
-        200
+        224,
+        0
       ],
-      "parameters": {
-        "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_artists import EnrichSpotifyArtistsCLI\nreturn EnrichSpotifyArtistsCLI().execute(limit=50)"
-      },
-      "credentials": {},
-      "typeVersion": 2
+      "typeVersion": 2,
+      "id": "dc126bf8-8b85-4a53-9e83-df464246897d"
     },
     {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums import EnrichSpotifyAlbumsCLI\nreturn EnrichSpotifyAlbumsCLI().execute(500)"
+      },
       "name": "Enrich Spotify Albums",
       "type": "n8n-nodes-base.code",
       "position": [
-        900,
-        300
+        224,
+        192
       ],
-      "parameters": {
-        "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_albums import EnrichSpotifyAlbumsCLI\nreturn EnrichSpotifyAlbumsCLI().execute(limit=50)"
-      },
-      "credentials": {},
-      "typeVersion": 2
+      "typeVersion": 2,
+      "id": "f6df12c6-66b6-4794-a286-7ab5cf97d80b"
     },
     {
-      "name": "Wait for Spotify",
-      "type": "n8n-nodes-base.wait",
-      "position": [
-        1200,
-        250
-      ],
-      "parameters": {
-        "mode": "timeInterval",
-        "timeInterval": 30,
-        "timeUnit": "seconds"
-      },
-      "credentials": {}
-    },
-    {
-      "name": "Discover MBZ Artists",
-      "type": "n8n-nodes-base.code",
-      "position": [
-        1500,
-        100
-      ],
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.discover_mbz_artists import DiscoverMBZArtistsCLI\nreturn DiscoverMBZArtistsCLI().execute()"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Fetch MBZ Artists",
+      "name": "Discover MBZ Artists",
       "type": "n8n-nodes-base.code",
       "position": [
-        1800,
-        100
+        672,
+        96
       ],
+      "typeVersion": 2,
+      "id": "c37f36f6-6ab3-4ad0-83eb-6ea2dd78fdad",
+      "executeOnce": true
+    },
+    {
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.fetch_mbz_artists import FetchMBZArtistsCLI\nreturn FetchMBZArtistsCLI().execute(limit=100, workers=5)"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Parse MBZ Data",
+      "name": "Fetch MBZ Artists",
       "type": "n8n-nodes-base.code",
       "position": [
-        2100,
-        100
+        896,
+        96
       ],
+      "typeVersion": 2,
+      "id": "d47b6f1f-8637-44a7-9084-88d46a447d0f",
+      "executeOnce": true,
+      "alwaysOutputData": false
+    },
+    {
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.parse_mbz_data import ParseMBZDataCLI\nreturn ParseMBZDataCLI().execute()"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Process MBZ Hierarchy",
+      "name": "Parse MBZ Data",
       "type": "n8n-nodes-base.code",
       "position": [
-        2400,
-        100
+        1120,
+        96
       ],
+      "typeVersion": 2,
+      "id": "8f5c7be8-8bbf-4696-9703-ff09b4ec5197",
+      "executeOnce": true
+    },
+    {
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.process_mbz_hierarchy import ProcessMBZHierarchyCLI\nreturn ProcessMBZHierarchyCLI().execute()"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Enrich Geography",
+      "name": "Process MBZ Hierarchy",
       "type": "n8n-nodes-base.code",
       "position": [
-        2700,
-        100
+        1344,
+        96
       ],
+      "typeVersion": 2,
+      "id": "9ea2b604-ed1d-4f86-a38c-a38b80613c55",
+      "executeOnce": true
+    },
+    {
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.enrich_geography import EnrichGeographyCLI\nreturn EnrichGeographyCLI().execute()"
       },
-      "credentials": {},
-      "typeVersion": 2
-    },
-    {
-      "name": "Update MBIDs",
+      "name": "Enrich Geography",
       "type": "n8n-nodes-base.code",
       "position": [
-        3000,
-        100
+        1568,
+        96
       ],
+      "typeVersion": 2,
+      "id": "e11d3c39-43dc-4aeb-be87-5862f3a59595",
+      "executeOnce": true
+    },
+    {
       "parameters": {
         "language": "pythonNative",
         "pythonCode": "from flows.cli.update_mbids import UpdateMBIDsCLI\nreturn UpdateMBIDsCLI().execute()"
       },
-      "credentials": {},
-      "typeVersion": 2
+      "name": "Update MBIDs",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1792,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "6151944d-a3bd-4639-ba93-4f1dcc05b932",
+      "executeOnce": true
     },
     {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='run')"
+      },
       "name": "Run dbt Build",
       "type": "n8n-nodes-base.code",
       "position": [
-        3300,
-        100
+        2016,
+        96
       ],
+      "typeVersion": 2,
+      "id": "e6ff9efc-df1c-4b9a-bf90-53018d6c3be3",
+      "executeOnce": true
+    },
+    {
       "parameters": {
-        "language": "pythonNative",
-        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build')"
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
       },
-      "credentials": {},
-      "typeVersion": 2
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        96
+      ],
+      "id": "c63c1764-ffc4-47ef-9831-3273133b715c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        96
+      ],
+      "id": "a791622f-3400-4180-9ac8-0aba39a3b6a1",
+      "name": "Merge Spotify Outputs"
     }
   ],
+  "pinData": {},
   "connections": {
-    "Trigger - Daily 2 AM": {
-      "main": [
-        [
-          {
-            "node": "Ingest Spotify",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ingest Spotify": {
-      "main": [
-        [
-          {
-            "node": "Load Raw Tracks",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Load Raw Tracks": {
-      "main": [
-        [
-          {
-            "node": "Validate Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Data": {
-      "main": [
-        [
-          {
-            "node": "Enrich Spotify Artists",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Enrich Spotify Albums",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Enrich Spotify Artists": {
       "main": [
         [
           {
-            "node": "Wait for Spotify",
+            "node": "Merge Spotify Outputs",
             "type": "main",
             "index": 0
           }
@@ -262,20 +183,9 @@
       "main": [
         [
           {
-            "node": "Wait for Spotify",
+            "node": "Merge Spotify Outputs",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait for Spotify": {
-      "main": [
-        [
-          {
-            "node": "Discover MBZ Artists",
-            "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -345,7 +255,44 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Enrich Spotify Albums",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enrich Spotify Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Spotify Outputs": {
+      "main": [
+        [
+          {
+            "node": "Discover MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": {}
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ad839cbf-418b-43dd-bddf-c4d8c5a839da",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "98lSkDAYkaO4Jcvc",
+  "tags": []
 }

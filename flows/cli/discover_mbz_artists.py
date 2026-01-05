@@ -32,15 +32,15 @@ class DiscoverMBZArtistsCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute artist discovery for MusicBrainz enrichment.
-        
+
         Returns:
             Result dictionary with list of artists needing enrichment
         """
         try:
             self.logger.info("Starting MusicBrainz artist discovery")
-            
+
             result = self.processor.discover_missing_artists()
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Found {result.get('artists_found', 0)} artists needing enrichment",
@@ -50,7 +50,7 @@ class DiscoverMBZArtistsCLI(CLICommand):
                 return self.no_updates_result(
                     message="No artists need MusicBrainz enrichment",
                 )
-        
+
         except Exception as e:
             self.logger.error(f"MusicBrainz artist discovery error: {str(e)}")
             return self.error_result(

@@ -224,7 +224,7 @@ class SpotifyDataIngestion:
                 (pl.col("track_id").is_not_null())
                 & (pl.col("played_at_dt").is_not_null())
             )
-            
+
             df_unique = (
                 df_filtered.sort(["track_id", "played_at_dt"])
                 .with_columns(

@@ -13,7 +13,8 @@ Usage: python flows/cli/run_dbt.py --select models/reporting
 import sys
 import argparse
 import subprocess
-import json
+import shutil
+import os
 from pathlib import Path
 from typing import Dict, Any
 
@@ -30,7 +31,7 @@ class RunDBTCLI(CLICommand):
     def __init__(self):
         super().__init__(
             name="run_dbt",
-            timeout=1200,  # 20 minutes
+            timeout=2400,  # 40 minutes
             retries=2,
         )
         # Use absolute path for task-runner compatibility
@@ -74,23 +75,58 @@ class RunDBTCLI(CLICommand):
             if command not in ("build", "run"):
                 raise ValueError(f"Invalid dbt command: {command}. Must be 'build' or 'run'")
             
-            # Build dbt command
-            cmd = [sys.executable, "-m", "dbt.cli", command]
+            # Determine how to invoke dbt
+            # First check if dbt is in PATH
+            dbt_cmd = shutil.which("dbt")
+            if not dbt_cmd:
+                # Check in the n8n task-runner venv
+                venv_dbt = Path("/opt/runners/task-runner-python/.venv/bin/dbt")
+                if venv_dbt.exists():
+                    # Add venv to PATH so shell can find dbt
+                    venv_bin = str(venv_dbt.parent)
+                    existing_path = os.environ.get("PATH", "")
+                    os.environ["PATH"] = f"{venv_bin}:{existing_path}"
+                else:
+                    raise FileNotFoundError(
+                        "dbt executable not found. Checked: system PATH and /opt/runners/task-runner-python/.venv/bin/"
+                    )
+            
+            # Build dbt command as a shell string for simpler execution
+            shell_cmd = f"dbt clean && dbt deps"
+            
+            # For 'run' command, need to seed first; 'build' does it automatically
+            if command == "run":
+                shell_cmd += " && dbt seed && dbt run"
+            else:
+                shell_cmd += f" && dbt {command}"
             
             if select:
-                cmd.extend(["--select", select])
+                shell_cmd += f" --select {select}"
             if exclude:
-                cmd.extend(["--exclude", exclude])
+                shell_cmd += f" --exclude {exclude}"
             if full_refresh:
-                cmd.append("--full-refresh")
+                shell_cmd += " --full-refresh"
             
-            # Change to dbt directory and run
+            # Prepare environment for subprocess, ensuring HOME is set for DuckDB
+            env = os.environ.copy()
+            if not env.get("HOME"):
+                env["HOME"] = "/workspace"
+            
+            # Add environment variables to help with multiprocessing in containers
+            env["PYTHONUNBUFFERED"] = "1"
+            env["OMP_NUM_THREADS"] = "1"  # Limit OpenMP threads for DuckDB
+            
+            self.logger.info(f"Running shell command: {shell_cmd}")
+            
+            # Execute dbt command via shell for simpler environment handling
             result = subprocess.run(
-                cmd,
+                shell_cmd,
+                shell=True,
                 cwd=str(self.dbt_dir),
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
+                env=env,
             )
             
             # Parse dbt output for metrics
@@ -105,13 +141,13 @@ class RunDBTCLI(CLICommand):
                     message="dbt transformations completed successfully",
                     data={
                         "returncode": result.returncode,
-                        "output": output[-1000:] if len(output) > 1000 else output,  # Last 1000 chars
+                        "output": result.stdout,
                     },
                 )
             else:
                 return self.error_result(
                     message="dbt transformations failed",
-                    errors=[output],
+                    errors= result.stdout,
                 )
         
         except subprocess.TimeoutExpired:

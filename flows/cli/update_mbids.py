@@ -32,26 +32,30 @@ class UpdateMBIDsCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute MusicBrainz ID update.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info("Starting MusicBrainz ID update")
-            
+
             result = self.processor.update_artist_mbids()
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message="Updated artist MBIDs successfully",
                     data=result,
+                )
+            elif result.get("status") == "no_updates":
+                return self.no_updates_result(
+                    result.get("message", "No MBIDs to update")
                 )
             else:
                 return self.error_result(
                     message="MusicBrainz ID update failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"MusicBrainz ID update error: {str(e)}")
             return self.error_result(

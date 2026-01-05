@@ -32,26 +32,30 @@ class ProcessMBZHierarchyCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute MusicBrainz area hierarchy processing.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info("Starting MusicBrainz area hierarchy processing")
-            
+
             result = self.processor.process_area_hierarchy()
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Processed {result.get('areas_processed', 0)} geographic areas",
                     data=result,
+                )
+            elif result.get("status") == "no_updates":
+                return self.no_updates_result(
+                    result.get("message", "No areas to process")
                 )
             else:
                 return self.error_result(
                     message="MusicBrainz area hierarchy processing failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"MusicBrainz area hierarchy processing error: {str(e)}")
             return self.error_result(

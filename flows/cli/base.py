@@ -10,13 +10,31 @@ from pathlib import Path
 import time
 
 
+class CLICommandException(Exception):
+    """Exception raised when a CLI command fails, including the result object."""
+
+    def __init__(self, message: str, result: Dict[str, Any]):
+        """
+        Initialize exception with message and result object.
+
+        Args:
+            message: Error message
+            result: Result dictionary containing status, data, errors, logs
+        """
+        self.result = result
+        self.message = message
+        # Format the exception message to include the full result
+        full_message = f"{message}\nResult: {json.dumps(result, indent=2)}"
+        super().__init__(full_message)
+
+
 class LogCapturingHandler(logging.Handler):
     """Custom logging handler that captures and prints log records."""
-    
+
     def __init__(self):
         super().__init__()
         self.records = []
-    
+
     def emit(self, record):
         """Capture and print log record."""
         try:
@@ -53,7 +71,7 @@ logging.basicConfig(
 class CLICommand(ABC):
     """
     Base class for all CLI commands.
-    
+
     Provides common functionality for error handling, retry logic, JSON output,
     and logging.
     """
@@ -61,7 +79,7 @@ class CLICommand(ABC):
     def __init__(self, name: str, timeout: int = 300, retries: int = 0):
         """
         Initialize CLI command.
-        
+
         Args:
             name: Command name for logging
             timeout: Timeout in seconds (default: 300)
@@ -77,7 +95,7 @@ class CLICommand(ABC):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute the command.
-        
+
         Returns:
             Dict with keys: status, message, data, errors
         """
@@ -86,7 +104,7 @@ class CLICommand(ABC):
     def run(self, **kwargs) -> int:
         """
         Run the command with retry logic and error handling.
-        
+
         Returns:
             Exit code (0 for success, 1 for failure)
         """
@@ -103,28 +121,38 @@ class CLICommand(ABC):
                     )
                     time.sleep(60)
 
-                self.logger.info(f"Starting {self.name} (attempt {attempt}/{max_attempts})")
-                
+                self.logger.info(
+                    f"Starting {self.name} (attempt {attempt}/{max_attempts})"
+                )
+
                 result = self._execute_with_timeout(**kwargs)
-                
-                self.logger.info(f"Command completed with status: {result.get('status')}")
-                
+
+                self.logger.info(
+                    f"Command completed with status: {result.get('status')}"
+                )
+
                 # Add captured logs to result
                 result["logs"] = self.log_handler.records
-                
+
                 # Output JSON result to stdout
                 print(json.dumps(result, indent=2))
-                
-                if result.get("status") == "success":
-                    return 0
-                else:
-                    # Failure but no exception - exit with 1
-                    return 1
 
+                # Handle successful statuses without raising
+                if result.get("status") in ("success", "no_updates"):
+                    return 0
+
+                # Failure status - raise exception with result
+                raise CLICommandException(
+                    f"Command failed with status: {result.get('status')}", result
+                )
+
+            except CLICommandException:
+                # Re-raise our custom exceptions
+                raise
             except Exception as e:
                 last_error = e
                 self.logger.error(f"Error on attempt {attempt}: {str(e)}")
-                
+
                 if attempt >= max_attempts:
                     # All retries exhausted
                     error_result = {
@@ -135,28 +163,32 @@ class CLICommand(ABC):
                         "logs": self.log_handler.records,
                     }
                     print(json.dumps(error_result, indent=2))
-                    return 1
+                    raise CLICommandException(
+                        f"Command failed after {max_attempts} attempt(s)", error_result
+                    )
 
         return 1
 
     def _execute_with_timeout(self, **kwargs) -> Dict[str, Any]:
         """
         Execute command with timeout enforcement.
-        
+
         Note: Python doesn't have true thread-level timeouts, so this is
         advisory. Tasks should check the timeout and exit gracefully.
         """
         start_time = time.time()
-        
+
         try:
             result = self.execute(**kwargs)
-            
+
             elapsed = time.time() - start_time
             if elapsed > self.timeout:
-                self.logger.warning(f"Timeout exceeded: {elapsed:.1f}s > {self.timeout}s")
-            
+                self.logger.warning(
+                    f"Timeout exceeded: {elapsed:.1f}s > {self.timeout}s"
+                )
+
             return result
-        
+
         except Exception as e:
             raise
 
@@ -172,7 +204,9 @@ class CLICommand(ABC):
         }
 
     @staticmethod
-    def error_result(message: str, errors: Optional[List[str]] = None) -> Dict[str, Any]:
+    def error_result(
+        message: str, errors: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Create an error result."""
         return {
             "status": "error",

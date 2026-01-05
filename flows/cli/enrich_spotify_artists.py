@@ -33,29 +33,33 @@ class EnrichSpotifyArtistsCLI(CLICommand):
     def execute(self, limit: int = None, **kwargs) -> Dict[str, Any]:
         """
         Execute Spotify artist enrichment.
-        
+
         Args:
             limit: Maximum number of artists to enrich
-            
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info(f"Starting Spotify artist enrichment with limit={limit}")
-            
+
             result = self.processor.enrich_artists(limit=limit)
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Enriched {result.get('artists_processed', 0)} artists",
                     data=result,
+                )
+            elif result.get("status") == "no_updates":
+                return self.no_updates_result(
+                    result.get("message", "No artists to process")
                 )
             else:
                 return self.error_result(
                     message="Spotify artist enrichment failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"Spotify artist enrichment error: {str(e)}")
             return self.error_result(
@@ -72,9 +76,9 @@ def main():
         default=None,
         help="Maximum number of artists to enrich",
     )
-    
+
     args = parser.parse_args()
-    
+
     cli = EnrichSpotifyArtistsCLI()
     exit_code = cli.run(limit=args.limit)
     sys.exit(exit_code)

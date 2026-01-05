@@ -33,15 +33,15 @@ class SpotifyIngestionCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute Spotify ingestion.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info(f"Starting Spotify ingestion")
-            
+
             result = self.ingestion.run_ingestion()
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Ingested {result.get('records_ingested', 0)} tracks",
@@ -52,7 +52,7 @@ class SpotifyIngestionCLI(CLICommand):
                     message="Spotify ingestion failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"Spotify ingestion error: {str(e)}")
             return self.error_result(
@@ -62,10 +62,12 @@ class SpotifyIngestionCLI(CLICommand):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Ingest recently played tracks from Spotify")
-    
+    parser = argparse.ArgumentParser(
+        description="Ingest recently played tracks from Spotify"
+    )
+
     args = parser.parse_args()
-    
+
     cli = SpotifyIngestionCLI()
     exit_code = cli.run()
     sys.exit(exit_code)

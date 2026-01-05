@@ -102,7 +102,7 @@ class SpotifyAPIClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Spotify API request failed: {e}")
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 logger.error(f"Response status code: {e.response.status_code}")
                 logger.error(f"Response body: {e.response.text}")
             raise
@@ -143,7 +143,7 @@ class SpotifyAPIClient:
                     sleep(60)  # Longer pause every 10 batches
 
             except Exception as e:
-                logger.error(f"Error fetching artists batch {i}-{i+len(batch)}: {e}")
+                logger.error(f"Error fetching artists batch {i}-{i + len(batch)}: {e}")
                 continue
 
         return results
@@ -169,7 +169,7 @@ class SpotifyAPIClient:
                     sleep(60)  # Longer pause every 5 batches
 
             except Exception as e:
-                logger.error(f"Error fetching albums batch {i}-{i+len(batch)}: {e}")
+                logger.error(f"Error fetching albums batch {i}-{i + len(batch)}: {e}")
                 continue
 
         return results

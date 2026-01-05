@@ -32,21 +32,21 @@ class ValidateDataCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute data validation.
-        
+
         Returns:
             Result dictionary with validation status
         """
         try:
             self.logger.info("Starting data validation")
-            
+
             # Use absolute path for task-runner compatibility
             workspace_dir = Path("/home/runner/workspace")
             if not workspace_dir.exists():
                 workspace_dir = Path.cwd()
             base_path = workspace_dir / "data"
-            
+
             validation_results = {}
-            
+
             # Validate tracks_played table exists and has data
             tracks_path = base_path / "src" / "tracks_played"
             if tracks_path.exists():
@@ -59,7 +59,7 @@ class ValidateDataCLI(CLICommand):
                     "exists": False,
                     "path": str(tracks_path),
                 }
-            
+
             # Check for required enrichment tables
             enrichment_tables = [
                 "spotify_artists",
@@ -70,16 +70,16 @@ class ValidateDataCLI(CLICommand):
                 "mbz_area_hierarchy",
                 "cities_with_lat_long",
             ]
-            
+
             for table in enrichment_tables:
                 table_path = base_path / "src" / table
                 validation_results[table] = {
                     "exists": table_path.exists(),
                     "path": str(table_path),
                 }
-            
+
             all_valid = all(v.get("exists", False) for v in validation_results.values())
-            
+
             if all_valid:
                 return self.success_result(
                     message="All validation checks passed",
@@ -89,7 +89,7 @@ class ValidateDataCLI(CLICommand):
                 return self.no_updates_result(
                     message="Some validation checks failed (data may still be valid)",
                 )
-        
+
         except Exception as e:
             self.logger.error(f"Data validation error: {str(e)}")
             return self.error_result(

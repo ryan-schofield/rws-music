@@ -33,29 +33,33 @@ class EnrichSpotifyAlbumsCLI(CLICommand):
     def execute(self, limit: int = None, **kwargs) -> Dict[str, Any]:
         """
         Execute Spotify album enrichment.
-        
+
         Args:
             limit: Maximum number of albums to enrich
-            
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info(f"Starting Spotify album enrichment with limit={limit}")
-            
+
             result = self.processor.enrich_albums(limit=limit)
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Enriched {result.get('albums_processed', 0)} albums",
                     data=result,
+                )
+            elif result.get("status") == "no_updates":
+                return self.no_updates_result(
+                    result.get("message", "No albums to process")
                 )
             else:
                 return self.error_result(
                     message="Spotify album enrichment failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"Spotify album enrichment error: {str(e)}")
             return self.error_result(
@@ -72,9 +76,9 @@ def main():
         default=None,
         help="Maximum number of albums to enrich",
     )
-    
+
     args = parser.parse_args()
-    
+
     cli = EnrichSpotifyAlbumsCLI()
     exit_code = cli.run(limit=args.limit)
     sys.exit(exit_code)

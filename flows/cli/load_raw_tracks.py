@@ -31,20 +31,20 @@ class LoadRawTracksCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute raw tracks loading.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info("Starting raw tracks data loading")
-            
+
             # Call existing append_tracks logic
             append_tracks_main()
-            
+
             return self.success_result(
                 message="Raw tracks data loaded successfully",
             )
-        
+
         except Exception as e:
             self.logger.error(f"Raw tracks loading error: {str(e)}")
             return self.error_result(

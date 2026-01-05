@@ -32,26 +32,28 @@ class ParseMBZDataCLI(CLICommand):
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
         Execute MusicBrainz data parsing.
-        
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
             self.logger.info("Starting MusicBrainz data parsing")
-            
+
             result = self.processor.parse_artist_json_files()
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Parsed {result.get('artists_processed', 0)} MusicBrainz artist records",
                     data=result,
                 )
+            elif result.get("status") == "no_updates":
+                return self.no_updates_result(result.get("message", "No data to parse"))
             else:
                 return self.error_result(
                     message="MusicBrainz data parsing failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"MusicBrainz data parsing error: {str(e)}")
             return self.error_result(

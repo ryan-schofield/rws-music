@@ -30,38 +30,34 @@ class FetchMBZArtistsCLI(CLICommand):
         )
         self.processor = MusicBrainzProcessor()
 
-    def execute(self, limit: int = None, max_workers: int = 5, **kwargs) -> Dict[str, Any]:
+    def execute(
+        self, limit: int = None, max_workers: int = 5, **kwargs
+    ) -> Dict[str, Any]:
         """
         Execute MusicBrainz artist data fetching.
-        
+
         Args:
             limit: Maximum number of artists to fetch
             max_workers: Number of parallel workers for API calls
-            
+
         Returns:
             Result dictionary with status and metrics
         """
         try:
-            self.logger.info(
-                f"Starting MusicBrainz artist fetch with limit={limit}"
-            )
-            
+            self.logger.info(f"Starting MusicBrainz artist fetch with limit={limit}")
+
             # First discover missing artists
             discovery = self.processor.discover_missing_artists()
             if discovery.get("status") != "success":
-                return self.no_updates_result(
-                    message="No artists found to fetch"
-                )
-            
+                return self.no_updates_result(message="No artists found to fetch")
+
             missing_artists_df = discovery.get("missing_artists")
             if missing_artists_df is None or missing_artists_df.is_empty():
-                return self.no_updates_result(
-                    message="No missing artists to fetch"
-                )
-            
+                return self.no_updates_result(message="No missing artists to fetch")
+
             # Fetch artist data
             result = self.processor.fetch_artist_data(missing_artists_df)
-            
+
             if result.get("status") == "success":
                 return self.success_result(
                     message=f"Fetched {result.get('artists_fetched', 0)} artists from MusicBrainz",
@@ -72,7 +68,7 @@ class FetchMBZArtistsCLI(CLICommand):
                     message="MusicBrainz artist fetch failed",
                     errors=[result.get("message", "Unknown error")],
                 )
-        
+
         except Exception as e:
             self.logger.error(f"MusicBrainz artist fetch error: {str(e)}")
             return self.error_result(
@@ -95,9 +91,9 @@ def main():
         default=5,
         help="Number of parallel workers",
     )
-    
+
     args = parser.parse_args()
-    
+
     cli = FetchMBZArtistsCLI()
     exit_code = cli.run(limit=args.limit, max_workers=args.workers)
     sys.exit(exit_code)

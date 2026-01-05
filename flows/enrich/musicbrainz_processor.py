@@ -327,7 +327,7 @@ class MusicBrainzProcessor:
         musicbrainzngs.set_useragent("rws-music-enrichment", "1.0")
 
         for i, area_id in enumerate(area_ids):
-            logger.info(f"Processing {i+1}/{len(area_ids)}: {area_id}")
+            logger.info(f"Processing {i + 1}/{len(area_ids)}: {area_id}")
             try:
                 areas = self._get_area_with_parents(area_id)
                 all_areas[area_id] = areas

@@ -28,7 +28,7 @@ class ParquetDataWriter:
             if not workspace_dir.exists():
                 workspace_dir = Path.cwd()
             base_path = str(workspace_dir / base_path)
-        
+
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 

@@ -5,12 +5,10 @@ music-tracker:
        type: duckdb
        path: "{{ env_var('DUCKDB_PATH', '../data/music_tracker.duckdb') }}"
        threads: 1
-       extensions:
-         - httpfs
-         - parquet
        settings:
-         memory_limit: 2GB
+         memory_limit: 800MB
          threads: 1
+         max_memory: 800MB
 
      local:
        type: duckdb
