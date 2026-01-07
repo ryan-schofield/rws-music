@@ -58,37 +58,34 @@ services:
 
   # n8n for workflow orchestration
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:2.2.3
     container_name: music-tracker-n8n
     ports:
       - "5678:5678"
     env_file: .env
     environment:
+      # Basic n8n config
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - N8N_SECURE_COOKIE=false
       - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
+      # Execution timeouts
       - EXECUTIONS_TIMEOUT=-1
       - EXECUTIONS_TIMEOUT_MAX=-1
+      # Task runners config
       - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
-      - N8N_RUNNERS=task-runners
-      - N8N_ENABLE_PYTHON=true
-      - N8N_PYTHON_EXECUTION_ENABLED=true
-      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_RUNNER_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_PYTHON_ALLOWED_CODE=*
-      - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
       - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
-      - N8N_RUNNERS_TASK_TIMEOUT=3600 
+      - N8N_RUNNERS_TASK_TIMEOUT=3600
       - N8N_RUNNERS_TASK_MAX_TIMEOUT=3660
+      # Python support and allowed packages
       - PYTHONPATH=/workspace
+      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,python_dateutil,structlog,python_dotenv,dbt
+      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,python_dateutil,structlog,python_dotenv,dbt
     volumes:
       - n8n-data:/home/node/.n8n
       - ./n8n-workflows:/workflows
@@ -110,37 +107,31 @@ services:
     restart: always
     env_file: .env
     environment:
+      # Core n8n runner config
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
-      - DBT_PROFILES_DIR=/workspace/dbt
-      - DUCKDB_PATH=/workspace/data/music_tracker.duckdb
-      - PYTHONPATH=/workspace
-      - N8N_RUNNER=true
-      - N8N_RUNNER_FEATURES=python
-      - N8N_ENABLE_PYTHON=true
-      - N8N_PYTHON_EXECUTION_ENABLED=true
-      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_RUNNER_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_NODES_PYTHON_ALLOWED_PACKAGES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,dateutil,structlog
-      - N8N_PYTHON_ALLOWED_CODE=*
-      - N8N_BLOCK_EXTERNAL_CODE_EXECUTION=false
       - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
       - N8N_RUNNERS_TASK_TIMEOUT=3600 
-      - N8N_RUNNERS_TASK_MAX_TIMEOUT=3660 
+      - N8N_RUNNERS_TASK_MAX_TIMEOUT=3660
+      # Application-specific paths
+      - DBT_PROFILES_DIR=/home/runner/workspace/dbt
+      - DUCKDB_PATH=/home/runner/workspace/data/music_tracker.duckdb
+      - PYTHONPATH=/home/runner/workspace
+      # Spotify credentials
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
       - SPOTIFY_REFRESH_TOKEN=${SPOTIFY_REFRESH_TOKEN}
+      # DuckDB memory limit
       - DUCKDB_MEMORY_LIMIT=800MB
     volumes:
-      - ./.env:/workspace/.env:ro
-      - ./data:/workspace/data
-      - ./flows:/workspace/flows
-      - ./dbt:/workspace/dbt
-      - ./scripts:/workspace/scripts
-      - ./logs:/workspace/logs
-      - ./n8n-workflows:/workspace/n8n-workflows
+      - ./.env:/home/runner/workspace/.env:ro
+      - ./data:/home/runner/workspace/data
+      - ./flows:/home/runner/workspace/flows
+      - ./dbt:/home/runner/workspace/dbt
+      - ./scripts:/home/runner/workspace/scripts
+      - ./logs:/home/runner/workspace/logs
+      - ./n8n-workflows:/home/runner/workspace/n8n-workflows
       - n8n-data:/home/node/.n8n
     networks:
       - music-tracker

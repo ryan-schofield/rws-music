@@ -6,9 +6,9 @@ music-tracker:
        path: "{{ env_var('DUCKDB_PATH', '../data/music_tracker.duckdb') }}"
        threads: 1
        settings:
-         memory_limit: 800MB
+         memory_limit: 256MB
          threads: 1
-         max_memory: 800MB
+         max_memory: 256MB
 
      local:
        type: duckdb

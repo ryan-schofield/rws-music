@@ -1,0 +1,17 @@
+{
+  "task-runners": [
+    {
+      "runner-type": "python",
+      "health-check-server-port": "5682",
+      "workdir": "/home/runner",
+      "command": "/usr/local/bin/python",
+      "args": ["-m", "src.main"],
+      "allowed-env": ["*"],
+      "env-overrides": {
+        "PYTHONPATH": "/opt/runners/task-runner-python:/home/runner/workspace:/usr/local/lib/python3.13/site-packages",
+        "N8N_RUNNERS_STDLIB_ALLOW": "*",
+        "N8N_RUNNERS_EXTERNAL_ALLOW": "*"
+      }
+    }
+  ]
+}
