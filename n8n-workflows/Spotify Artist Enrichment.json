@@ -1,0 +1,164 @@
+{
+  "name": "Spotify Artist Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        96
+      ],
+      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import IdentifyMissingArtistsCLI\nreturn IdentifyMissingArtistsCLI().execute(limit=500, batch_size=50)"
+      },
+      "name": "Identify Missing Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -800,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "notes": "Uses DuckDB to efficiently identify missing artists and create batch plan"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.batches",
+        "options": {}
+      },
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -576,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "59323605-cea2-4a4d-a73c-3e5e0c9830ec",
+      "notes": "Splits the batch plan into individual batch items for parallel processing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import FetchArtistBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\noffset = _item[\"json\"][\"offset\"]\nbatch_size = _item[\"json\"][\"size\"]\n\nreturn FetchArtistBatchCLI().execute(\n    batch_index=batch_index,\n    offset=offset,\n    batch_size=batch_size\n)"
+      },
+      "name": "Fetch Artist Batch",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -352,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "36bfcc15-ae78-409e-988e-cdcad054c344",
+      "notes": "Fetches artist data from Spotify API for this specific batch"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import WriteArtistDataCLI\n\nartist_data = _item[\"json\"][\"data\"][\"artist_data\"]\n\nreturn WriteArtistDataCLI().execute(artist_data=artist_data)"
+      },
+      "name": "Write Artist Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -128,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "94462264-c827-4582-8b2b-5aee64889048",
+      "notes": "Writes artist data to spotify_artists parquet table using merge mode"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import ExtractArtistGenresCLI\n\nartist_data = _item[\"json\"][\"data\"][\"artist_data\"]\n\nreturn ExtractArtistGenresCLI().execute(artist_data=artist_data)"
+      },
+      "name": "Extract Artist Genres",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -128,
+        192
+      ],
+      "typeVersion": 2,
+      "id": "bdcf841a-973b-421e-9b91-d7112a6968c7",
+      "notes": "Extracts genre data and writes to spotify_artist_genre parquet table"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Identify Missing Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Missing Artists": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch Artist Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Artist Batch": {
+      "main": [
+        [
+          {
+            "node": "Write Artist Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Artist Genres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Artist Genres": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "W1j31on099RSbipqouRVm",
+  "tags": []
+}
