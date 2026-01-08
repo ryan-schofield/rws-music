@@ -48,7 +48,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import FetchCoordinateBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\noffset = _item[\"json\"][\"offset\"]\nbatch_size = _item[\"json\"][\"size\"]\n\nreturn FetchCoordinateBatchCLI().execute(\n    batch_index=batch_index,\n    offset=offset,\n    batch_size=batch_size\n)"
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import FetchCoordinateBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\nbatch_size = _item[\"json\"][\"batch_size\"]\noffset = _item[\"json\"][\"offset\"]\n\nreturn FetchCoordinateBatchCLI().execute(\n    batch_index=batch_index,\n    batch_size=batch_size,\n    offset=offset\n)"
       },
       "name": "Fetch Coordinate Batch",
       "type": "n8n-nodes-base.code",
