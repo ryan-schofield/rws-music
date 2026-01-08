@@ -1,0 +1,63 @@
+{
+  "name": "Geography Base Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        96
+      ],
+      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_base import EnrichGeographyBaseCLI\nreturn EnrichGeographyBaseCLI().execute()"
+      },
+      "name": "Enrich Geography Base",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -176,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "notes": "Adds continent information and geocoding parameters to area hierarchy"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Enrich Geography Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Geography Base": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "GeographyBaseEnrichment",
+  "tags": []
+}

@@ -503,6 +503,61 @@ class MusicBrainzProcessor:
 
         return sorted(list(area_ids))
 
+    def track_failed_artists(self, failed_artists: List[Dict]) -> Dict[str, Any]:
+        """
+        Track artists that failed MusicBrainz lookup.
+        
+        Writes failed artist lookups to the mbz_artist_not_found tracking table.
+        
+        Args:
+            failed_artists: List of artist dictionaries that failed lookup
+            
+        Returns:
+            Result with tracking status
+        """
+        try:
+            if not failed_artists:
+                logger.info("No failed artists to track")
+                return {
+                    "status": "no_updates",
+                    "message": "No failed artists to track",
+                }
+
+            logger.info(f"Tracking {len(failed_artists)} failed artists")
+
+            # Create DataFrame from failed artists
+            failed_df = pl.DataFrame(failed_artists)
+
+            # Write to tracking table
+            write_result = self.data_writer.write_table(
+                failed_df, "mbz_artist_not_found", mode="append"
+            )
+
+            if write_result.get("status") == "success":
+                records_written = write_result.get("records_written", len(failed_artists))
+                logger.info(
+                    f"Successfully tracked {records_written} failed artists"
+                )
+                return {
+                    "status": "success",
+                    "message": f"Tracked {records_written} failed artists",
+                    "records_written": records_written,
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Failed to write tracking data",
+                    "error": write_result.get("message", "Unknown error"),
+                }
+
+        except Exception as e:
+            logger.error(f"Error tracking failed artists: {e}")
+            return {
+                "status": "error",
+                "message": f"Failed to track artists: {str(e)}",
+                "error": str(e),
+            }
+
     def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Run the complete MusicBrainz enrichment pipeline.

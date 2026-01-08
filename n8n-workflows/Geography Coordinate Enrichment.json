@@ -1,0 +1,143 @@
+{
+  "name": "Geography Coordinate Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        96
+      ],
+      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import IdentifyCitiesNeedingCoordinatesCLI\nreturn IdentifyCitiesNeedingCoordinatesCLI().execute(limit=500, batch_size=50)"
+      },
+      "name": "Identify Cities Needing Coordinates",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -800,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "notes": "Uses DuckDB to efficiently identify cities needing coordinate lookup and create batch plan"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.batches",
+        "options": {}
+      },
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -576,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "59323605-cea2-4a4d-a73c-3e5e0c9830ec",
+      "notes": "Splits the batch plan into individual batch items for parallel processing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import FetchCoordinateBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\noffset = _item[\"json\"][\"offset\"]\nbatch_size = _item[\"json\"][\"size\"]\n\nreturn FetchCoordinateBatchCLI().execute(\n    batch_index=batch_index,\n    offset=offset,\n    batch_size=batch_size\n)"
+      },
+      "name": "Fetch Coordinate Batch",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -352,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "36bfcc15-ae78-409e-988e-cdcad054c344",
+      "notes": "Fetches coordinates from OpenWeather API for this specific batch"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import WriteCoordinateDataCLI\n\ncoordinate_data = _item[\"json\"][\"data\"][\"coordinate_data\"]\n\nreturn WriteCoordinateDataCLI().execute(coordinate_data=coordinate_data)"
+      },
+      "name": "Write Coordinate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -128,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "94462264-c827-4582-8b2b-5aee64889048",
+      "notes": "Writes coordinate data to cities_with_lat_long parquet table using merge mode"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Identify Cities Needing Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Cities Needing Coordinates": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch Coordinate Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Coordinate Batch": {
+      "main": [
+        [
+          {
+            "node": "Write Coordinate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Coordinate Data": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "GeographyCoordinateEnrichment",
+  "tags": []
+}

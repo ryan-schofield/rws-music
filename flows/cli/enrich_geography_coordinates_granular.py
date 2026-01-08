@@ -159,7 +159,7 @@ class FetchCoordinateBatchCLI(CLICommand):
             )
 
             if result.get("status") == "success":
-                coordinate_count = len(result.get("coordinates", []))
+                coordinate_count = len(result.get("coordinate_data", []))
                 self.logger.info(
                     f"Batch {batch_index} complete: {coordinate_count} coordinates fetched"
                 )
@@ -169,7 +169,7 @@ class FetchCoordinateBatchCLI(CLICommand):
                     data={
                         "batch_index": batch_index,
                         "coordinate_count": coordinate_count,
-                        "coordinates": result.get("coordinates", []),
+                        "coordinate_data": result.get("coordinate_data", []),
                     },
                 )
             else:
@@ -195,7 +195,8 @@ class WriteCoordinateDataCLI(CLICommand):
             timeout=300,  # 5 minutes
             retries=2,
         )
-        self.processor = GeographicProcessor()
+        from flows.enrich.utils.data_writer import ParquetDataWriter
+        self.data_writer = ParquetDataWriter()
 
     def execute(self, coordinate_data: List[Dict], **kwargs) -> Dict[str, Any]:
         """
@@ -216,17 +217,27 @@ class WriteCoordinateDataCLI(CLICommand):
 
             self.logger.info(f"Writing {len(coordinate_data)} coordinates to table")
 
-            result = self.processor.write_coordinates(coordinate_data)
+            # Convert to Polars DataFrame
+            import polars as pl
+            df = pl.DataFrame(coordinate_data)
 
-            if result.get("status") == "success":
+            # Write using merge mode to preserve existing data
+            write_result = self.data_writer.write_table(
+                df, "cities_with_lat_long", mode="merge"
+            )
+
+            if write_result.get("status") == "success":
                 return self.success_result(
                     message=f"Wrote {len(coordinate_data)} coordinates",
-                    data=result,
+                    data={
+                        "records_written": write_result.get("records_written", 0),
+                        "total_written": len(coordinate_data),
+                    },
                 )
             else:
                 return self.error_result(
                     message="Failed to write coordinate data",
-                    errors=[result.get("message", "Unknown error")],
+                    errors=[write_result.get("message", "Unknown error")],
                 )
 
         except Exception as e:

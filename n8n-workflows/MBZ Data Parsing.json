@@ -1,0 +1,63 @@
+{
+  "name": "MBZ Data Parsing",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        96
+      ],
+      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.parse_mbz_data import ParseMBZDataCLI\nreturn ParseMBZDataCLI().execute()"
+      },
+      "name": "Parse MBZ Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -176,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "notes": "Processes cached MusicBrainz JSON files and writes to parquet tables"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Parse MBZ Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse MBZ Data": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "MBZDataParsing",
+  "tags": []
+}
