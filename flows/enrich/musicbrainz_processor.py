@@ -503,6 +503,68 @@ class MusicBrainzProcessor:
 
         return sorted(list(area_ids))
 
+    def fetch_artist_by_isrc(self, isrc: str, artist_id: str, artist_name: str) -> Dict[str, Any]:
+        """
+        Fetch a single artist from MusicBrainz using ISRC lookup.
+        
+        Used by granular fetching in workflows.
+        
+        Args:
+            isrc: ISRC code for track to lookup artist
+            artist_id: Spotify artist ID
+            artist_name: Artist name for logging
+            
+        Returns:
+            Result dictionary with status and message
+        """
+        try:
+            # Get artist MBID using ISRC
+            artist_mbid = self.mbz_client.get_artist_by_isrc(isrc)
+            
+            if not artist_mbid:
+                logger.info(
+                    f"Could not find MBID for artist {artist_name} ({artist_id}) using ISRC {isrc}"
+                )
+                return {
+                    "status": "failed",
+                    "message": f"Could not find MBID for ISRC {isrc}",
+                }
+            
+            # Get full artist data
+            artist_data = self.mbz_client.get_artist_by_id(
+                artist_mbid, includes=["tags", "release-groups", "aliases"]
+            )
+            
+            if not artist_data:
+                logger.info(f"Could not fetch artist data for MBID {artist_mbid}")
+                return {
+                    "status": "failed",
+                    "message": f"Could not fetch data for MBID {artist_mbid}",
+                }
+            
+            # Add Spotify ID to the artist data
+            artist_data["spotify_id"] = artist_id
+            
+            # Save to JSON file
+            json_file = self.cache_dir / f"{artist_mbid}.json"
+            with open(json_file, "w") as f:
+                json.dump(artist_data, f, indent=2, default=str)
+            
+            logger.info(f"Successfully fetched MBZ data for {artist_name}")
+            return {
+                "status": "success",
+                "message": f"Fetched artist {artist_name}",
+                "artist_mbid": artist_mbid,
+                "cache_file": str(json_file),
+            }
+            
+        except Exception as e:
+            logger.error(f"Error fetching artist by ISRC: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Error fetching artist: {str(e)}",
+            }
+
     def track_failed_artists(self, failed_artists: List[Dict]) -> Dict[str, Any]:
         """
         Track artists that failed MusicBrainz lookup.
