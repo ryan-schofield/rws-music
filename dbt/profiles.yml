@@ -3,7 +3,7 @@ music-tracker:
    outputs:
      dev:
        type: duckdb
-       path: "{{ env_var('DUCKDB_PATH', '/home/runner/workspace/data/music_tracker.duckdb') }}"
+       path: "/home/runner/workspace/data/music_tracker.duckdb"
        threads: 1
        settings:
          memory_limit: 256MB
