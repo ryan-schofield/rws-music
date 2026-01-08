@@ -148,12 +148,119 @@ class DuckDBQueryEngine:
 
         return self.execute_query(query)
 
+    def get_missing_mbz_artists(self, limit: Optional[int] = None) -> pl.DataFrame:
+        """
+        Find artists needing MusicBrainz enrichment using DuckDB.
+        
+        Returns artists with ISRCs that don't have MBZ data yet.
+        Filters to last 48 hours of play data.
+        """
+        query = """
+        SELECT DISTINCT
+            tp.artist_id,
+            tp.artist,
+            FIRST(tp.track_isrc) as track_isrc
+        FROM tracks_played tp
+        LEFT JOIN mbz_artist_info mbz ON tp.artist_id = mbz.spotify_id
+        WHERE mbz.spotify_id IS NULL
+          AND tp.track_isrc IS NOT NULL
+          AND tp.artist_id IS NOT NULL
+          AND tp.played_at >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+        GROUP BY tp.artist_id, tp.artist
+        ORDER BY tp.artist
+        """
+        if limit:
+            query += f" LIMIT {limit}"
+        return self.execute_query(query)
+
+    def get_mbz_artists_batch(
+        self, batch_size: int = 10, offset: int = 0
+    ) -> pl.DataFrame:
+        """
+        Get a batch of missing MBZ artists for processing.
+
+        Args:
+            batch_size: Number of artists to return (default 10 for rate limiting)
+            offset: Starting offset for pagination
+            
+        Returns:
+            DataFrame with artist_id, artist, and track_isrc columns
+        """
+        query = f"""
+        SELECT DISTINCT
+            tp.artist_id,
+            tp.artist,
+            FIRST(tp.track_isrc) as track_isrc
+        FROM tracks_played tp
+        LEFT JOIN mbz_artist_info mbz ON tp.artist_id = mbz.spotify_id
+        WHERE mbz.spotify_id IS NULL
+          AND tp.track_isrc IS NOT NULL
+          AND tp.artist_id IS NOT NULL
+          AND tp.played_at >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+        GROUP BY tp.artist_id, tp.artist
+        ORDER BY tp.artist
+        LIMIT {batch_size} OFFSET {offset}
+        """
+        return self.execute_query(query)
+
+    def get_cities_needing_coordinates(self, limit: Optional[int] = None) -> pl.DataFrame:
+        """
+        Find cities that need coordinate lookup using DuckDB.
+        
+        Returns cities with geocoding params that don't have coordinates yet.
+        """
+        query = """
+        SELECT DISTINCT
+            ah.params,
+            ah.city_name,
+            ah.country_code,
+            ah.country_name
+        FROM mbz_area_hierarchy ah
+        LEFT JOIN cities_with_lat_long c ON ah.params = c.params
+        WHERE ah.params IS NOT NULL
+          AND ah.params != ''
+          AND c.params IS NULL
+        ORDER BY ah.city_name
+        """
+        if limit:
+            query += f" LIMIT {limit}"
+        return self.execute_query(query)
+
+    def get_cities_batch(
+        self, batch_size: int = 50, offset: int = 0
+    ) -> pl.DataFrame:
+        """
+        Get a batch of cities needing coordinate lookup.
+
+        Args:
+            batch_size: Number of cities to return (default 50)
+            offset: Starting offset for pagination
+            
+        Returns:
+            DataFrame with params, city_name, country_code, country_name columns
+        """
+        query = f"""
+        SELECT DISTINCT
+            ah.params,
+            ah.city_name,
+            ah.country_code,
+            ah.country_name
+        FROM mbz_area_hierarchy ah
+        LEFT JOIN cities_with_lat_long c ON ah.params = c.params
+        WHERE ah.params IS NOT NULL
+          AND ah.params != ''
+          AND c.params IS NULL
+        ORDER BY ah.city_name
+        LIMIT {batch_size} OFFSET {offset}
+        """
+        return self.execute_query(query)
+
     def get_missing_count(self, entity_type: str = "artists") -> int:
         """
         Get count of missing entities efficiently.
 
         Args:
-            entity_type: Either 'artists' or 'albums'
+            entity_type: 'artists', 'albums', 'mbz_artists', or 'cities'
 
         Returns:
             Count of missing entities
@@ -173,6 +280,25 @@ class DuckDBQueryEngine:
             LEFT JOIN spotify_albums sa ON tp.album_id = sa.album_id
             WHERE tp.album_id IS NOT NULL
               AND sa.album_id IS NULL
+            """
+        elif entity_type == "mbz_artists":
+            query = """
+            SELECT COUNT(DISTINCT tp.artist_id) as count
+            FROM tracks_played tp
+            LEFT JOIN mbz_artist_info mbz ON tp.artist_id = mbz.spotify_id
+            WHERE mbz.spotify_id IS NULL
+              AND tp.track_isrc IS NOT NULL
+              AND tp.artist_id IS NOT NULL
+              AND tp.played_at >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+            """
+        elif entity_type == "cities":
+            query = """
+            SELECT COUNT(DISTINCT ah.params) as count
+            FROM mbz_area_hierarchy ah
+            LEFT JOIN cities_with_lat_long c ON ah.params = c.params
+            WHERE ah.params IS NOT NULL
+              AND ah.params != ''
+              AND c.params IS NULL
             """
         else:
             raise ValueError(f"Unknown entity_type: {entity_type}")
