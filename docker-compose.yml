@@ -47,7 +47,14 @@ services:
       - MB_DB_TYPE=h2
       - MB_DB_FILE=/home/metabase.db
       - MB_PLUGINS_DIR=/home/plugins/
-      - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC
+      - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC
+      # Optimization flags for minimal resource usage
+      - MB_ANALYTICS_ENABLED=false
+      - MB_SEND_ANONYMOUS_USAGE_STATS=false
+      - MB_DB_AUTODETECT_REQUIRES_PASSWORD=false
+      - MB_QUERY_CACHE_MAX_KB=10000
+      - MB_QUERY_DEFAULT_CACHE_TTL_MS=300000
+      - REDISSON_ENABLED=false
     networks:
       - music-tracker
     restart: unless-stopped
