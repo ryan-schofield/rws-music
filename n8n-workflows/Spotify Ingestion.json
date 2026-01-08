@@ -1,0 +1,105 @@
+{
+  "name": "Spotify Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Trigger - Every 30min",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        0,
+        0
+      ],
+      "id": "183e3039-e7e3-4cf0-9341-0ddfa7dd3a8a",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_spotify import SpotifyIngestionCLI\nimport os\nfrom pathlib import Path\n\n# Diagnostic output\nprint(f\"Current working directory: {os.getcwd()}\")\nprint(f\"Files in current dir: {os.listdir('.')}\")\nprint(f\"Absolute path of 'data': {Path('data').absolute()}\")\nprint(f\"Exists? {Path('data').exists()}\")\nprint(f\"PYTHONPATH: {os.getenv('PYTHONPATH')}\")\n\nreturn SpotifyIngestionCLI().execute()"
+      },
+      "name": "Ingest Spotify Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        304,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "70205a37-2d4d-4e23-bcc1-8f8da705de50"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
+      },
+      "name": "Load Raw Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        608,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "dbf5ba91-6c7f-4151-98e3-e37de3771cfb"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.validate_data import ValidateDataCLI\nreturn ValidateDataCLI().execute()"
+      },
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        912,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "e35cad8d-bfec-4718-98b7-c2c6698f53ad"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger - Every 30min": {
+      "main": [
+        [
+          {
+            "node": "Ingest Spotify Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest Spotify Tracks": {
+      "main": [
+        [
+          {
+            "node": "Load Raw Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Raw Tracks": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "17a453a4-b256-4403-aec5-d0b64ce3a053",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "oF0EgDuOnQ5IWIKp",
+  "tags": []
+}

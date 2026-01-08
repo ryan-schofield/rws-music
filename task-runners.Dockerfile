@@ -41,7 +41,8 @@ COPY --from=launcher-source /usr/local/bin/task-runner-launcher /usr/local/bin/t
 # Copy task runner configuration
 COPY n8n-task-runners.json /etc/n8n-task-runners.json
 
-USER runner
+# Run as root to avoid permission issues with Synology volumes
+# USER runner
 WORKDIR /home/runner/workspace
 
 EXPOSE 5682/tcp

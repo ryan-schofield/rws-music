@@ -123,7 +123,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='run')"
+        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build')"
       },
       "name": "Run dbt Build",
       "type": "n8n-nodes-base.code",
@@ -284,7 +284,7 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false

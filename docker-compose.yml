@@ -118,6 +118,7 @@ services:
       - DBT_PROFILES_DIR=/home/runner/workspace/dbt
       - DUCKDB_PATH=/home/runner/workspace/data/music_tracker.duckdb
       - PYTHONPATH=/home/runner/workspace
+      - POLARS_SKIP_CPU_CHECK=1
       # Spotify credentials
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
