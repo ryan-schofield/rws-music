@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1024,
-        96
+        0,
+        0
       ],
-      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "id": "730ccf3f-5e42-443a-a6a6-531491760709",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -22,11 +22,11 @@
       "name": "Identify Missing MBZ Artists",
       "type": "n8n-nodes-base.code",
       "position": [
-        -800,
-        96
+        224,
+        0
       ],
       "typeVersion": 2,
-      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "id": "aa4965a0-9c1e-4d6f-a6e5-4955f764e07e",
       "notes": "Uses DuckDB to efficiently identify missing MBZ artists and create batch plan"
     },
     {
@@ -37,11 +37,11 @@
       "name": "Split Into Batches",
       "type": "n8n-nodes-base.splitOut",
       "position": [
-        -576,
-        96
+        448,
+        0
       ],
       "typeVersion": 1,
-      "id": "59323605-cea2-4a4d-a73c-3e5e0c9830ec",
+      "id": "1c093af7-b08b-49f4-8193-752805c2561d",
       "notes": "Splits the batch plan into individual batch items for parallel processing"
     },
     {
@@ -53,11 +53,11 @@
       "name": "Fetch MBZ Artist Batch",
       "type": "n8n-nodes-base.code",
       "position": [
-        -352,
-        96
+        672,
+        0
       ],
       "typeVersion": 2,
-      "id": "36bfcc15-ae78-409e-988e-cdcad054c344",
+      "id": "ccad4361-aed8-4eae-a30f-1dd711209e6f",
       "notes": "Fetches artist data from MusicBrainz API for this specific batch"
     },
     {
@@ -69,11 +69,11 @@
       "name": "Track MBZ Failures",
       "type": "n8n-nodes-base.code",
       "position": [
-        -128,
-        192
+        896,
+        0
       ],
       "typeVersion": 2,
-      "id": "bdcf841a-973b-421e-9b91-d7112a6968c7",
+      "id": "eab01757-9ab5-4b02-85ed-6e490f445ae0",
       "notes": "Tracks artists that failed MusicBrainz lookup to the tracking table"
     }
   ],
@@ -122,11 +122,6 @@
           }
         ]
       ]
-    },
-    "Track MBZ Failures": {
-      "main": [
-        []
-      ]
     }
   },
   "active": true,
@@ -134,10 +129,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "versionId": "d22648b3-dea8-457b-be17-43cbfc53d1a4",
   "meta": {
     "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
   },
-  "id": "MBZArtistEnrichment",
+  "id": "uG8gCQZ7rkAdczCmSvKCC",
   "tags": []
 }

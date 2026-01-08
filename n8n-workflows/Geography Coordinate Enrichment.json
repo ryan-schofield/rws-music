@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1024,
-        96
+        0,
+        0
       ],
-      "id": "9aa58ef5-95c5-4a71-99ae-47fb61b23bbf",
+      "id": "2ebfee0d-d78d-49a5-a47e-a6cff577c58b",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -22,11 +22,11 @@
       "name": "Identify Cities Needing Coordinates",
       "type": "n8n-nodes-base.code",
       "position": [
-        -800,
-        96
+        224,
+        0
       ],
       "typeVersion": 2,
-      "id": "3d296071-8a49-4e7c-b283-f6442f59f7e4",
+      "id": "0d0b0365-be7c-4ff9-9002-6770ecc5240a",
       "notes": "Uses DuckDB to efficiently identify cities needing coordinate lookup and create batch plan"
     },
     {
@@ -37,11 +37,11 @@
       "name": "Split Into Batches",
       "type": "n8n-nodes-base.splitOut",
       "position": [
-        -576,
-        96
+        448,
+        0
       ],
       "typeVersion": 1,
-      "id": "59323605-cea2-4a4d-a73c-3e5e0c9830ec",
+      "id": "90cd6f67-92fe-41ae-a0b5-abe5332df4c0",
       "notes": "Splits the batch plan into individual batch items for parallel processing"
     },
     {
@@ -53,11 +53,11 @@
       "name": "Fetch Coordinate Batch",
       "type": "n8n-nodes-base.code",
       "position": [
-        -352,
-        96
+        672,
+        0
       ],
       "typeVersion": 2,
-      "id": "36bfcc15-ae78-409e-988e-cdcad054c344",
+      "id": "73f848dd-2601-41a0-aac3-30f095a1e2f0",
       "notes": "Fetches coordinates from OpenWeather API for this specific batch"
     },
     {
@@ -69,11 +69,11 @@
       "name": "Write Coordinate Data",
       "type": "n8n-nodes-base.code",
       "position": [
-        -128,
-        96
+        896,
+        0
       ],
       "typeVersion": 2,
-      "id": "94462264-c827-4582-8b2b-5aee64889048",
+      "id": "3194ac07-17d7-4aa5-ad13-d87e291b0e91",
       "notes": "Writes coordinate data to cities_with_lat_long parquet table using merge mode"
     }
   ],
@@ -122,11 +122,6 @@
           }
         ]
       ]
-    },
-    "Write Coordinate Data": {
-      "main": [
-        []
-      ]
     }
   },
   "active": true,
@@ -134,10 +129,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "750000de-cd53-4c9e-8b37-7fde9187a319",
+  "versionId": "8ae3af44-6a8b-4f3d-8e0f-8ad8c8aebded",
   "meta": {
     "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
   },
-  "id": "GeographyCoordinateEnrichment",
+  "id": "JSwOOALUm8EQcFveF-kKw",
   "tags": []
 }

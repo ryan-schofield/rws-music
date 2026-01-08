@@ -24,6 +24,9 @@ COPY pyproject.toml uv.lock /tmp/
 # Install all Python packages from pyproject.toml using pre-built wheels (fast on Debian)
 RUN uv pip install --system --no-cache-dir -r /tmp/pyproject.toml
 
+# Ensure dbt is accessible (it should be in /usr/local/bin after uv pip install --system)
+RUN which dbt || python -m dbt --version || echo "Warning: dbt not found in expected locations"
+
 # Create runner user
 RUN groupadd -g 1000 runner && \
     useradd -u 1000 -g runner -m -s /bin/bash runner

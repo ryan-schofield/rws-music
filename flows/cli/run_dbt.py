@@ -79,26 +79,52 @@ class RunDBTCLI(CLICommand):
             # First check if dbt is in PATH
             dbt_cmd = shutil.which("dbt")
             if not dbt_cmd:
-                # Check in the n8n task-runner venv
-                venv_dbt = Path("/opt/runners/task-runner-python/.venv/bin/dbt")
-                if venv_dbt.exists():
-                    # Add venv to PATH so shell can find dbt
-                    venv_bin = str(venv_dbt.parent)
-                    existing_path = os.environ.get("PATH", "")
-                    os.environ["PATH"] = f"{venv_bin}:{existing_path}"
-                else:
-                    raise FileNotFoundError(
-                        "dbt executable not found. Checked: system PATH and /opt/runners/task-runner-python/.venv/bin/"
-                    )
+                # Check common installation locations
+                common_paths = [
+                    Path("/usr/local/bin/dbt"),
+                    Path("/opt/runners/task-runner-python/.venv/bin/dbt"),
+                    Path("/usr/bin/dbt"),
+                ]
+                
+                found = False
+                for dbt_path in common_paths:
+                    if dbt_path.exists():
+                        dbt_cmd = str(dbt_path)
+                        self.logger.info(f"Found dbt at: {dbt_cmd}")
+                        found = True
+                        break
+                
+                if not found:
+                    # Last resort: try to import and run as Python module
+                    try:
+                        import dbt
+                        dbt_cmd = "dbt"  # Will work via 'python -m dbt'
+                        self.logger.info("dbt found as Python module")
+                    except ImportError:
+                        raise FileNotFoundError(
+                            "dbt executable not found in PATH, /usr/local/bin, /opt/runners/task-runner-python/.venv/bin/, "
+                            "or as a Python module. Please ensure dbt-core is installed."
+                        )
             
             # Build dbt command as a shell string for simpler execution
-            shell_cmd = f"dbt clean && dbt deps"
+            # Use 'python -m dbt' as fallback if dbt executable isn't found
+            if dbt_cmd and dbt_cmd != "dbt":
+                shell_cmd = f"{dbt_cmd} clean && {dbt_cmd} deps"
+            else:
+                # Use python module syntax which works regardless of installation method
+                shell_cmd = f"python -m dbt clean && python -m dbt deps"
             
             # For 'run' command, need to seed first; 'build' does it automatically
             if command == "run":
-                shell_cmd += " && dbt seed && dbt run"
+                if dbt_cmd and dbt_cmd != "dbt":
+                    shell_cmd += f" && {dbt_cmd} seed && {dbt_cmd} run"
+                else:
+                    shell_cmd += " && python -m dbt seed && python -m dbt run"
             else:
-                shell_cmd += f" && dbt {command}"
+                if dbt_cmd and dbt_cmd != "dbt":
+                    shell_cmd += f" && {dbt_cmd} {command}"
+                else:
+                    shell_cmd += f" && python -m dbt {command}"
             
             if select:
                 shell_cmd += f" --select {select}"
