@@ -178,7 +178,7 @@ class FetchMBZArtistBatchCLI(CLICommand):
                         failed_artists.append({
                             "artist_id": artist_id,
                             "artist": artist_name,
-                            "isrc": isrc,
+                            "track_isrc": isrc,
                             "reason": result.get("message", "Unknown error"),
                         })
                         self.logger.debug(f"Failed to fetch MBZ data for {artist_name}: {result.get('message')}")
@@ -187,7 +187,7 @@ class FetchMBZArtistBatchCLI(CLICommand):
                     failed_artists.append({
                         "artist_id": row["artist_id"],
                         "artist": row["artist"],
-                        "isrc": row.get("track_isrc"),
+                        "track_isrc": row.get("track_isrc"),
                         "reason": str(e),
                     })
                     self.logger.error(f"Error processing artist in batch: {str(e)}")
@@ -248,9 +248,14 @@ class TrackMBZFailuresCLI(CLICommand):
             result = self.processor.track_failed_artists(failed_artists)
 
             if result.get("status") == "success":
+                # Include the list of failed artists in the output data
+                data = {
+                    "summary": result,
+                    "failed_artists": failed_artists
+                }
                 return self.success_result(
                     message=f"Tracked {len(failed_artists)} failed artists",
-                    data=result,
+                    data=data,
                 )
             else:
                 return self.error_result(

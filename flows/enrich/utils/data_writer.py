@@ -94,8 +94,8 @@ class ParquetDataWriter:
             existing_df = pl.read_parquet(existing_files)
             # Align new data schema with existing data
             df = self._align_dataframe_schema(df, existing_df)
-            # Combine with new data
-            combined_df = pl.concat([existing_df, df], how="vertical")
+            # Combine with new data using diagonal concat to support schema evolution
+            combined_df = pl.concat([existing_df, df], how="diagonal")
         else:
             combined_df = df
 
@@ -152,11 +152,11 @@ class ParquetDataWriter:
                 on=merge_keys,
                 how="anti",  # Keep records that don't match
             )
-            # Add new/updated records
-            merged_df = pl.concat([merged_df, df], how="vertical")
+            # Add new/updated records using diagonal concat to support schema evolution
+            merged_df = pl.concat([merged_df, df], how="diagonal")
         else:
             # If no merge keys, just append
-            merged_df = pl.concat([existing_df, df], how="vertical")
+            merged_df = pl.concat([existing_df, df], how="diagonal")
             merged_df = merged_df.unique()
 
         # Write merged data
@@ -299,6 +299,7 @@ class ParquetDataWriter:
             "spotify_artist_genre": ["artist_id", "genre"],
             "mbz_artist_info": ["id"],
             "mbz_area_hierarchy": ["area_id"],
+            "mbz_artist_not_found": ["artist_id", "track_isrc"],
             "cities_with_lat_long": ["params"],
             "tracks_played": ["played_at", "track_id", "user_id"],
         }
