@@ -123,13 +123,15 @@ class FetchAlbumBatchCLI(CLICommand):
                 f"Fetching album batch {batch_index} (offset={offset}, size={batch_size})"
             )
 
-            # Get missing albums using DuckDB
-            missing_albums_df = self.query_engine.get_missing_spotify_albums(limit=batch_size)
+            # Get missing albums using DuckDB with offset
+            missing_albums_df = self.query_engine.get_missing_spotify_albums(
+                limit=batch_size, offset=offset
+            )
 
             if missing_albums_df.is_empty():
                 return self.no_updates_result(f"No albums found at offset {offset}")
 
-            album_ids = missing_albums_df["album_id"].to_list()[offset : offset + batch_size]
+            album_ids = missing_albums_df["album_id"].to_list()
 
             if not album_ids:
                 return self.no_updates_result(f"No albums in range")

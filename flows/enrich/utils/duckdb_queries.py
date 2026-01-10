@@ -79,10 +79,14 @@ class DuckDBQueryEngine:
             logger.error(f"Error executing query: {e}")
             raise
 
-    def get_missing_spotify_artists(self, limit: Optional[int] = None) -> pl.DataFrame:
+    def get_missing_spotify_artists(self, limit: Optional[int] = None, offset: int = 0) -> pl.DataFrame:
         """
         Find Spotify artists that need enrichment using DuckDB.
         Memory-efficient alternative to loading full tables.
+        
+        Args:
+            limit: Maximum number of artists to return
+            offset: Starting offset for pagination
         """
         query = """
         SELECT DISTINCT
@@ -96,13 +100,17 @@ class DuckDBQueryEngine:
         """
 
         if limit:
-            query += f" LIMIT {limit}"
+            query += f" LIMIT {limit} OFFSET {offset}"
 
         return self.execute_query(query)
 
-    def get_missing_spotify_albums(self, limit: Optional[int] = None) -> pl.DataFrame:
+    def get_missing_spotify_albums(self, limit: Optional[int] = None, offset: int = 0) -> pl.DataFrame:
         """
         Find Spotify albums that need enrichment using DuckDB.
+        
+        Args:
+            limit: Maximum number of albums to return
+            offset: Starting offset for pagination
         """
         query = """
         SELECT
@@ -117,7 +125,7 @@ class DuckDBQueryEngine:
         """
 
         if limit:
-            query += f" LIMIT {limit}"
+            query += f" LIMIT {limit} OFFSET {offset}"
 
         return self.execute_query(query)
 
@@ -148,12 +156,16 @@ class DuckDBQueryEngine:
 
         return self.execute_query(query)
 
-    def get_missing_mbz_artists(self, limit: Optional[int] = None) -> pl.DataFrame:
+    def get_missing_mbz_artists(self, limit: Optional[int] = None, offset: int = 0) -> pl.DataFrame:
         """
         Find artists needing MusicBrainz enrichment using DuckDB.
         
         Returns artists with ISRCs that don't have MBZ data yet.
         Filters to last 48 hours of play data.
+        
+        Args:
+            limit: Maximum number of artists to return
+            offset: Starting offset for pagination
         """
         query = """
         SELECT DISTINCT
@@ -170,7 +182,7 @@ class DuckDBQueryEngine:
         ORDER BY tp.artist
         """
         if limit:
-            query += f" LIMIT {limit}"
+            query += f" LIMIT {limit} OFFSET {offset}"
         return self.execute_query(query)
 
     def get_mbz_artists_batch(
@@ -203,11 +215,15 @@ class DuckDBQueryEngine:
         """
         return self.execute_query(query)
 
-    def get_cities_needing_coordinates(self, limit: Optional[int] = None) -> pl.DataFrame:
+    def get_cities_needing_coordinates(self, limit: Optional[int] = None, offset: int = 0) -> pl.DataFrame:
         """
         Find cities that need coordinate lookup using DuckDB.
         
         Returns cities with geocoding params that don't have coordinates yet.
+        
+        Args:
+            limit: Maximum number of cities to return
+            offset: Starting offset for pagination
         """
         query = """
         SELECT DISTINCT
@@ -223,7 +239,7 @@ class DuckDBQueryEngine:
         ORDER BY ah.city_name
         """
         if limit:
-            query += f" LIMIT {limit}"
+            query += f" LIMIT {limit} OFFSET {offset}"
         return self.execute_query(query)
 
     def get_cities_batch(
