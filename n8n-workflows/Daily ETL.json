@@ -77,7 +77,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build')"
+        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build', target='dev')"
       },
       "name": "Run dbt Build",
       "type": "n8n-nodes-base.code",

@@ -8,6 +8,11 @@
 		"ruff.lint.enable": false,
 		"python.analysis.typeCheckingMode": "off",
 		"python.analysis.autoSearchPaths": false,
-		"python.analysis.useLibraryCodeForTypes": false
+		"python.analysis.useLibraryCodeForTypes": false,
+		"dbt.allowListFolders": ["dbt"],
+		"files.associations": {
+			"*.sql": "jinja-sql",
+			"*.yml": "jinja-yaml"
+		},
 	}
 }

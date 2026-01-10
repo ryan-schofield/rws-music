@@ -46,6 +46,7 @@ class RunDBTCLI(CLICommand):
         exclude: str = None,
         full_refresh: bool = False,
         command: str = "build",
+        target: str = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -59,6 +60,7 @@ class RunDBTCLI(CLICommand):
             exclude: dbt models to exclude
             full_refresh: Force full refresh of all models
             command: dbt command to run ('build' or 'run', default: 'build')
+            target: dbt target to use (optional, e.g., 'dev', 'prod')
             
         Returns:
             Result dictionary with status and metrics
@@ -132,6 +134,8 @@ class RunDBTCLI(CLICommand):
                 shell_cmd += f" --exclude {exclude}"
             if full_refresh:
                 shell_cmd += " --full-refresh"
+            if target:
+                shell_cmd += f" --target {target}"
             
             # Prepare environment for subprocess, ensuring HOME is set for DuckDB
             env = os.environ.copy()
@@ -217,6 +221,12 @@ def main():
         choices=["build", "run"],
         help="dbt command to run (default: build)",
     )
+    parser.add_argument(
+        "--target",
+        type=str,
+        default=None,
+        help="dbt target to use (optional, e.g., 'dev', 'prod')",
+    )
     
     args = parser.parse_args()
     
@@ -226,6 +236,7 @@ def main():
         exclude=args.exclude,
         full_refresh=args.full_refresh,
         command=args.command,
+        target=args.target,
     )
     sys.exit(exit_code)
 

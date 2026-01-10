@@ -1,5 +1,5 @@
 music-tracker:
-   target: dev
+   target: local
    outputs:
      dev:
        type: duckdb
@@ -12,7 +12,7 @@ music-tracker:
 
      local:
        type: duckdb
-       path: "../data/music_tracker.duckdb"
+       path: "c:/Users/fffv2/repos/rws-music/data/music_tracker.duckdb"
        threads: 4
        extensions:
          - httpfs
