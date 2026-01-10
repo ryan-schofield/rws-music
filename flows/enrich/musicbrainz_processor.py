@@ -11,6 +11,7 @@ import os
 import sys
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Set
 from pathlib import Path
 import polars as pl
@@ -135,10 +136,11 @@ class MusicBrainzProcessor:
 
         # Store failed artists for tracking
         if artists_failed:
-            failed_df = pl.DataFrame(artists_failed)
-            self.data_writer.write_table(
-                failed_df, "mbz_artist_not_found", mode="merge"
-            )
+            # Add default reason for failures in this context
+            for f in artists_failed:
+                if "reason" not in f:
+                    f["reason"] = "MusicBrainz lookup failed"
+            self.track_failed_artists(artists_failed)
 
         logger.info(
             f"Successfully fetched {artists_fetched} artists, {len(artists_failed)} failed"
@@ -587,23 +589,39 @@ class MusicBrainzProcessor:
 
             logger.info(f"Tracking {len(failed_artists)} failed artists")
 
-            # Create DataFrame from failed artists
-            failed_df = pl.DataFrame(failed_artists)
+            # Standardize schema for mbz_artist_not_found
+            standardized_records = []
+            now = datetime.now(timezone.utc).isoformat()
+            
+            for artist in failed_artists:
+                # Handle both 'isrc' and 'track_isrc'
+                isrc = artist.get("track_isrc") or artist.get("isrc")
+                
+                standardized_records.append({
+                    "artist_id": artist.get("artist_id"),
+                    "artist": artist.get("artist"),
+                    "track_isrc": isrc,
+                    "reason": artist.get("reason", "Unknown failure"),
+                    "failed_at": now
+                })
 
-            # Write to tracking table
+            # Create DataFrame from standardized records
+            failed_df = pl.DataFrame(standardized_records)
+
+            # Write to tracking table using merge to avoid duplicates
             write_result = self.data_writer.write_table(
-                failed_df, "mbz_artist_not_found", mode="append"
+                failed_df, "mbz_artist_not_found", mode="merge"
             )
 
             if write_result.get("status") == "success":
-                records_written = write_result.get("records_written", len(failed_artists))
+                records_processed = write_result.get("records_updated", len(failed_artists))
                 logger.info(
-                    f"Successfully tracked {records_written} failed artists"
+                    f"Successfully tracked {records_processed} failed artists"
                 )
                 return {
                     "status": "success",
-                    "message": f"Tracked {records_written} failed artists",
-                    "records_written": records_written,
+                    "message": f"Tracked {records_processed} failed artists",
+                    "records_processed": records_processed,
                 }
             else:
                 return {
