@@ -1,12 +1,11 @@
 # Docker Compose configuration for music tracking application
 # Optimized for ~2GB RAM deployments with local-only access
 # Memory allocation strategy (rough guide):
-# - Metabase: 600MB (JVM with 512MB heap)
 # - Data Pipeline: 400MB (ETL processing)
 # - n8n: 300MB (UI + orchestration)
 # - n8n task runners: 350MB (Python Code node runtime)
-# - Total: ~1.65GB (within 2GB budget)
-# Local-only access: Metabase on port 3000, n8n on port 5678
+# - Total: ~1.05GB (within 2GB budget)
+# Local-only access: n8n on port 5678
 
 services:
   # Main data processing and dbt service
@@ -30,59 +29,6 @@ services:
     # 400MB max, 250MB reservation for data processing overhead
     mem_limit: 400m
     mem_reservation: 250m
-
-  # Metabase for reporting (uses Debian-based image with DuckDB driver support)
-  metabase:
-    build:
-      context: .
-      dockerfile: metabase.Dockerfile
-    container_name: music-tracker-metabase
-    ports:
-      - "3000:3000"
-    volumes:
-      - metabase-data:/home
-      - ./data:/data
-    env_file: .env
-    environment:
-      - MB_DB_TYPE=h2
-      - MB_DB_FILE=/home/metabase.db
-      - MB_PLUGINS_DIR=/metabase/plugins
-      - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC
-      # Optimization flags for minimal resource usage
-      - MB_ANALYTICS_ENABLED=false
-      - MB_SEND_ANONYMOUS_USAGE_STATS=false
-      - MB_DB_AUTODETECT_REQUIRES_PASSWORD=false
-      - MB_QUERY_CACHE_MAX_KB=10000
-      - MB_QUERY_DEFAULT_CACHE_TTL_MS=300000
-      - REDISSON_ENABLED=false
-      # Disable all unnecessary database drivers to reduce footprint
-      - MB_DB_DISABLE_DRIVERS=mysql,postgres,mongo,sqlite,sqlserver,oracle,presto,druid,crate,bigquery,snowflake,redshift,athena,google-analytics
-      # Disable analytics, surveys, and background features
-      - MB_SURVEYS_ENABLED=false
-      - MB_ANON_TRACKING_ENABLED=false
-      - MB_CHECK_FOR_UPDATES=false
-      - MB_ENABLE_XRAYS=false
-      - MB_LOAD_SAMPLE_CONTENT=false
-      - MB_SHOW_HOMEPAGE_DATA=false
-      - MB_SHOW_HOMEPAGE_XRAYS=false
-      - MB_DEFAULT_MAPS_ENABLED=false
-      - MB_DISABLE_SCHEDULER=true
-      # Optimize thread pools and connection pooling for low-resource environments
-      - MB_INDEX_UPDATE_THREAD_COUNT=1
-      - MB_JETTY_MAXTHREADS=20
-      - MB_JETTY_MINTHREADS=4
-      - MB_APPLICATION_DB_MAX_CONNECTION_POOL_SIZE=5
-      - MB_JDBC_DATA_WAREHOUSE_MAX_CONNECTION_POOL_SIZE=3
-      # Reduce query row limits
-      - MB_AGGREGATED_QUERY_ROW_LIMIT=5000
-      - MB_UNAGGREGATED_QUERY_ROW_LIMIT=1000
-    networks:
-      - music-tracker
-    restart: unless-stopped
-    # Memory limits for 2GB RAM Synology NAS
-    # 800MB max, 600MB reservation provides headroom for JVM overhead
-    mem_limit: 800m
-    mem_reservation: 600m
 
   # n8n for workflow orchestration
   n8n:
@@ -170,7 +116,6 @@ services:
     mem_reservation: 512m
 
 volumes:
-  metabase-data:
   n8n-data:
 
 networks:
