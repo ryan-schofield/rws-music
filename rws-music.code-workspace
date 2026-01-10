@@ -14,5 +14,13 @@
 			"*.sql": "jinja-sql",
 			"*.yml": "jinja-yaml"
 		},
+		"[sql]": {
+			"editor.defaultFormatter": "dorzey.vscode-sqlfluff",
+			"editor.formatOnSave": true
+		},
+		"sqlfluff.dialect": "duckdb",
+		"sqlfluff.executablePath": "C:\\Users\\fffv2\\repos\\rws-music\\.venv\\Scripts\\sqlfluff.exe",
+		"sqlfluff.env.useDotEnvFile": true,
+		"sqlfluff.linter.run": "off"
 	}
 }

@@ -115,6 +115,33 @@ services:
     mem_limit: 1024m
     mem_reservation: 512m
 
+  # Streamlit analytics dashboard
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: streamlit.Dockerfile
+    container_name: music-tracker-streamlit
+    ports:
+      - "8501:8501"
+    env_file: .env
+    environment:
+      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_RUNONSAVE=false
+      - STREAMLIT_CLIENT_TOOLBAR_MODE=viewer
+    volumes:
+      - ./data:/app/data:ro
+      - ./streamlit:/app/streamlit
+    networks:
+      - music-tracker
+    restart: unless-stopped
+    depends_on:
+      - data-pipeline
+    # Memory limits: 250-350MB range, keep minimal
+    mem_limit: 350m
+    mem_reservation: 250m
+
 volumes:
   n8n-data:
 
