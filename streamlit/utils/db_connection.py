@@ -2,6 +2,7 @@
 
 import logging
 import os
+from contextlib import contextmanager
 
 import duckdb
 import polars as pl
@@ -16,16 +17,31 @@ DUCKDB_PATH = os.getenv(
 )
 
 
-@st.cache_resource
+@contextmanager
 def get_duckdb_connection():
-    """Get a cached DuckDB connection to the music tracker database."""
+    """
+    Context manager for DuckDB connections.
+    
+    Creates a fresh connection for each use and ensures it's properly closed,
+    preventing file locks when running with Streamlit.
+    
+    Usage:
+        with get_duckdb_connection() as conn:
+            result = conn.execute(query).pl()
+    """
     try:
         conn = duckdb.connect(str(DUCKDB_PATH), read_only=True)
         logger.info(f"Connected to DuckDB: {DUCKDB_PATH}")
-        return conn
+        yield conn
     except Exception as e:
         logger.error(f"Failed to connect to DuckDB: {e}")
         raise
+    finally:
+        try:
+            conn.close()
+            logger.debug("DuckDB connection closed")
+        except Exception as e:
+            logger.warning(f"Error closing DuckDB connection: {e}")
 
 
 def get_last_24h_tracks():
@@ -39,29 +55,28 @@ def get_last_24h_tracks():
         None if query fails
     """
     try:
-        conn = get_duckdb_connection()
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    user_id,
+                    track_id,
+                    track_name,
+                    artist,
+                    artist_id,
+                    album,
+                    duration_ms,
+                    minutes_played,
+                    played_at,
+                    popularity,
+                    play_source
+                FROM main_dw.recently_played
+                WHERE played_at >= NOW() - INTERVAL 24 HOURS
+                ORDER BY played_at DESC
+            """
 
-        query = """
-            SELECT
-                user_id,
-                track_id,
-                track_name,
-                artist,
-                artist_id,
-                album,
-                duration_ms,
-                minutes_played,
-                played_at,
-                popularity,
-                play_source
-            FROM main_dw.recently_played
-            WHERE played_at >= NOW() - INTERVAL 24 HOURS
-            ORDER BY played_at DESC
-        """
-
-        result = conn.execute(query).pl()
-        logger.info(f"Fetched {len(result)} tracks from last 24 hours")
-        return result
+            result = conn.execute(query).pl()
+            logger.info(f"Fetched {len(result)} tracks from last 24 hours")
+            return result
 
     except Exception as e:
         logger.error(f"Failed to fetch last 24h tracks: {e}")
