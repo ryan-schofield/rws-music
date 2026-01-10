@@ -194,7 +194,7 @@ class SpotifyProcessor:
             processed_albums = []
             for album in album_data:
                 # Extract primary artist information
-                artists = album.get("artists", [])
+                artists = album.get("artists") or []
                 primary_artist = artists[0] if artists else {}
 
                 processed_album = {
@@ -202,7 +202,7 @@ class SpotifyProcessor:
                     "artist_id": primary_artist.get("id"),
                     "artist_name": primary_artist.get("name"),
                     "artist_type": primary_artist.get("type"),
-                    "genres": album.get("genres", []),
+                    "genres": album.get("genres") or [],
                     "album_id": album.get("id"),
                     "label": album.get("label"),
                     "album_name": album.get("name"),
