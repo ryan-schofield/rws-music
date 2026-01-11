@@ -191,7 +191,7 @@ class NavidromeDataIngestion:
                         "duration_ms": additional_info.get("duration_ms"),
                         "played_at": played_at,
                         "popularity": None,
-                        "request_after": ts * 1000,
+                        "request_after": str(ts * 1000),
                         "play_source": "navidrome",
                     }
                 )
