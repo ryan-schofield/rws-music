@@ -1,6 +1,6 @@
 # Music Tracker
 
-A modern, open-source music tracking and analytics platform built with DuckDB, Polars, and Metabase for cost-effective music listening analytics. Optimized for local-only deployment on Synology NAS with 2GB RAM.
+A modern, open-source music tracking and analytics platform built with DuckDB, Polars, n8n, and Streamlit for cost-effective music listening analytics. Optimized for local-only deployment on Synology NAS with 2GB RAM.
 
 ## Overview
 
@@ -15,9 +15,9 @@ This project provides a complete data pipeline for ingesting, processing, and an
 - **📊 DuckDB**: Analytical database for efficient data storage and querying
 - **⚡ Polars**: High-performance DataFrame library for data processing
 - **🔄 n8n**: Workflow orchestration and scheduling
-- **📈 Metabase**: Business intelligence and reporting platform
 - **🐳 Docker**: Containerized deployment with Docker Compose
 - **🛠️ dbt**: Data transformation and modeling
+- **🎨 Streamlit**: Interactive data visualization and analytics dashboards
 
 ### System Components
 
@@ -34,8 +34,7 @@ The application consists of several containerized services:
 
 #### Reporting & Database Services
 - **DuckDB**: Analytical database for data warehousing and analytics (in-app file storage)
-- **Metabase**: Business intelligence platform (port 3000, local-only access)
-- **H2 Database (Metabase)**: Embedded file-based metadata storage (no separate container)
+- **Streamlit**: Interactive analytics dashboards with real-time data visualization (port 8501)
 
 ### Data Architecture
 
@@ -94,6 +93,13 @@ data/
 - **Monitoring**: n8n workflow execution history and logs
 - **Version Control**: Exported workflow JSON files in `n8n-workflows/` directory
 
+### 6. Reporting & Analytics (Streamlit App)
+- **Interactive Dashboards**: Real-time analytics dashboards with filtering and exploration
+- **Time-Series Analysis**: Track listening patterns over time
+- **Artist & Genre Analytics**: Deep dives into artist popularity and genre preferences
+- **Geographic Analysis**: Explore music by artist origin locations
+- **Multi-Page Interface**: Organized analytics pages accessible from sidebar navigation
+
 ## Configuration
 
 ### Environment Variables
@@ -114,8 +120,6 @@ ENVIRONMENT=development  # or production
 DUCKDB_PATH=//home/runner/workspace/data/music_tracker.duckdb
 LOG_LEVEL=INFO
 ```
-
-**Note**: Metabase uses embedded H2 database and n8n stores its data in a dedicated volume.
 
 ### Workflow Configuration
 The system supports environment-specific configuration through CLI scripts and n8n workflow definitions:
@@ -149,7 +153,7 @@ docker compose up -d
 
 3. **Access Applications**:
 - n8n UI: http://localhost:5678
-- Metabase: http://localhost:3000
+- Streamlit Analytics: http://localhost:8501
 
 4. **Deploy n8n Workflows**:
 Deploy workflows using the CLI deployment script:
@@ -162,7 +166,7 @@ Monitor execution in the n8n UI.
 
 1. **Spotify Ingestion**: Runs every 30 minutes to collect new tracks
 2. **Daily ETL**: Processes and enriches data, runs dbt transformations
-3. **Reporting**: Metabase connects to DuckDB for real-time analytics
+3. **Reporting**: Streamlit dashboards connect to DuckDB for real-time analytics
 
 ## Development
 
@@ -178,6 +182,11 @@ Monitor execution in the n8n UI.
 │   ├── models/              # dbt SQL models (staging, intermediate, marts)
 │   ├── macros/              # Reusable SQL macros
 │   └── seeds/               # Reference data
+├── streamlit/               # Interactive analytics dashboards
+│   ├── app.py               # Main Streamlit application
+│   ├── config.py            # Configuration settings
+│   ├── pages/               # Multi-page dashboard definitions
+│   └── utils/               # Database connection and utilities
 ├── data/                    # Data storage and caching
 ├── n8n-workflows/           # n8n workflow JSON exports (version control)
 │   ├── utils/               # Export/import utility scripts
@@ -255,9 +264,9 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
 
 4. **Memory Configuration** (Post-Prefect Migration):
    - n8n: 300MB limit (workflow orchestration)
-   - Metabase: 600MB limit with JVM heap constraints
+   - Streamlit: 200MB limit (analytics dashboards)
    - Data Pipeline: 400MB limit
-   - **Total**: ~1.3GB (700MB freed from Prefect removal)
+   - **Total**: ~900MB (700MB freed from Prefect removal)
 
 5. **Deploy Workflows**:
    - Access n8n UI: `http://<synology-ip>:5678`
@@ -265,15 +274,16 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
    - Workflows will be created and can be monitored in n8n UI
 
 6. **Access Applications**:
-   - Metabase: `http://<synology-ip>:3000` (LAN only)
-   - n8n: `http://<synology-ip>:5678` (LAN only)
+   - Streamlit Analytics: `http://<synology-ip>:8501` (LAN only)
+   - n8n Workflows: `http://<synology-ip>:5678` (LAN only)
    - No external DNS or SSL required for local deployment
 
-6. **Monitoring & Maintenance**:
+7. **Monitoring & Maintenance**:
    - Use Synology Resource Monitor for real-time tracking
    - Set up Container Manager notifications for alerts
    - Configure Hyper Backup for automated data protection
-   - Regularly check memory usage stays under 1.8GB
+   - Regularly check memory usage stays under 1.5GB
+   - Monitor Streamlit app responsiveness and reconnect to DuckDB as needed
 
 **Storage Optimization**:
 - Use SSD cache for DuckDB files if available
@@ -282,19 +292,21 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
 
 **Optional Reverse Proxy**:
 - Set up Synology Reverse Proxy for custom domains on LAN
-- Configure `metabase.yourdomain.local` and `prefect.yourdomain.local`
+- Configure `analytics.yourdomain.local` and `workflows.yourdomain.local`
 - Update hosts files on client devices or use Synology DNS Server
 
 **Performance Tips**:
 - Monitor memory usage during initial data loads
-- Adjust Metabase JVM heap size if queries are slow
+- Streamlit caches queries automatically for better responsiveness
 - Use wired network connection for stability
 - Regularly compact DuckDB database for optimal performance
 - Monitor n8n workflow execution history for job performance
+- Restart Streamlit container if experiencing connection issues to DuckDB
 
 ## Monitoring & Observability
 
 - **n8n UI**: Workflow monitoring, execution history, and scheduling
+- **Streamlit Dashboards**: Real-time data visualization and exploration
 - **CLI Output**: JSON logs from each task execution
 - **Performance Metrics**: Execution timing and resource usage captured in n8n
 - **Health Checks**: Container health monitoring
@@ -302,11 +314,11 @@ For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
 
 ## Resource Requirements
 
-- **Memory**: 2GB RAM minimum (optimized for Synology NAS, typical usage ~1.3GB after Prefect removal)
+- **Memory**: 2GB RAM minimum (optimized for Synology NAS, typical usage ~900MB after Prefect removal)
 - **Storage**: 1GB+ for Docker images and data files
 - **CPU**: 2+ cores recommended for smooth operation
 - **Network**: Local LAN access only (no external/internet exposure required)
-- **Internet**: Required for API calls to Spotify, MusicBrainz, and OpenWeather during data processing
+- **Internet**: Required for API calls to Spotify and MusicBrainz during data processing
 
 ## Contributing
 
