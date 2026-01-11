@@ -169,7 +169,7 @@ class NavidromeDataIngestion:
                 mbid_mapping = track_metadata.get("mbid_mapping", {})
 
                 # Convert Unix timestamp to ISO 8601 format
-                played_at = datetime.utcfromtimestamp(ts).isoformat() + "Z"
+                played_at = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() + "Z"
 
                 # Get artist MBID (first one if multiple)
                 artist_mbids = mbid_mapping.get("artist_mbids", [])
@@ -272,7 +272,7 @@ class NavidromeDataIngestion:
 
             # Update cursor with the last Navidrome track's timestamp
             if data:
-                last_ts = data[-1]["request_after"] // 1000  # Convert from milliseconds to Unix timestamp
+                last_ts = int(data[-1]["request_after"]) // 1000  # Convert from milliseconds to Unix timestamp
                 self.save_cursor(last_ts)
 
             end_time = datetime.now(timezone.utc)
