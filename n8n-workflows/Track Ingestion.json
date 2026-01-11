@@ -16,10 +16,10 @@
       "name": "Trigger - Every 30min",
       "type": "n8n-nodes-base.cron",
       "position": [
-        -320,
-        0
+        0,
+        16
       ],
-      "id": "ae9a6108-7c36-485e-b378-a86e2bde6222",
+      "id": "12f48db4-7ffb-4434-a73e-2d956d2e26a3",
       "typeVersion": 1
     },
     {
@@ -30,11 +30,11 @@
       "name": "Ingest Navidrome Tracks",
       "type": "n8n-nodes-base.code",
       "position": [
-        0,
-        0
+        224,
+        112
       ],
       "typeVersion": 2,
-      "id": "navidrome-1"
+      "id": "72a533a0-42fc-4c80-9a50-4379b0bb6988"
     },
     {
       "parameters": {
@@ -44,11 +44,11 @@
       "name": "Ingest Spotify Tracks",
       "type": "n8n-nodes-base.code",
       "position": [
-        304,
-        0
+        224,
+        -80
       ],
       "typeVersion": 2,
-      "id": "9ba9176e-2687-4d91-a3d9-5fe38d2f86f1"
+      "id": "1006b3fe-2a57-4b5c-be39-cb540b6201bd"
     },
     {
       "parameters": {
@@ -58,11 +58,12 @@
       "name": "Consolidate Tracks",
       "type": "n8n-nodes-base.code",
       "position": [
-        608,
-        0
+        672,
+        16
       ],
       "typeVersion": 2,
-      "id": "consolidate-1"
+      "id": "a547b4b5-059b-4e8e-b98f-e2497fac2ad8",
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -72,11 +73,12 @@
       "name": "Load Raw Tracks",
       "type": "n8n-nodes-base.code",
       "position": [
-        912,
-        0
+        896,
+        16
       ],
       "typeVersion": 2,
-      "id": "5c68f21b-1fa5-427a-a268-d561ec12e4dc"
+      "id": "84ad8a27-2ab8-4e7d-a981-107e4a12e1c4",
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -86,11 +88,23 @@
       "name": "Validate Data",
       "type": "n8n-nodes-base.code",
       "position": [
-        1216,
-        0
+        1120,
+        16
       ],
       "typeVersion": 2,
-      "id": "13fb8dcb-78d2-4a09-8219-2c3f25a00905"
+      "id": "acc0667d-1545-4b81-8e62-6ba79c78fda8",
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        16
+      ],
+      "id": "5ed49929-1e0d-4ed6-b27c-5f41ea1c6a1f",
+      "name": "Merge"
     }
   ],
   "pinData": {},
@@ -102,13 +116,7 @@
             "node": "Ingest Navidrome Tracks",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Ingest Navidrome Tracks": {
-      "main": [
-        [
+          },
           {
             "node": "Ingest Spotify Tracks",
             "type": "main",
@@ -117,11 +125,22 @@
         ]
       ]
     },
+    "Ingest Navidrome Tracks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
     "Ingest Spotify Tracks": {
       "main": [
         [
           {
-            "node": "Consolidate Tracks",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -149,17 +168,28 @@
           }
         ]
       ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "d575ba87-851c-4dbe-ab3a-55bfd72c6139",
+  "versionId": "57c131c6-5bab-44fa-803a-4239537e4e22",
   "meta": {
-    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
   },
-  "id": "dk9jQHRcOELyU2mcpzEad",
+  "id": "H1g77L8RQsIDqVOk_3Igk",
   "tags": []
 }

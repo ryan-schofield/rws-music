@@ -1,64 +1,82 @@
 #!/usr/bin/env python3
 """
-Standalone CLI wrapper for Navidrome API ingestion via ListenBrainz.
+CLI wrapper for Navidrome API ingestion via ListenBrainz.
 
-Ingests recently played tracks from Navidrome (via ListenBrainz) without
-requiring the full CLI framework dependencies.
+Ingests recently played tracks from Navidrome (via ListenBrainz).
 Usage: python flows/cli/ingest_navidrome.py
 """
 
 import sys
-import os
-import json
-import logging
+import argparse
 from pathlib import Path
-from dotenv import load_dotenv
+from typing import Dict, Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# Load .env file from project root - override=True to replace existing env vars
-env_path = project_root / ".env"
-if env_path.exists():
-    load_dotenv(env_path, override=True)
-    print(f"Loaded .env from {env_path} (override=True)")
-else:
-    print(f".env file not found at {env_path}")
+from flows.cli.base import CLICommand
+from flows.ingest.navidrome_api_ingestion import NavidromeDataIngestion
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+
+class NavidromeIngestionCLI(CLICommand):
+    """CLI wrapper for Navidrome ingestion."""
+
+    def __init__(self):
+        super().__init__(
+            name="navidrome_ingestion",
+            timeout=300,  # 5 minutes
+            retries=3,
+        )
+        self.ingestion = NavidromeDataIngestion()
+
+    def execute(self, **kwargs) -> Dict[str, Any]:
+        """
+        Execute Navidrome ingestion via ListenBrainz.
+
+        Returns:
+            Result dictionary with status and metrics
+        """
+        try:
+            self.logger.info("Starting Navidrome ingestion via ListenBrainz")
+
+            result = self.ingestion.run_ingestion()
+
+            if result.get("status") == "success":
+                return self.success_result(
+                    message=f"Ingested {result.get('records_ingested', 0)} tracks",
+                    data=result,
+                )
+            elif result.get("status") == "no_data":
+                return self.success_result(
+                    message="No new data to ingest",
+                    data=result,
+                )
+            else:
+                return self.error_result(
+                    message="Navidrome ingestion failed",
+                    errors=[result.get("message", "Unknown error")],
+                )
+
+        except Exception as e:
+            self.logger.error(f"Navidrome ingestion error: {str(e)}")
+            return self.error_result(
+                message="Navidrome ingestion failed",
+                errors=[str(e)],
+            )
 
 
 def main():
-    """Main entry point."""
-    try:
-        from flows.ingest.navidrome_api_ingestion import NavidromeDataIngestion
+    parser = argparse.ArgumentParser(
+        description="Ingest recently played tracks from Navidrome via ListenBrainz"
+    )
 
-        logger.info("Starting Navidrome ingestion via ListenBrainz")
+    args = parser.parse_args()
 
-        ingestor = NavidromeDataIngestion()
-        result = ingestor.run_ingestion()
-
-        # Print result for logging/monitoring
-        print(json.dumps(result, indent=2, default=str))
-
-        # Exit with appropriate code
-        if result.get("status") == "success" or result.get("status") == "no_data":
-            return 0
-        else:
-            return 1
-
-    except Exception as e:
-        logger.error(f"Navidrome ingestion failed: {e}")
-        error_result = {"status": "error", "message": str(e)}
-        print(json.dumps(error_result, indent=2))
-        return 1
+    cli = NavidromeIngestionCLI()
+    exit_code = cli.run()
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
