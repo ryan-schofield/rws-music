@@ -394,3 +394,153 @@ def get_artists_by_geography(
     except Exception as e:
         logger.error(f"Failed to fetch artists by geography: {e}")
         return None
+
+
+def get_countries():
+    """
+    Get all distinct country codes from the data.
+
+    Returns:
+        List of country codes, sorted alphabetically
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT DISTINCT country_code
+                FROM main_dw.dim_artist
+                WHERE country_code IS NOT NULL AND country_code != ''
+                ORDER BY country_code
+            """
+            result = conn.execute(query).pl()
+            return result["country_code"].to_list()
+
+    except Exception as e:
+        logger.error(f"Failed to fetch countries: {e}")
+        return []
+
+
+def get_tracks_by_year(start_date, end_date, country_code=None):
+    """
+    Get track count by year for selected date range and optional country filter.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        country_code: Optional country code filter
+
+    Returns:
+        DataFrame with columns: year_num, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    dd.year_num,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND da.artist_name IS NOT NULL
+            """
+            params = [start_date, end_date]
+
+            if country_code:
+                query += " AND da.country_code = ?"
+                params.append(country_code)
+
+            query += " GROUP BY dd.year_num ORDER BY dd.year_num ASC"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch tracks by year: {e}")
+        return None
+
+
+def get_tracks_by_hour(start_date, end_date, country_code=None):
+    """
+    Get track count by hour of day for selected date range and optional country filter.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        country_code: Optional country code filter
+
+    Returns:
+        DataFrame with columns: hour_of_day, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    dt.hour_of_day,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                JOIN main_dw.dim_time dt ON ftp.time_sid = dt.time_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND dt.hour_of_day IS NOT NULL
+                    AND da.artist_name IS NOT NULL
+            """
+            params = [start_date, end_date]
+
+            if country_code:
+                query += " AND da.country_code = ?"
+                params.append(country_code)
+
+            query += " GROUP BY dt.hour_of_day ORDER BY dt.hour_of_day ASC"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch tracks by hour: {e}")
+        return None
+
+
+def get_tracks_by_time_of_day(start_date, end_date, country_code=None):
+    """
+    Get track count by time of day period for selected date range and optional country filter.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        country_code: Optional country code filter
+
+    Returns:
+        DataFrame with columns: time_of_day, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    dt.time_of_day,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                JOIN main_dw.dim_time dt ON ftp.time_sid = dt.time_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND dt.hour_of_day IS NOT NULL
+                    AND da.artist_name IS NOT NULL
+            """
+            params = [start_date, end_date]
+
+            if country_code:
+                query += " AND da.country_code = ?"
+                params.append(country_code)
+
+            query += " GROUP BY dt.time_of_day ORDER BY CASE WHEN dt.time_of_day = 'Morning' THEN 1 WHEN dt.time_of_day = 'Afternoon' THEN 2 WHEN dt.time_of_day = 'Evening' THEN 3 WHEN dt.time_of_day = 'Night' THEN 4 ELSE 5 END"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch tracks by time of day: {e}")
+        return None

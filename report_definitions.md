@@ -261,7 +261,7 @@ Explores listening patterns through the lens of musical genres, showing genre di
 **Visual Properties**:
 - Border: Visible
 - Mode: Between (date range)
-- Default Range: 2025-01-01 to 2025-12-21
+- Default Range: Current Year
 - Sort Order: Ascending by date
 
 **Purpose**: Controls the time period for genre analysis.
@@ -368,7 +368,7 @@ Maps listening activity to artist geographic origins, showing regional patterns 
 **Visual Properties**:
 - Border: Visible
 - Mode: Between (date range)
-- Default Range: 2025-01-01 to 2025-12-21
+- Default Range: Current Year
 
 **Purpose**: Controls the time period for geographic analysis.
 
