@@ -61,6 +61,7 @@ def main():
     new_data_frames = []
 
     # Define explicit schema for the DataFrame to handle mixed types
+    # Use Float64 for numeric columns first (handles None gracefully), then cast to Int64
     schema = {
         "user_id": pl.Utf8,
         "track_id": pl.Utf8,
@@ -84,6 +85,12 @@ def main():
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         df = pl.DataFrame(data, schema=schema)
+
+        # Cast numeric columns to Int64 to match parquet schema (None becomes null)
+        df = df.with_columns(
+            pl.col("duration_ms").cast(pl.Int64),
+            pl.col("popularity").cast(pl.Int64),
+        )
 
         # Rename columns to match existing schema (only if they exist)
         rename_mapping = {}
