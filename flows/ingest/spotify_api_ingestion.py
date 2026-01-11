@@ -187,8 +187,28 @@ class SpotifyDataIngestion:
 
         # Convert to Polars DataFrame and remove duplicates
         try:
+            # Define explicit schema to handle mixed types (e.g., None from Navidrome, strings from Spotify)
+            schema = {
+                "user_id": pl.Utf8,
+                "track_id": pl.Utf8,
+                "uri": pl.Utf8,
+                "track_isrc": pl.Utf8,
+                "track_name": pl.Utf8,
+                "album_id": pl.Utf8,
+                "album_uri": pl.Utf8,
+                "album": pl.Utf8,
+                "artist_id": pl.Utf8,
+                "artist_mbid": pl.Utf8,
+                "artist": pl.Utf8,
+                "duration_ms": pl.Float64,  # Use Float64 to handle None values
+                "played_at": pl.Utf8,
+                "popularity": pl.Float64,  # Use Float64 to handle None values
+                "request_after": pl.Utf8,
+                "play_source": pl.Utf8,
+            }
+
             logger.info(f"Converting {len(all_data)} records to DataFrame")
-            df = pl.DataFrame(all_data)
+            df = pl.DataFrame(all_data, schema=schema)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
             # Use strict=False to handle parsing errors gracefully
