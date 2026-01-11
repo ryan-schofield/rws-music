@@ -21,10 +21,10 @@ DUCKDB_PATH = os.getenv(
 def get_duckdb_connection():
     """
     Context manager for DuckDB connections.
-    
+
     Creates a fresh connection for each use and ensures it's properly closed,
     preventing file locks when running with Streamlit.
-    
+
     Usage:
         with get_duckdb_connection() as conn:
             result = conn.execute(query).pl()
@@ -102,7 +102,7 @@ def get_artist_aggregates(df):
             df.group_by(["artist", "artist_id"])
             .agg(
                 pl.col("minutes_played").sum().alias("total_minutes"),
-                pl.col("track_id").count().alias("track_count")
+                pl.col("track_id").count().alias("track_count"),
             )
             .sort("total_minutes", descending=True)
         )
@@ -132,7 +132,9 @@ def get_tracks_for_artist(df, artist: str):
     try:
         result = (
             df.filter(pl.col("artist") == artist)
-            .select(["track_name", "album", "minutes_played", "played_at", "popularity"])
+            .select(
+                ["track_name", "album", "minutes_played", "played_at", "popularity"]
+            )
             .sort("played_at", descending=True)
         )
         return result
@@ -140,3 +142,255 @@ def get_tracks_for_artist(df, artist: str):
     except Exception as e:
         logger.error(f"Failed to get tracks for artist {artist}: {e}")
         return pl.DataFrame()
+
+
+def get_geographic_data(start_date, end_date):
+    """
+    Fetch tracks played within a date range with geographic and artist data.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+
+    Returns:
+        DataFrame with columns: artist_name, continent, country, state_province, city,
+                                lat, longitude, primary_genre, track_count
+        None if query fails
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    da.artist_name,
+                    da.continent,
+                    da.country,
+                    da.state_province,
+                    da.city,
+                    da.lat,
+                    da.longitude,
+                    da.primary_genre,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND da.country IS NOT NULL
+                GROUP BY da.artist_sid, da.artist_name, da.continent, da.country,
+                         da.state_province, da.city, da.lat, da.longitude, da.primary_genre
+                ORDER BY track_count DESC
+            """
+
+            result = conn.execute(query, [start_date, end_date]).pl()
+            logger.info(
+                f"Fetched {len(result)} artist-location records between {start_date} and {end_date}"
+            )
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch geographic data: {e}")
+        return None
+
+
+def get_continents():
+    """
+    Get all distinct continents from the data.
+
+    Returns:
+        List of continent names, sorted alphabetically
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT DISTINCT continent
+                FROM main_dw.dim_artist
+                WHERE continent IS NOT NULL AND continent != ''
+                ORDER BY continent
+            """
+            result = conn.execute(query).pl()
+            return result["continent"].to_list()
+
+    except Exception as e:
+        logger.error(f"Failed to fetch continents: {e}")
+        return []
+
+
+def get_countries_for_continents(continents):
+    """
+    Get countries filtered by selected continents.
+
+    Args:
+        continents: List of continent names
+
+    Returns:
+        List of country names, sorted alphabetically
+    """
+    if not continents:
+        return []
+
+    try:
+        with get_duckdb_connection() as conn:
+            # Create placeholder string
+            placeholders = ",".join(["?" for _ in continents])
+            query = f"""
+                SELECT DISTINCT country
+                FROM main_dw.dim_artist
+                WHERE continent IN ({placeholders})
+                    AND country IS NOT NULL
+                    AND country != ''
+                ORDER BY country
+            """
+            result = conn.execute(query, continents).pl()
+            return result["country"].to_list()
+
+    except Exception as e:
+        logger.error(f"Failed to fetch countries: {e}")
+        return []
+
+
+def get_track_count_by_geography(
+    start_date, end_date, continents=None, countries=None, genres=None
+):
+    """
+    Get total track count for selected geography and date range.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        continents: List of continent names (optional)
+        countries: List of country names (optional)
+        genres: List of genre names (optional)
+
+    Returns:
+        Integer count of tracks
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = 'SELECT COUNT(ftp.track_sid) as track_count FROM main_dw.fact_track_played ftp JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid WHERE dd."date" >= ? AND dd."date" <= ?'
+            params = [start_date, end_date]
+
+            if continents:
+                placeholders = ",".join(["?" for _ in continents])
+                query += f" AND da.continent IN ({placeholders})"
+                params.extend(continents)
+
+            if countries:
+                placeholders = ",".join(["?" for _ in countries])
+                query += f" AND da.country IN ({placeholders})"
+                params.extend(countries)
+
+            if genres:
+                placeholders = ",".join(["?" for _ in genres])
+                query += f" AND da.primary_genre IN ({placeholders})"
+                params.extend(genres)
+
+            result = conn.execute(query, params).pl()
+            return result["track_count"][0]
+
+    except Exception as e:
+        logger.error(f"Failed to fetch track count: {e}")
+        return 0
+
+
+def get_genre_distribution(start_date, end_date, continents=None, countries=None):
+    """
+    Get genre distribution for selected geography and date range (top 20).
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        continents: List of continent names (optional)
+        countries: List of country names (optional)
+
+    Returns:
+        DataFrame with columns: primary_genre, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    da.primary_genre,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND da.primary_genre IS NOT NULL
+                    AND da.primary_genre != 'no genre defined'
+            """
+            params = [start_date, end_date]
+
+            if continents:
+                placeholders = ",".join(["?" for _ in continents])
+                query += f" AND da.continent IN ({placeholders})"
+                params.extend(continents)
+
+            if countries:
+                placeholders = ",".join(["?" for _ in countries])
+                query += f" AND da.country IN ({placeholders})"
+                params.extend(countries)
+
+            query += " GROUP BY da.primary_genre ORDER BY track_count DESC LIMIT 20"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch genre distribution: {e}")
+        return None
+
+
+def get_artists_by_geography(
+    start_date, end_date, continents=None, countries=None, genres=None
+):
+    """
+    Get artists ranked by track count for selected filters (top 25).
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        continents: List of continent names (optional)
+        countries: List of country names (optional)
+        genres: List of genre names (optional)
+
+    Returns:
+        DataFrame with columns: artist_name, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    da.artist_name,
+                    COUNT(ftp.track_sid) as track_count
+                FROM main_dw.fact_track_played ftp
+                JOIN main_dw.dim_artist da ON ftp.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON ftp.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+            """
+            params = [start_date, end_date]
+
+            if continents:
+                placeholders = ",".join(["?" for _ in continents])
+                query += f" AND da.continent IN ({placeholders})"
+                params.extend(continents)
+
+            if countries:
+                placeholders = ",".join(["?" for _ in countries])
+                query += f" AND da.country IN ({placeholders})"
+                params.extend(countries)
+
+            if genres:
+                placeholders = ",".join(["?" for _ in genres])
+                query += f" AND da.primary_genre IN ({placeholders})"
+                params.extend(genres)
+
+            query += " GROUP BY da.artist_sid, da.artist_name ORDER BY track_count DESC LIMIT 25"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch artists by geography: {e}")
+        return None

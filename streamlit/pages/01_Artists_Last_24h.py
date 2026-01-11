@@ -45,6 +45,15 @@ st.markdown(
     [data-testid="stMetricLabel"] {
         font-size: 0.9rem;
     }
+    /* Reduce top margin/padding */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+    }
+    h1 {
+        padding-top: 0rem;
+        margin-top: 0rem;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -77,7 +86,6 @@ def refresh_data():
 
             st.session_state.tracks_data = data
             st.session_state.last_refresh = datetime.now()
-            st.success("✅ Data refreshed successfully")
         except Exception as e:
             st.error(f"❌ Failed to load data: {e}")
             logger.error(f"Data refresh failed: {e}", exc_info=True)
@@ -166,7 +174,7 @@ def display_artists_chart(data):
         xaxis_title="Minutes Played",
         yaxis_title="",
         height=500,
-        margin=dict(l=200, r=50, t=50, b=50),
+        margin=dict(l=200, r=50, t=30, b=50),
         hovermode="closest",
         plot_bgcolor="rgba(240, 240, 240, 0.5)",
         paper_bgcolor="white",
@@ -196,9 +204,9 @@ def display_artists_chart(data):
 
         if len(artist_tracks) > 0:
             # Display artist info
-            artist_stats = artist_data.filter(
-                pl.col("artist") == selected_artist
-            ).row(0, named=True)
+            artist_stats = artist_data.filter(pl.col("artist") == selected_artist).row(
+                0, named=True
+            )
             total_min, track_count = (
                 artist_stats["total_minutes"],
                 artist_stats["track_count"],
@@ -217,18 +225,20 @@ def display_artists_chart(data):
             st.markdown(f"#### Tracks by {selected_artist}")
 
             # Format for display
-            display_df = artist_tracks[
-                ["track_name", "album", "minutes_played", "played_at", "popularity"]
-            ].rename(
-                {
-                    "track_name": "Track",
-                    "album": "Album",
-                    "minutes_played": "Minutes",
-                    "played_at": "Played At",
-                    "popularity": "Popularity",
-                }
-            ).with_columns(
-                pl.col("Minutes").round(2)
+            display_df = (
+                artist_tracks[
+                    ["track_name", "album", "minutes_played", "played_at", "popularity"]
+                ]
+                .rename(
+                    {
+                        "track_name": "Track",
+                        "album": "Album",
+                        "minutes_played": "Minutes",
+                        "played_at": "Played At",
+                        "popularity": "Popularity",
+                    }
+                )
+                .with_columns(pl.col("Minutes").round(2))
             )
 
             st.dataframe(
