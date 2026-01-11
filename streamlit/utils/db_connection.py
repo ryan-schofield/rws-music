@@ -544,3 +544,183 @@ def get_tracks_by_time_of_day(start_date, end_date, country_code=None):
     except Exception as e:
         logger.error(f"Failed to fetch tracks by time of day: {e}")
         return None
+
+
+def get_genres():
+    """
+    Get all distinct genres from the data.
+
+    Returns:
+        List of genre names, sorted alphabetically
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT DISTINCT genre
+                FROM main_dw.dim_artist_genre
+                WHERE genre IS NOT NULL
+                    AND genre != ''
+                    AND genre != 'no genre defined'
+                ORDER BY genre
+            """
+            result = conn.execute(query).pl()
+            return result["genre"].to_list()
+
+    except Exception as e:
+        logger.error(f"Failed to fetch genres: {e}")
+        return []
+
+
+def get_tracks_by_year_and_genre(start_date, end_date, genres=None):
+    """
+    Get track count by year for selected date range and optional genre filter.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        genres: Optional list of genre names to filter
+
+    Returns:
+        DataFrame with columns: year_num, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    dd.year_num,
+                    COUNT(fag.track_sid) as track_count
+                FROM main_dw.fact_artist_genre fag
+                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND dag.genre IS NOT NULL
+                    AND dag.genre != 'no genre defined'
+            """
+            params = [start_date, end_date]
+
+            if genres:
+                placeholders = ",".join(["?" for _ in genres])
+                query += f" AND dag.genre IN ({placeholders})"
+                params.extend(genres)
+
+            query += " GROUP BY dd.year_num ORDER BY dd.year_num ASC"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch tracks by year and genre: {e}")
+        return None
+
+
+def get_genre_distribution_for_analysis(start_date, end_date, genres=None):
+    """
+    Get genre distribution for genre analysis page (top 25).
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        genres: Optional list of genre names to filter
+
+    Returns:
+        DataFrame with columns: genre, track_count, top_artist, most_popular_artist
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            # Get genre counts and pre-calculated artist info from dim_artist_genre
+            query = """
+                SELECT
+                    dag.genre,
+                    COUNT(fag.track_sid) as track_count,
+                    dag.top_artist_in_genre as top_artist,
+                    dag.most_popular_artist_in_genre as most_popular_artist
+                FROM main_dw.fact_artist_genre fag
+                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND dag.genre IS NOT NULL
+                    AND dag.genre != 'no genre defined'
+            """
+            params = [start_date, end_date]
+
+            if genres:
+                placeholders = ",".join(["?" for _ in genres])
+                query += f" AND dag.genre IN ({placeholders})"
+                params.extend(genres)
+
+            query += " GROUP BY dag.genre, dag.top_artist_in_genre, dag.most_popular_artist_in_genre ORDER BY track_count DESC LIMIT 25"
+
+            result = conn.execute(query, params).pl()
+            logger.debug(
+                f"Genre distribution query result shape: {result.shape if result is not None else 'None'}"
+            )
+            logger.debug(
+                f"Genre distribution query result columns: {result.columns if result is not None else 'None'}"
+            )
+            if result is not None and len(result) > 0:
+                logger.debug(f"First row: {result.row(0)}")
+            logger.info(
+                f"Fetched {len(result) if result is not None and not result.is_empty() else 0} genres for analysis"
+            )
+
+            return result
+
+    except Exception as e:
+        logger.error(
+            f"Failed to fetch genre distribution for analysis: {e}", exc_info=True
+        )
+        return None
+
+
+def get_artists_by_genre(
+    start_date, end_date, selected_genres=None, selected_years=None
+):
+    """
+    Get artists ranked by track count within selected genres and years.
+
+    Args:
+        start_date: Start date (datetime)
+        end_date: End date (datetime)
+        selected_genres: Optional list of genre names to filter (top 25)
+        selected_years: Optional list of year numbers to filter
+
+    Returns:
+        DataFrame with columns: artist_name, track_count
+    """
+    try:
+        with get_duckdb_connection() as conn:
+            query = """
+                SELECT
+                    da.artist_name,
+                    COUNT(fag.track_sid) as track_count
+                FROM main_dw.fact_artist_genre fag
+                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_artist da ON fag.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                WHERE dd."date" >= ?
+                    AND dd."date" <= ?
+                    AND dag.genre IS NOT NULL
+                    AND dag.genre != 'no genre defined'
+            """
+            params = [start_date, end_date]
+
+            if selected_genres:
+                placeholders = ",".join(["?" for _ in selected_genres])
+                query += f" AND dag.genre IN ({placeholders})"
+                params.extend(selected_genres)
+
+            if selected_years:
+                placeholders = ",".join(["?" for _ in selected_years])
+                query += f" AND dd.year_num IN ({placeholders})"
+                params.extend(selected_years)
+
+            query += " GROUP BY da.artist_sid, da.artist_name ORDER BY track_count DESC LIMIT 25"
+
+            result = conn.execute(query, params).pl()
+            return result
+
+    except Exception as e:
+        logger.error(f"Failed to fetch artists by genre: {e}")
+        return None

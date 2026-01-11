@@ -282,7 +282,7 @@ def display_geographic_map(data, continents, countries, genres):
             hovermode="closest",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display geographic map: {e}")
@@ -330,7 +330,7 @@ def display_genre_treemap(start_date, end_date, continents, countries, genres):
             margin=dict(l=10, r=10, t=30, b=10),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display genre treemap: {e}")
@@ -399,7 +399,7 @@ def display_artists_chart(start_date, end_date, continents, countries, genres):
         fig.update_yaxes(autorange="reversed", tickfont=dict(color="black", size=11))
         fig.update_xaxes(tickfont=dict(color="black", size=11))
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display artists chart: {e}")
@@ -408,13 +408,13 @@ def display_artists_chart(start_date, end_date, continents, countries, genres):
 
 def main():
     """Main app logic."""
-    st.title("Geographic Analysis Report")
+    st.title("Geographic Analysis")
 
     # Sidebar controls
     with st.sidebar:
         st.markdown("### Controls")
 
-        if st.button("🔄 Refresh Data", use_container_width=True):
+        if st.button("🔄 Refresh Data", width="stretch"):
             refresh_data(st.session_state.start_date, st.session_state.end_date)
 
         st.markdown("---")

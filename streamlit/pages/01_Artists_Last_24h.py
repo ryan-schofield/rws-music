@@ -185,7 +185,7 @@ def display_artists_chart(data):
     fig.update_yaxes(autorange="reversed", tickfont=dict(color="black", size=11))
     fig.update_xaxes(tickfont=dict(color="black", size=11))
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Artist details modal
     st.markdown("---")
@@ -243,18 +243,18 @@ def display_artists_chart(data):
 
             st.dataframe(
                 display_df,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
 
 def main():
     """Main app logic."""
-    st.title("Artists Last 24 Hours Report")
+    st.title("Artists Last 24 Hours")
     # Sidebar with refresh button
     with st.sidebar:
         st.markdown("### Controls")
-        if st.button("🔄 Refresh Data", use_container_width=True):
+        if st.button("🔄 Refresh Data", width="stretch"):
             refresh_data()
 
         st.markdown("---")

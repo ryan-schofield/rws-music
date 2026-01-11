@@ -147,7 +147,7 @@ def display_tracks_by_year_chart(start_date, end_date, country_code):
             yaxis=dict(type="category"),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display tracks by year chart: {e}")
@@ -187,7 +187,7 @@ def display_tracks_by_hour_chart(start_date, end_date, country_code):
             xaxis=dict(type="category"),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display tracks by hour chart: {e}")
@@ -233,7 +233,7 @@ def display_tracks_by_time_of_day_chart(start_date, end_date, country_code):
             xaxis=dict(type="category"),
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         logger.error(f"Failed to display tracks by time of day chart: {e}")
@@ -242,7 +242,7 @@ def display_tracks_by_time_of_day_chart(start_date, end_date, country_code):
 
 def main():
     """Main app logic."""
-    st.title("Time of Day Analysis Report")
+    st.title("Time of Day Analysis")
 
     # Sidebar info
     with st.sidebar:
