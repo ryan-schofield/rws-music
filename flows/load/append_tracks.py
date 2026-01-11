@@ -44,8 +44,11 @@ def harmonize_dataframe_schemas(dataframes):
 
 
 def main():
-    # Define paths
-    base_path = Path("data")
+    # Define paths using absolute path for task-runner compatibility
+    workspace_dir = Path("/home/runner/workspace")
+    if not workspace_dir.exists():
+        workspace_dir = Path.cwd()
+    base_path = workspace_dir / "data"
     detail_path = base_path / "raw" / "recently_played" / "detail"
     src_tracks_path = base_path / "src" / "tracks_played"
     processed_path = base_path / "raw" / "recently_played" / "processed"
@@ -61,15 +64,24 @@ def main():
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         df = pl.DataFrame(data)
-        # Rename columns to match existing schema
-        df = df.rename({"uri": "track_uri", "request_after": "request_cursor"})
-        # Cast played_at to datetime
-        df = df.with_columns(
-            pl.col("played_at")
-            .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.3fZ")
-            .dt.replace_time_zone("UTC")
-            .dt.cast_time_unit("us")
-        )
+
+        # Rename columns to match existing schema (only if they exist)
+        rename_mapping = {}
+        if "uri" in df.columns:
+            rename_mapping["uri"] = "track_uri"
+        if "request_after" in df.columns:
+            rename_mapping["request_after"] = "request_cursor"
+        if rename_mapping:
+            df = df.rename(rename_mapping)
+
+        # Cast played_at to datetime (only if it exists)
+        if "played_at" in df.columns:
+            df = df.with_columns(
+                pl.col("played_at")
+                .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.3fZ")
+                .dt.replace_time_zone("UTC")
+                .dt.cast_time_unit("us")
+            )
         new_data_frames.append(df)
 
     if new_data_frames:

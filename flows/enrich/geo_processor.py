@@ -415,6 +415,147 @@ class GeographicProcessor:
         else:
             return {"status": "no_updates", "message": "No coordinate data to write"}
 
+    def enrich_base(self) -> Dict[str, Any]:
+        """
+        Add continent and geocoding params only (no API calls).
+        
+        This is a lightweight enrichment that doesn't require external API access.
+        Designed for use in a separate workflow step.
+        
+        Returns:
+            Combined result from continent enrichment and parameter addition
+        """
+        logger.info("Starting base geography enrichment (continents + params only)")
+
+        results = {
+            "continent_enrichment": None,
+            "parameter_addition": None,
+            "overall_status": "success",
+        }
+
+        try:
+            # Step 1: Add continent information
+            logger.info("Step 1: Starting continent enrichment")
+            continent_result = self.enrich_continents()
+            results["continent_enrichment"] = continent_result
+            logger.info(
+                f"Continent enrichment result: {continent_result.get('status', 'unknown')}"
+            )
+
+            if continent_result["status"] not in ["success", "no_updates"]:
+                results["overall_status"] = "partial_failure"
+                logger.warning(
+                    f"Continent enrichment failed with status: {continent_result.get('status')}"
+                )
+
+            # Step 2: Add geocoding parameters
+            logger.info("Step 2: Adding geocoding parameters")
+            params_result = self.add_geocoding_params()
+            results["parameter_addition"] = params_result
+            logger.info(
+                f"Parameter addition result: {params_result.get('status', 'unknown')}"
+            )
+
+            if params_result["status"] not in ["success", "no_updates"]:
+                results["overall_status"] = "partial_failure"
+                logger.warning(
+                    f"Parameter addition failed with status: {params_result.get('status')}"
+                )
+
+            logger.info(
+                f"Base geography enrichment completed with overall status: {results['overall_status']}"
+            )
+            results["status"] = results[
+                "overall_status"
+            ]  # Add status field for compatibility
+            return results
+
+        except Exception as e:
+            logger.error(
+                f"Base geography enrichment failed with exception: {e}", exc_info=True
+            )
+            results["overall_status"] = "error"
+            results["status"] = "error"  # Also set status for compatibility
+            results["message"] = f"Base geography enrichment failed: {str(e)}"
+            results["error_message"] = str(e)
+            results["error_type"] = type(e).__name__
+            return results
+
+    def enrich_coordinates_batch(self, city_params: List[str]) -> Dict[str, Any]:
+        """
+        Enrich coordinates for a specific batch of cities.
+        
+        This is designed to be called by granular workflow batching logic,
+        processing only the provided city parameters.
+        
+        Args:
+            city_params: List of geocoding param strings to process
+            
+        Returns:
+            Result with coordinate data ready for writing
+        """
+        logger.info(f"Starting coordinate enrichment for batch of {len(city_params)} cities")
+
+        # Check if API key is available
+        if not self.has_api_key:
+            logger.info(
+                "OpenWeather API key not available - skipping coordinate enrichment"
+            )
+            return {"status": "skipped", "message": "OpenWeather API key not available", "coordinate_data": []}
+
+        if not city_params:
+            logger.info("No city parameters provided for coordinate enrichment")
+            return {"status": "no_updates", "message": "No city parameters provided", "coordinate_data": []}
+
+        logger.info(f"Looking up coordinates for {len(city_params)} locations")
+
+        # Parse parameters into structured data (simplified version)
+        recs = []
+        for p in city_params:
+            if not p:
+                continue
+
+            d = {}
+            split_vals = p.split(",")
+            d["city_name"] = split_vals[0] if len(split_vals) > 0 else ""
+            d["state_code"] = ""
+            d["country_code"] = split_vals[-1] if len(split_vals) > 1 else ""
+            d["params"] = p
+
+            if len(split_vals) == 3:
+                d["state_code"] = split_vals[1]
+            recs.append(d)
+
+        logger.info(f"Parsed {len(recs)} location parameters")
+
+        # Get coordinates from OpenWeather API
+        for rec in recs:
+            q = rec.get("params")
+            if not q:
+                continue
+
+            coords = self.geo_client.get_coordinates(q)
+            if coords:
+                rec["lat"] = str(coords.get("lat"))
+                rec["long"] = str(coords.get("long"))
+
+        enriched_records = recs
+
+        successful_lookups = sum(
+            1 for r in enriched_records if "lat" in r and r.get("lat") is not None
+        )
+
+        logger.info(
+            f"Successfully looked up coordinates for {successful_lookups}/{len(enriched_records)} locations"
+        )
+
+        return {
+            "status": "success" if enriched_records else "no_updates",
+            "locations_processed": len(enriched_records),
+            "successful_lookups": successful_lookups,
+            "coordinate_data": enriched_records,
+        }
+
     def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Run the complete geographic enrichment pipeline.

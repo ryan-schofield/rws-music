@@ -57,6 +57,7 @@ docs/
 .python-version
 .sqlfluff
 requirements.txt
+*.code-workspace
 
 # dbt artifacts (will be generated in container)
 dbt/logs/

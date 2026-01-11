@@ -1,0 +1,138 @@
+{
+  "name": "MBZ Artist Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b46c1fa7-134e-47d7-a5f6-bd6471a7138d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_mbz_artists_granular import IdentifyMissingMBZArtistsCLI\nreturn IdentifyMissingMBZArtistsCLI().execute(limit=100, batch_size=10)"
+      },
+      "name": "Identify Missing MBZ Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "d61262f1-5df2-46cf-9830-1c20c6971e4b",
+      "notes": "Uses DuckDB to efficiently identify missing MBZ artists and create batch plan"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.batches",
+        "options": {}
+      },
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        448,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "3087dbb6-f8f0-49ce-9f73-4c0bfde22ffb",
+      "notes": "Splits the batch plan into individual batch items for parallel processing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_mbz_artists_granular import FetchMBZArtistBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\nbatch_size = _item[\"json\"][\"batch_size\"]\noffset = _item[\"json\"][\"offset\"]\n\nreturn FetchMBZArtistBatchCLI().execute(\n    batch_index=batch_index,\n    batch_size=batch_size,\n    offset=offset\n)"
+      },
+      "name": "Fetch MBZ Artist Batch",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        672,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "4a61bc05-c02d-4eda-b276-8cdc5aedf0f6",
+      "notes": "Fetches artist data from MusicBrainz API for this specific batch"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_mbz_artists_granular import TrackMBZFailuresCLI\n\nfailed_artists = _item[\"json\"][\"data\"][\"failed_artists\"]\n\nif failed_artists:\n    return TrackMBZFailuresCLI().execute(failed_artists=failed_artists)\nelse:\n    return {\"status\": \"no_failures\", \"tracked\": 0}"
+      },
+      "name": "Track MBZ Failures",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        896,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "77001853-0c51-457c-82d1-ec408cba08b7",
+      "notes": "Tracks artists that failed MusicBrainz lookup to the tracking table"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Identify Missing MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Missing MBZ Artists": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch MBZ Artist Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch MBZ Artist Batch": {
+      "main": [
+        [
+          {
+            "node": "Track MBZ Failures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "6a3cf9c1-e323-44c9-8347-8a4604afa924",
+  "meta": {
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+  },
+  "id": "jZkVWDPhN2rMCAk9VCaQ9",
+  "tags": []
+}

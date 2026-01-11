@@ -1,0 +1,155 @@
+{
+  "name": "Spotify Album Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import ExtractAlbumGenresCLI\n\nalbum_data = _item[\"json\"][\"data\"][\"album_data\"]\n\nreturn ExtractAlbumGenresCLI().execute(album_data=album_data)"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "cf6d9b6e-0b65-429f-817e-5bbad0139a19",
+      "name": "Extract Album Genre"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import WriteAlbumDataCLI\n\nalbum_data = _item[\"json\"][\"data\"][\"album_data\"]\n\nreturn WriteAlbumDataCLI().execute(album_data=album_data)"
+      },
+      "name": "Extract Album",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "d6d399e7-e2f3-402f-b046-7db7eda85157"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import FetchAlbumBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\noffset = _item[\"json\"][\"offset\"]\nbatch_size = _item[\"json\"][\"size\"]\n\nreturn FetchAlbumBatchCLI().execute(\n    batch_index=batch_index,\n    offset=offset,\n    batch_size=batch_size\n)"
+      },
+      "name": "Fetch Album Batch",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -224,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "5f7a5bb1-7e54-40a8-b846-a9edc586c707"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.batches",
+        "options": {}
+      },
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -448,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "43731035-662d-421e-bf28-a753ad5091ba"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import IdentifyMissingAlbumsCLI\nreturn IdentifyMissingAlbumsCLI().execute(limit=25, batch_size=5)"
+      },
+      "name": "Identify Missing Albums",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -672,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "b3e8f910-85c3-4daf-9fd9-414be25fc297",
+      "notes": "Uses DuckDB to efficiently identify missing albums"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -896,
+        96
+      ],
+      "id": "12a91562-bf3a-44a7-bf15-47a37cc905d4",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fetch Album Batch": {
+      "main": [
+        [
+          {
+            "node": "Extract Album",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Album Genre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch Album Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Missing Albums": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Identify Missing Albums",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0bb21151-6a89-41a3-ac34-783176efa068",
+  "meta": {
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+  },
+  "id": "RoTUHjfSlRPrq_3oGZUlN",
+  "tags": []
+}

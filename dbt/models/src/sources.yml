@@ -12,3 +12,9 @@ sources:
       - name: spotify_albums
       - name: mbz_area_hierarchy
       - name: cities_with_lat_long
+
+  - name: rt
+    meta:
+      external_location: "{% if target.name == 'dev' %}/app/data{% else %}../data{% endif %}/{name}.csv"
+    tables:
+      - name: recently_played

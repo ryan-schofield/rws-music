@@ -1,3 +1,12 @@
+# Docker Compose configuration for music tracking application
+# Optimized for ~2GB RAM deployments with local-only access
+# Memory allocation strategy (rough guide):
+# - Data Pipeline: 400MB (ETL processing)
+# - n8n: 300MB (UI + orchestration)
+# - n8n task runners: 350MB (Python Code node runtime)
+# - Total: ~1.05GB (within 2GB budget)
+# Local-only access: n8n on port 5678
+
 services:
   # Main data processing and dbt service
   data-pipeline:
@@ -11,165 +20,130 @@ services:
       - ./logs:/app/logs
     env_file: .env
     environment:
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - DUCKDB_PATH=//home/runner/workspace/data/music_tracker.duckdb
       - LOG_LEVEL=INFO
     networks:
       - music-tracker
-    depends_on:
-      - metabase
     restart: unless-stopped
+    # Memory limits for 2GB RAM Synology NAS
+    # 400MB max, 250MB reservation for data processing overhead
+    mem_limit: 400m
+    mem_reservation: 250m
 
-  # Metabase for reporting
-  metabase:
+  # n8n for workflow orchestration
+  n8n:
+    image: n8nio/n8n:2.2.3
+    container_name: music-tracker-n8n
+    ports:
+      - "5678:5678"
+    env_file: .env
+    environment:
+      # Basic n8n config
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
+      - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
+      # Execution timeouts
+      - EXECUTIONS_TIMEOUT=-1
+      - EXECUTIONS_TIMEOUT_MAX=-1
+      # Task runners config
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_MODE=external
+      - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
+      - N8N_RUNNERS_TASK_TIMEOUT=3600
+      - N8N_RUNNERS_TASK_MAX_TIMEOUT=3660
+      # Python support and allowed packages
+      - PYTHONPATH=/workspace
+      - N8N_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,python_dateutil,structlog,python_dotenv,dbt
+      - N8N_RUNNERS_PYTHON_ALLOWED_MODULES=flows,polars,requests,duckdb,httpx,musicbrainzngs,pyarrow,pycountry,pycountry_convert,python_dateutil,structlog,python_dotenv,dbt
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n-workflows:/workflows
+      - ./:/workspace
+    networks:
+      - music-tracker
+    restart: unless-stopped
+    # Memory limits for 2GB RAM Synology NAS
+    # ~300MB for n8n (improvement over Prefect's 400MB server + 200MB DB)
+    mem_limit: 300m
+    mem_reservation: 200m
+
+  # n8n task runners (required for Python (Native) Code node)
+  task-runners:
     build:
       context: .
-      dockerfile: metabase.Dockerfile
-    container_name: music-tracker-metabase
-    ports:
-      - "3000:3000"
-    volumes:
-      - metabase-data:/home
-      - ./data:/data
+      dockerfile: task-runners.Dockerfile
+    container_name: music-tracker-n8n-runners
+    restart: always
     env_file: .env
     environment:
-      - MB_DB_TYPE=postgres
-      - MB_DB_DBNAME=metabase
-      - MB_DB_PORT=5432
-      - MB_DB_USER=metabase
-      - MB_DB_PASS=${METABASE_DB_PASSWORD}
-      - MB_DB_HOST=metabase-db
-      - MB_PLUGINS_DIR=/home/plugins/
-    networks:
-      - music-tracker
-    depends_on:
-      - metabase-db
-    restart: unless-stopped
-
-  # PostgreSQL for Metabase metadata
-  metabase-db:
-    image: postgres:15-alpine
-    container_name: music-tracker-metabase-db
-    env_file: .env
-    environment:
-      - POSTGRES_DB=metabase
-      - POSTGRES_USER=metabase
-      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
-    volumes:
-      - metabase-db-data:/var/lib/postgresql/data
-    networks:
-      - music-tracker
-    restart: unless-stopped
-
-  # Prefect for orchestration
-  prefect-server:
-    image: prefecthq/prefect:3.4.0-python3.11
-    container_name: music-tracker-prefect
-    ports:
-      - "4200:4200"
-    env_file: .env
-    environment:
-      - PREFECT_API_URL=http://localhost:4200/api
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_SERVER_API_PORT=4200
-      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect:${PREFECT_DB_PASSWORD}@prefect-db:5432/prefect
-      - PREFECT_SERVER_ANALYTICS_ENABLED=false
-    volumes:
-      - prefect-data:/opt/prefect
-    networks:
-      - music-tracker
-    depends_on:
-      - prefect-db
-    restart: unless-stopped
-    command: prefect server start --host 0.0.0.0 --port 4200
-
-  prefect-worker:
-    build: .
-    container_name: music-tracker-prefect-worker
-    env_file: .env
-    environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-      - PREFECT_WORK_POOL_NAME=default-agent-pool
+      # Core n8n runner config
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+      - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
+      - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=1800000
+      - N8N_RUNNERS_TASK_TIMEOUT=3600 
+      - N8N_RUNNERS_TASK_MAX_TIMEOUT=3660
+      # Application-specific paths
+      - DBT_PROFILES_DIR=/home/runner/workspace/dbt
+      - DUCKDB_PATH=/home/runner/workspace/data/music_tracker.duckdb
+      - PYTHONPATH=/home/runner/workspace
+      - POLARS_SKIP_CPU_CHECK=1
+      # Spotify credentials
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
-      - LOG_LEVEL=INFO
+      - SPOTIFY_REFRESH_TOKEN=${SPOTIFY_REFRESH_TOKEN}
+      # DuckDB memory limit
+      - DUCKDB_MEMORY_LIMIT=800MB
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./flows:/app/flows
+      - ./.env:/home/runner/workspace/.env:ro
+      - ./data:/home/runner/workspace/data
+      - ./flows:/home/runner/workspace/flows
+      - ./dbt:/home/runner/workspace/dbt
+      - ./scripts:/home/runner/workspace/scripts
+      - ./logs:/home/runner/workspace/logs
+      - ./n8n-workflows:/home/runner/workspace/n8n-workflows
+      - n8n-data:/home/node/.n8n
     networks:
       - music-tracker
     depends_on:
-      - prefect-server
-    restart: unless-stopped
-    command: >
-      bash -c "
-        echo 'Waiting for Prefect server to be ready...';
-        until curl -f http://prefect-server:4200/api/health > /dev/null 2>&1; do
-          echo 'Prefect server not ready, waiting...';
-          sleep 5;
-        done;
-        echo 'Prefect server is ready!';
-        sleep 5;
-        echo 'Starting Prefect worker...';
-        prefect worker start --pool default-agent-pool
-      "
+      - n8n
+    mem_limit: 1024m
+    mem_reservation: 512m
 
-  prefect-deployer:
-    build: .
-    container_name: music-tracker-prefect-deployer
+  # Streamlit analytics dashboard
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: streamlit.Dockerfile
+    container_name: music-tracker-streamlit
+    ports:
+      - "8501:8501"
     env_file: .env
     environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-      - PREFECT_WORK_POOL_NAME=default-agent-pool
-      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
-      - LOG_LEVEL=INFO
+      - DUCKDB_PATH=/home/runner/workspace/data/music_tracker.duckdb
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_RUNONSAVE=false
+      - STREAMLIT_CLIENT_TOOLBAR_MODE=viewer
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./flows:/app/flows
+      - ./data:/home/runner/workspace/data:ro
+      - ./streamlit:/home/runner/workspace/streamlit
     networks:
       - music-tracker
+    restart: unless-stopped
     depends_on:
-      - prefect-worker
-    restart: "no"
-    command: >
-      bash -c "
-        echo 'Waiting for Prefect server to be ready...';
-        until curl -f http://prefect-server:4200/api/health > /dev/null 2>&1; do
-          echo 'Prefect server not ready, waiting...';
-          sleep 5;
-        done;
-        echo 'Prefect server is ready!';
-        echo 'Waiting for worker to be ready...';
-        sleep 15;
-        echo 'Deploying flows...';
-        cd /app && PYTHONPATH=/app uv run python flows/orchestrate/deploy_flows.py;
-        echo 'Flow deployment completed!';
-      "
-
-  # PostgreSQL for Prefect
-  prefect-db:
-    image: postgres:15-alpine
-    container_name: music-tracker-prefect-db
-    env_file: .env
-    environment:
-      - POSTGRES_DB=prefect
-      - POSTGRES_USER=prefect
-      - POSTGRES_PASSWORD=${PREFECT_DB_PASSWORD}
-    volumes:
-      - prefect-db-data:/var/lib/postgresql/data
-    networks:
-      - music-tracker
-    restart: unless-stopped
+      - data-pipeline
+    # Memory limits: 250-350MB range, keep minimal
+    mem_limit: 350m
+    mem_reservation: 250m
 
 volumes:
-  metabase-data:
-  metabase-db-data:
-  prefect-data:
-  prefect-db-data:
+  n8n-data:
 
 networks:
   music-tracker:
