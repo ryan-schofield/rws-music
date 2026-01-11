@@ -1,0 +1,360 @@
+{
+  "name": "Daily ETL",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jZkVWDPhN2rMCAk9VCaQ9",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jZkVWDPhN2rMCAk9VCaQ9",
+          "cachedResultName": "MBZ Artist Enrichment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "name": "Call 'MBZ Artist Enrichment'",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        96
+      ],
+      "id": "026ac1d9-bb86-40b3-b6da-82e06741b3b4"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NaayjsvwwAzeVCvYpv_MH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NaayjsvwwAzeVCvYpv_MH",
+          "cachedResultName": "Geography Coordinate Enrichment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "name": "Call 'Geography Coordinate Enrichment'",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        96
+      ],
+      "id": "17459df7-771a-4fdd-9387-671a97603841",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.update_mbids import UpdateMBIDsCLI\nreturn UpdateMBIDsCLI().execute()"
+      },
+      "name": "Update MBIDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        96
+      ],
+      "id": "c7811274-ce37-4f96-9ab6-db796945af37",
+      "executeOnce": true,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.run_dbt import RunDBTCLI\nreturn RunDBTCLI().execute(command='build', target='dev')"
+      },
+      "name": "Run dbt Build",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        96
+      ],
+      "id": "8cb79225-79c2-4770-a1fd-3b6ed1b9206d",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.discover_mbz_artists import DiscoverMBZArtistsCLI\nreturn DiscoverMBZArtistsCLI().execute()"
+      },
+      "name": "Discover MBZ Artists",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        448,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "826214a2-9662-4e73-aaf3-b89861cbccdc",
+      "executeOnce": true,
+      "notes": "Identifies artists from tracks that need MusicBrainz lookup"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.parse_mbz_data import ParseMBZDataCLI\nreturn ParseMBZDataCLI().execute()"
+      },
+      "name": "Parse MBZ Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        896,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "1dbc46fe-2bde-4b40-8a42-a3a9d7c8a82b",
+      "notes": "Processes cached MusicBrainz JSON files and writes to parquet tables"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.process_mbz_hierarchy import ProcessMBZHierarchyCLI\nreturn ProcessMBZHierarchyCLI().execute()"
+      },
+      "name": "Process MBZ Hierarchy",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "2a983277-00bc-47f2-a808-3a4607f9dc61",
+      "notes": "Processes MusicBrainz area hierarchy and builds parent relationships"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_base import EnrichGeographyBaseCLI\nreturn EnrichGeographyBaseCLI().execute()"
+      },
+      "name": "Enrich Geography Base",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1344,
+        96
+      ],
+      "typeVersion": 2,
+      "id": "2c35faed-729d-46d4-9780-70790920ad69",
+      "notes": "Adds continent information and geocoding parameters to area hierarchy"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "240ee2d7-6051-413e-8dea-f56c5309a9e4",
+      "name": "Run Daily"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "8xDECCWUlCDeLBejBCrYN",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/8xDECCWUlCDeLBejBCrYN",
+          "cachedResultName": "Spotify Artist Enrichment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d085bed3-5966-448a-85af-a7ba9672e344",
+      "name": "Call 'Spotify Artist Enrichment",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "RoTUHjfSlRPrq_3oGZUlN",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/RoTUHjfSlRPrq_3oGZUlN",
+          "cachedResultName": "Spotify Album Enrichment"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        192
+      ],
+      "id": "2a4e16b1-17a5-4466-804a-ed67e1f33c5d",
+      "name": "Call 'Spotify Album Enrichment'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Call 'MBZ Artist Enrichment'": {
+      "main": [
+        [
+          {
+            "node": "Parse MBZ Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Geography Coordinate Enrichment'": {
+      "main": [
+        [
+          {
+            "node": "Update MBIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update MBIDs": {
+      "main": [
+        [
+          {
+            "node": "Run dbt Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discover MBZ Artists": {
+      "main": [
+        [
+          {
+            "node": "Call 'MBZ Artist Enrichment'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse MBZ Data": {
+      "main": [
+        [
+          {
+            "node": "Process MBZ Hierarchy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process MBZ Hierarchy": {
+      "main": [
+        [
+          {
+            "node": "Enrich Geography Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Geography Base": {
+      "main": [
+        [
+          {
+            "node": "Call 'Geography Coordinate Enrichment'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Daily": {
+      "main": [
+        [
+          {
+            "node": "Call 'Spotify Album Enrichment'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'Spotify Artist Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Spotify Artist Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Discover MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Spotify Album Enrichment'": {
+      "main": [
+        [
+          {
+            "node": "Discover MBZ Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "acc7c287-0c13-402b-8309-c1bad3b3f04d",
+  "meta": {
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+  },
+  "id": "ksDIaNrxoBVpsWSKiNKzG",
+  "tags": []
+}

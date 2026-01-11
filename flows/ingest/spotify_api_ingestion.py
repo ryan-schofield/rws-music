@@ -5,18 +5,22 @@ and storing them for further processing.
 """
 
 import os
+import sys
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any
 import json
 from pathlib import Path
-import base64
-import csv
 import glob
 
-import requests
 from dotenv import load_dotenv
 import polars as pl
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from flows.enrich.utils.api_clients import SpotifyAPIClient
 
 # Load environment variables
 load_dotenv()
@@ -29,108 +33,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class SpotifyAPIClient:
-    """Client for interacting with Spotify Web API."""
-
-    BASE_URL = "https://api.spotify.com/v1"
-    TOKEN_URL = "https://accounts.spotify.com/api/token"
-
-    def __init__(
-        self,
-        client_id: str = None,
-        client_secret: str = None,
-        refresh_token: str = None,
-    ):
-        self.client_id = client_id or os.getenv("SPOTIFY_CLIENT_ID")
-        self.client_secret = client_secret or os.getenv("SPOTIFY_CLIENT_SECRET")
-        self.refresh_token = refresh_token or os.getenv("SPOTIFY_REFRESH_TOKEN")
-        self._access_token = None
-        self._token_expires_at = None
-
-        if not self.client_id or not self.client_secret or not self.refresh_token:
-            raise ValueError("Spotify credentials not found")
-
-    def _get_access_token(self) -> str:
-        """Get or refresh access token."""
-        now = datetime.now(timezone.utc)
-
-        # Check if we have a valid token
-        if (
-            self._access_token
-            and self._token_expires_at
-            and now < self._token_expires_at
-        ):
-            return self._access_token
-
-        # Get new token
-        auth_string = f"{self.client_id}:{self.client_secret}"
-        auth_bytes = auth_string.encode("utf-8")
-        auth_base64 = base64.b64encode(auth_bytes).decode("utf-8")
-
-        headers = {
-            "Authorization": f"Basic {auth_base64}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-
-        data = {"grant_type": "refresh_token", "refresh_token": self.refresh_token}
-
-        try:
-            response = requests.post(self.TOKEN_URL, headers=headers, data=data)
-            response.raise_for_status()
-
-            token_data = response.json()
-            self._access_token = token_data["access_token"]
-            expires_in = token_data["expires_in"]
-
-            # Set expiration time (with 5 minute buffer)
-            self._token_expires_at = now + timedelta(seconds=expires_in - 300)
-
-            logger.info("Successfully obtained Spotify access token")
-            return self._access_token
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to get access token: {e}")
-            raise
-
-    def _make_request(
-        self, endpoint: str, params: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
-        """Make authenticated request to Spotify API."""
-        token = self._get_access_token()
-
-        headers = {"Authorization": f"Bearer {token}"}
-
-        url = f"{self.BASE_URL}{endpoint}"
-
-        try:
-            response = requests.get(url, headers=headers, params=params)
-            response.raise_for_status()
-            logger.debug(f"Spotify API response status: {response.status_code}")
-            logger.debug(f"Spotify API response body: {response.text}")
-            return response.json()
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Spotify API request failed: {e}")
-            if e.response is not None:
-                logger.error(f"Response status code: {e.response.status_code}")
-                logger.error(f"Response body: {e.response.text}")
-            raise
-
-    def get_recently_played(self, after: str = None) -> Dict[str, Any]:
-        """Get recently played tracks."""
-        params = {"limit": 50}
-
-        if after:
-            params["after"] = after
-
-        return self._make_request("/me/player/recently-played", params)
-
-
 class SpotifyDataIngestion:
     """Handles ingestion of Spotify data."""
 
     def __init__(self):
-        self.data_dir = Path("data")
+        # Use absolute path for task-runner compatibility
+        workspace_dir = Path("/home/runner/workspace")
+        if not workspace_dir.exists():
+            workspace_dir = Path.cwd()
+        self.data_dir = workspace_dir / "data"
         self.raw_data_dir = self.data_dir / "raw" / "recently_played" / "detail"
 
         # Ensure directories exist
@@ -141,7 +52,7 @@ class SpotifyDataIngestion:
 
     def load_cursor(self) -> str:
         """Load cursor from JSON file."""
-        cursor_path = Path("data/cursor/cursor.json")
+        cursor_path = self.data_dir / "cursor" / "cursor.json"
         if cursor_path.exists():
             with open(cursor_path, "r") as f:
                 cursor = json.load(f)
@@ -150,7 +61,8 @@ class SpotifyDataIngestion:
 
     def save_cursor(self, after: str):
         """Save cursor to JSON file."""
-        cursor_path = Path("data/cursor/cursor.json")
+        cursor_path = self.data_dir / "cursor" / "cursor.json"
+        cursor_path.parent.mkdir(parents=True, exist_ok=True)
         cursor = {"user_id": "fffv23", "after": after}
         with open(cursor_path, "w") as f:
             json.dump(cursor, f, indent=2)
@@ -279,10 +191,11 @@ class SpotifyDataIngestion:
             df = pl.DataFrame(all_data)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
+            # Use strict=False to handle parsing errors gracefully
             df = df.with_columns(
                 [
                     pl.col("played_at")
-                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ")
+                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
                     .alias("played_at_dt"),
                     (pl.col("duration_ms") / 1000).alias("duration_sec"),
                 ]
@@ -304,18 +217,25 @@ class SpotifyDataIngestion:
             step1_count = len(df_step1)
             step1_removed = len(df) - step1_count
 
-            # Step 2: Remove duplicates where same track_id and request_after have plays within track duration
+            # Step 2: Remove duplicates where same track_id have plays within track duration
+            # Filter out rows with null values in critical columns before sorting
+            # Note: request_after may be null, which is expected - don't filter on it
+            df_filtered = df_step1.filter(
+                (pl.col("track_id").is_not_null())
+                & (pl.col("played_at_dt").is_not_null())
+            )
+
             df_unique = (
-                df_step1.sort(["track_id", "request_after", "played_at_dt"])
+                df_filtered.sort(["track_id", "played_at_dt"])
                 .with_columns(
                     [
                         pl.col("played_at_dt")
                         .shift(1)
-                        .over(["track_id", "request_after"])
+                        .over(["track_id"])
                         .alias("prev_played_at"),
                         pl.col("duration_sec")
                         .shift(1)
-                        .over(["track_id", "request_after"])
+                        .over(["track_id"])
                         .alias("prev_duration_sec"),
                     ]
                 )
@@ -347,15 +267,23 @@ class SpotifyDataIngestion:
 
             # Log deduplication results
             original_count = len(all_data)
+            step1_count = len(df_step1)
+            filtered_count = len(df_filtered)
             unique_count = len(df_unique)
-            step2_removed = step1_count - unique_count
+            step1_removed = original_count - step1_count
+            filtered_removed = step1_count - filtered_count
+            step2_removed = filtered_count - unique_count
             total_removed = original_count - unique_count
 
             if total_removed > 0:
-                logger.info(f"Deduplication complete:")
+                logger.info("Deduplication complete:")
                 logger.info(
                     f"  - Step 1 (exact duplicates): {step1_removed} records removed"
                 )
+                if filtered_removed > 0:
+                    logger.info(
+                        f"  - Filtered (null values): {filtered_removed} records removed"
+                    )
                 logger.info(
                     f"  - Step 2 (duration-based): {step2_removed} records removed"
                 )

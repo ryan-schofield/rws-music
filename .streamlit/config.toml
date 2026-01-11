@@ -1,0 +1,9 @@
+[logger]
+level = "info"
+
+[client]
+toolbarMode = "viewer"
+
+[server]
+runOnSave = false
+headless = true

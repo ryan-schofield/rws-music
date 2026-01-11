@@ -1,20 +1,11 @@
 music-tracker:
-   target: dev
+   target: local
+
    outputs:
-     dev:
-       type: duckdb
-       path: "{{ env_var('DUCKDB_PATH', '../data/music_tracker.duckdb') }}"
-       threads: 1
-       extensions:
-         - httpfs
-         - parquet
-       settings:
-         memory_limit: 2GB
-         threads: 1
 
      local:
        type: duckdb
-       path: "../data/music_tracker.duckdb"
+       path: "c:/Users/fffv2/repos/rws-music/data/music_tracker.duckdb"
        threads: 4
        extensions:
          - httpfs
@@ -22,3 +13,12 @@ music-tracker:
        settings:
          memory_limit: 4GB
          threads: 4
+
+     dev:
+       type: duckdb
+       path: "/home/runner/workspace/data/music_tracker.duckdb"
+       threads: 1
+       settings:
+         memory_limit: 256MB
+         threads: 1
+         max_memory: 256MB

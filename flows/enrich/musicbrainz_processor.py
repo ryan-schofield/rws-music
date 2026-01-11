@@ -11,10 +11,10 @@ import os
 import sys
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Set
 from pathlib import Path
 import polars as pl
-import pandas as pd
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
@@ -48,7 +48,13 @@ class MusicBrainzProcessor:
         self.mbz_client = MusicBrainzClient(cache_dir=cache_dir)
 
         # Cache directory for storing raw JSON data
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("data/cache/mbz")
+        if cache_dir:
+            self.cache_dir = Path(cache_dir)
+        else:
+            workspace_dir = Path("/home/runner/workspace")
+            if not workspace_dir.exists():
+                workspace_dir = Path.cwd()
+            self.cache_dir = workspace_dir / "data" / "cache" / "mbz"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def discover_missing_artists(self) -> Dict[str, Any]:
@@ -130,10 +136,11 @@ class MusicBrainzProcessor:
 
         # Store failed artists for tracking
         if artists_failed:
-            failed_df = pl.DataFrame(artists_failed)
-            self.data_writer.write_table(
-                failed_df, "mbz_artist_not_found", mode="merge"
-            )
+            # Add default reason for failures in this context
+            for f in artists_failed:
+                if "reason" not in f:
+                    f["reason"] = "MusicBrainz lookup failed"
+            self.track_failed_artists(artists_failed)
 
         logger.info(
             f"Successfully fetched {artists_fetched} artists, {len(artists_failed)} failed"
@@ -322,7 +329,7 @@ class MusicBrainzProcessor:
         musicbrainzngs.set_useragent("rws-music-enrichment", "1.0")
 
         for i, area_id in enumerate(area_ids):
-            logger.info(f"Processing {i+1}/{len(area_ids)}: {area_id}")
+            logger.info(f"Processing {i + 1}/{len(area_ids)}: {area_id}")
             try:
                 areas = self._get_area_with_parents(area_id)
                 all_areas[area_id] = areas
@@ -497,6 +504,139 @@ class MusicBrainzProcessor:
             logger.info("No existing hierarchy data found")
 
         return sorted(list(area_ids))
+
+    def fetch_artist_by_isrc(self, isrc: str, artist_id: str, artist_name: str) -> Dict[str, Any]:
+        """
+        Fetch a single artist from MusicBrainz using ISRC lookup.
+        
+        Used by granular fetching in workflows.
+        
+        Args:
+            isrc: ISRC code for track to lookup artist
+            artist_id: Spotify artist ID
+            artist_name: Artist name for logging
+            
+        Returns:
+            Result dictionary with status and message
+        """
+        try:
+            # Get artist MBID using ISRC
+            artist_mbid = self.mbz_client.get_artist_by_isrc(isrc)
+            
+            if not artist_mbid:
+                logger.info(
+                    f"Could not find MBID for artist {artist_name} ({artist_id}) using ISRC {isrc}"
+                )
+                return {
+                    "status": "failed",
+                    "message": f"Could not find MBID for ISRC {isrc}",
+                }
+            
+            # Get full artist data
+            artist_data = self.mbz_client.get_artist_by_id(
+                artist_mbid, includes=["tags", "release-groups", "aliases"]
+            )
+            
+            if not artist_data:
+                logger.info(f"Could not fetch artist data for MBID {artist_mbid}")
+                return {
+                    "status": "failed",
+                    "message": f"Could not fetch data for MBID {artist_mbid}",
+                }
+            
+            # Add Spotify ID to the artist data
+            artist_data["spotify_id"] = artist_id
+            
+            # Save to JSON file
+            json_file = self.cache_dir / f"{artist_mbid}.json"
+            with open(json_file, "w") as f:
+                json.dump(artist_data, f, indent=2, default=str)
+            
+            logger.info(f"Successfully fetched MBZ data for {artist_name}")
+            return {
+                "status": "success",
+                "message": f"Fetched artist {artist_name}",
+                "artist_mbid": artist_mbid,
+                "cache_file": str(json_file),
+            }
+            
+        except Exception as e:
+            logger.error(f"Error fetching artist by ISRC: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Error fetching artist: {str(e)}",
+            }
+
+    def track_failed_artists(self, failed_artists: List[Dict]) -> Dict[str, Any]:
+        """
+        Track artists that failed MusicBrainz lookup.
+        
+        Writes failed artist lookups to the mbz_artist_not_found tracking table.
+        
+        Args:
+            failed_artists: List of artist dictionaries that failed lookup
+            
+        Returns:
+            Result with tracking status
+        """
+        try:
+            if not failed_artists:
+                logger.info("No failed artists to track")
+                return {
+                    "status": "no_updates",
+                    "message": "No failed artists to track",
+                }
+
+            logger.info(f"Tracking {len(failed_artists)} failed artists")
+
+            # Standardize schema for mbz_artist_not_found
+            standardized_records = []
+            now = datetime.now(timezone.utc).isoformat()
+            
+            for artist in failed_artists:
+                # Handle both 'isrc' and 'track_isrc'
+                isrc = artist.get("track_isrc") or artist.get("isrc")
+                
+                standardized_records.append({
+                    "artist_id": artist.get("artist_id"),
+                    "artist": artist.get("artist"),
+                    "track_isrc": isrc,
+                    "reason": artist.get("reason", "Unknown failure"),
+                    "failed_at": now
+                })
+
+            # Create DataFrame from standardized records
+            failed_df = pl.DataFrame(standardized_records)
+
+            # Write to tracking table using merge to avoid duplicates
+            write_result = self.data_writer.write_table(
+                failed_df, "mbz_artist_not_found", mode="merge"
+            )
+
+            if write_result.get("status") == "success":
+                records_processed = write_result.get("records_updated", len(failed_artists))
+                logger.info(
+                    f"Successfully tracked {records_processed} failed artists"
+                )
+                return {
+                    "status": "success",
+                    "message": f"Tracked {records_processed} failed artists",
+                    "records_processed": records_processed,
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Failed to write tracking data",
+                    "error": write_result.get("message", "Unknown error"),
+                }
+
+        except Exception as e:
+            logger.error(f"Error tracking failed artists: {e}")
+            return {
+                "status": "error",
+                "message": f"Failed to track artists: {str(e)}",
+                "error": str(e),
+            }
 
     def run_full_enrichment(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """

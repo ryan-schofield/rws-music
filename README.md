@@ -1,6 +1,6 @@
 # Music Tracker
 
-A modern, open-source music tracking and analytics platform built with DuckDB, Polars, and Metabase for cost-effective music listening analytics.
+A modern, open-source music tracking and analytics platform built with DuckDB, Polars, n8n, and Streamlit for cost-effective music listening analytics. Optimized for local-only deployment on Synology NAS with 2GB RAM.
 
 ## Overview
 
@@ -14,11 +14,10 @@ This project provides a complete data pipeline for ingesting, processing, and an
 - **⚡️ uv**: Ultra-fast Python package manager and dependency resolver
 - **📊 DuckDB**: Analytical database for efficient data storage and querying
 - **⚡ Polars**: High-performance DataFrame library for data processing
-- **🔄 Prefect**: Workflow orchestration and scheduling
-- **📈 Metabase**: Business intelligence and reporting platform
+- **🔄 n8n**: Workflow orchestration and scheduling
 - **🐳 Docker**: Containerized deployment with Docker Compose
 - **🛠️ dbt**: Data transformation and modeling
-- **🏗️ Terraform**: Infrastructure as Code for cloud deployment
+- **🎨 Streamlit**: Interactive data visualization and analytics dashboards
 
 ### System Components
 
@@ -28,15 +27,14 @@ The application consists of several containerized services:
 - **Data Pipeline Container**: Main application with Python flows, dbt models, and data processing
   - Built with uv for fast dependency resolution and virtual environment management
   - Contains all Python dependencies defined in `pyproject.toml` and locked in `uv.lock`
-- **Prefect Server**: Workflow orchestration and monitoring UI (port 4200)
-- **Prefect Worker**: Executes scheduled flows and tasks
-- **Prefect Deployer**: Automatically deploys flows on startup
+- **n8n**: Workflow orchestration and monitoring UI (port 5678)
+  - Executes data workflows, scheduling, and monitoring
+  - Node-based visual workflow editor with REST API
+  - Manages both Spotify ingestion and daily ETL workflows
 
 #### Reporting & Database Services
 - **DuckDB**: Analytical database for data warehousing and analytics (in-app file storage)
-- **Metabase**: Business intelligence platform (port 3000)
-- **PostgreSQL (Metabase)**: Metadata storage for Metabase
-- **PostgreSQL (Prefect)**: Workflow state and history storage
+- **Streamlit**: Interactive analytics dashboards with real-time data visualization (port 8501)
 
 ### Data Architecture
 
@@ -88,37 +86,48 @@ data/
 - **Business Metrics**: Pre-calculated aggregations and KPIs
 - **Data Quality Tests**: Automated validation of data integrity
 
-### 5. Orchestration (`flows/orchestrate/`)
-- **Daily ETL Flow**: Comprehensive pipeline with concurrent execution
-- **Spotify Ingestion Flow**: Frequent data collection from Spotify API
-- **Monitoring**: Performance metrics and alerting
-- **Configuration Management**: Environment-specific settings
+### 5. Orchestration (n8n Workflows)
+- **CLI Wrappers** (`flows/cli/`): Standalone Python scripts callable by n8n tasks
+- **Daily ETL Workflow**: Comprehensive pipeline with concurrent execution (runs daily at 2 AM UTC)
+- **Spotify Ingestion Workflow**: Frequent data collection from Spotify API (runs every 30 minutes)
+- **Monitoring**: n8n workflow execution history and logs
+- **Version Control**: Exported workflow JSON files in `n8n-workflows/` directory
+
+### 6. Reporting & Analytics (Streamlit App)
+- **Interactive Dashboards**: Real-time analytics dashboards with filtering and exploration
+- **Time-Series Analysis**: Track listening patterns over time
+- **Artist & Genre Analytics**: Deep dives into artist popularity and genre preferences
+- **Geographic Analysis**: Explore music by artist origin locations
+- **Multi-Page Interface**: Organized analytics pages accessible from sidebar navigation
 
 ## Configuration
 
 ### Environment Variables
-Create a `.env` file with the following required variables:
+Create a `.env` file with the following required variables (copy from `.env.example`):
 
 ```bash
-# Spotify API Credentials
+# Spotify API Credentials (Required)
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REFRESH_TOKEN=your_spotify_refresh_token
 
-# Database Passwords
-METABASE_DB_PASSWORD=secure_password_here
-PREFECT_DB_PASSWORD=another_secure_password
+# n8n Configuration (Required)
+N8N_HOST=localhost
+TIMEZONE=UTC
 
 # Optional Configuration
 ENVIRONMENT=development  # or production
-DUCKDB_PATH=/app/data/music_tracker.duckdb
+DUCKDB_PATH=//home/runner/workspace/data/music_tracker.duckdb
 LOG_LEVEL=INFO
 ```
 
-### Flow Configuration
-The system supports environment-specific configuration through `flows/orchestrate/flow_config.py`:
+### Workflow Configuration
+The system supports environment-specific configuration through CLI scripts and n8n workflow definitions:
 
+- **CLI Scripts** (`flows/cli/`): Configure retry logic, timeouts, and parameters
+- **n8n Workflows**: Define scheduling (cron expressions), dependencies, and error handling
 - **Development**: No processing limits, verbose logging
-- **Testing**: Small data limits for fast execution
+- **Testing**: Small data limits for fast execution via `--limit` parameters
 - **Production**: Optimized batch sizes and API limits
 
 ## Getting Started
@@ -126,7 +135,7 @@ The system supports environment-specific configuration through `flows/orchestrat
 ### Prerequisites
 - Docker and Docker Compose
 - Spotify Developer Account (for API credentials)
-- 4GB+ RAM recommended
+- 2GB RAM minimum (optimized for Synology NAS)
 
 ### Local Development Setup
 
@@ -143,36 +152,47 @@ docker compose up -d
 ```
 
 3. **Access Applications**:
-- Prefect UI: http://localhost:4200
-- Metabase: http://localhost:3000
+- n8n UI: http://localhost:5678
+- Streamlit Analytics: http://localhost:8501
 
-4. **Run Initial Data Load**:
-The Prefect deployer will automatically deploy flows. Monitor execution in the Prefect UI.
+4. **Deploy n8n Workflows**:
+Deploy workflows using the CLI deployment script:
+```bash
+python flows/cli/deploy_n8n_workflows.py --action deploy
+```
+Monitor execution in the n8n UI.
 
 ### Data Flow Execution
 
 1. **Spotify Ingestion**: Runs every 30 minutes to collect new tracks
 2. **Daily ETL**: Processes and enriches data, runs dbt transformations
-3. **Reporting**: Metabase connects to DuckDB for real-time analytics
+3. **Reporting**: Streamlit dashboards connect to DuckDB for real-time analytics
 
 ## Development
 
 ### Project Structure
 ```
-├── flows/                    # Prefect workflows and data processing
+├── flows/                    # Data processing flows and n8n CLI wrappers
+│   ├── cli/                 # CLI wrapper scripts for n8n workflow execution
 │   ├── ingest/              # Data ingestion from APIs
 │   ├── enrich/              # Data enrichment and processing
 │   ├── load/                # Data loading utilities
-│   └── orchestrate/         # Flow coordination and scheduling
+│   └── orchestrate/         # Legacy Prefect flows (deprecated)
 ├── dbt/                     # Data transformation models
 │   ├── models/              # dbt SQL models (staging, intermediate, marts)
 │   ├── macros/              # Reusable SQL macros
 │   └── seeds/               # Reference data
+├── streamlit/               # Interactive analytics dashboards
+│   ├── app.py               # Main Streamlit application
+│   ├── config.py            # Configuration settings
+│   ├── pages/               # Multi-page dashboard definitions
+│   └── utils/               # Database connection and utilities
 ├── data/                    # Data storage and caching
+├── n8n-workflows/           # n8n workflow JSON exports (version control)
+│   ├── utils/               # Export/import utility scripts
+│   └── subflows/            # Workflow JSON definitions
 ├── docs/                    # Documentation
 ├── scripts/                 # Utility scripts
-├── terraform/               # Infrastructure as Code for cloud deployment
-│   └── phase1-lightsail/    # AWS Lightsail deployment configuration
 ├── pyproject.toml           # Python project configuration and dependencies
 ├── uv.lock                  # Locked dependency versions for reproducible builds
 ├── docker-compose.yml       # Multi-container application orchestration
@@ -196,60 +216,109 @@ The project uses **uv** as the Python package manager for several key advantages
 ### Key Dependencies
 - **dbt-duckdb**: dbt adapter for DuckDB integration
 - **polars**: High-performance DataFrame operations
-- **prefect**: Workflow orchestration framework
 - **httpx**: Async HTTP client for API calls
 - **musicbrainzngs**: MusicBrainz API client
 - **pydantic**: Data validation and settings management
+- **n8n** (runs in Docker container, not a Python dependency)
 
 ## Deployment
 
 ### Local Development
 Use Docker Compose for local development and testing with uv handling all Python dependencies.
 
-### Production Deployment with Terraform
+### Deployment
 
-The project includes comprehensive **Terraform** Infrastructure as Code for AWS deployment:
+The application is designed for simple local deployment using Docker Compose:
 
-#### Terraform Configuration (`terraform/phase1-lightsail/`)
-- **`main.tf`**: Provider configuration and module orchestration
-- **`lightsail.tf`**: AWS Lightsail instance configuration with Docker setup
-- **`dns.tf`**: Domain and DNS management for public access
-- **`variables.tf`**: Configurable deployment parameters
-- **`outputs.tf`**: Important deployment information (IP addresses, domains)
-- **`user_data.sh`**: Automated server setup script for Docker and application deployment
-
-#### Infrastructure Features:
-- **AWS Lightsail Instance**: Cost-effective VPS with predictable pricing
-- **Automated Setup**: User data scripts handle Docker installation and application deployment
-- **DNS Management**: Configurable domain setup for public Metabase access
-- **Security**: Proper firewall configuration and SSH key management
-- **Monitoring**: Instance health monitoring and alerting
+#### Local Deployment
+- **Docker Compose**: Simple multi-container orchestration
+- **Local Access**: Services accessible on localhost ports
+- **Easy Setup**: Single command to start all services
 
 #### Deployment Process:
-1. **Configure**: Set variables in `terraform.tfvars`
-2. **Plan**: `terraform plan` to review infrastructure changes
-3. **Deploy**: `terraform apply` to provision AWS resources
-4. **Access**: Automated DNS setup for public dashboard access
+1. **Configure**: Set environment variables in `.env` file (copy from `.env.example`)
+2. **Start**: `docker compose up -d` to launch all services
+3. **Access**: Applications available at localhost ports
 
-#### Cost Structure:
-- **Infrastructure**: $5-15/month (AWS Lightsail instances)
-- **Predictable Pricing**: No surprise charges from compute or storage usage
-- **Scalability**: Easy instance upgrades through Terraform configuration updates
+#### Synology NAS Deployment (Recommended)
+For Synology NAS deployment using Container Manager (optimized for 2GB RAM):
+
+**Complete Deployment Guide**: See [SYNOLOGY_DEPLOYMENT_GUIDE.md](SYNOLOGY_DEPLOYMENT_GUIDE.md) for comprehensive step-by-step instructions including screenshots, troubleshooting, and performance tuning.
+
+**Quick Start**:
+
+1. **Prepare NAS**:
+   - Install Container Manager from Package Center
+   - Create shared folder: `/volume1/docker/music-tracker`
+   - Set proper permissions for your user account
+
+2. **Transfer Files**:
+   - Copy entire project to `/volume1/docker/music-tracker`
+   - Ensure all subdirectories are preserved
+
+3. **Container Manager Setup**:
+   - Open Container Manager > Project > Create from docker-compose.yml
+   - Browse to `/volume1/docker/music-tracker/docker-compose.yml`
+   - Configure environment variables (copy from `.env.example`)
+   - Set volume mappings to persistent storage locations
+
+4. **Memory Configuration** (Post-Prefect Migration):
+   - n8n: 300MB limit (workflow orchestration)
+   - Streamlit: 200MB limit (analytics dashboards)
+   - Data Pipeline: 400MB limit
+   - **Total**: ~900MB (700MB freed from Prefect removal)
+
+5. **Deploy Workflows**:
+   - Access n8n UI: `http://<synology-ip>:5678`
+   - Run deployment script: `python flows/cli/deploy_n8n_workflows.py --action deploy`
+   - Workflows will be created and can be monitored in n8n UI
+
+6. **Access Applications**:
+   - Streamlit Analytics: `http://<synology-ip>:8501` (LAN only)
+   - n8n Workflows: `http://<synology-ip>:5678` (LAN only)
+   - No external DNS or SSL required for local deployment
+
+7. **Monitoring & Maintenance**:
+   - Use Synology Resource Monitor for real-time tracking
+   - Set up Container Manager notifications for alerts
+   - Configure Hyper Backup for automated data protection
+   - Regularly check memory usage stays under 1.5GB
+   - Monitor Streamlit app responsiveness and reconnect to DuckDB as needed
+
+**Storage Optimization**:
+- Use SSD cache for DuckDB files if available
+- Implement backup strategy for `data/music_tracker.duckdb`
+- Configure log rotation in Synology Log Center
+
+**Optional Reverse Proxy**:
+- Set up Synology Reverse Proxy for custom domains on LAN
+- Configure `analytics.yourdomain.local` and `workflows.yourdomain.local`
+- Update hosts files on client devices or use Synology DNS Server
+
+**Performance Tips**:
+- Monitor memory usage during initial data loads
+- Streamlit caches queries automatically for better responsiveness
+- Use wired network connection for stability
+- Regularly compact DuckDB database for optimal performance
+- Monitor n8n workflow execution history for job performance
+- Restart Streamlit container if experiencing connection issues to DuckDB
 
 ## Monitoring & Observability
 
-- **Prefect UI**: Workflow monitoring, logs, and scheduling
-- **Structured Logging**: JSON logs with correlation IDs
-- **Performance Metrics**: Execution timing and resource usage
+- **n8n UI**: Workflow monitoring, execution history, and scheduling
+- **Streamlit Dashboards**: Real-time data visualization and exploration
+- **CLI Output**: JSON logs from each task execution
+- **Performance Metrics**: Execution timing and resource usage captured in n8n
 - **Health Checks**: Container health monitoring
-- **Alerting**: Configurable notifications for failures
+- **Error Handling**: Configurable retry logic and error notifications per task
 
-## Cost Analysis
+## Resource Requirements
 
-- **Infrastructure**: $5-15/month (AWS Lightsail)
-- **API Costs**: Free (Spotify Web API, MusicBrainz)
-- **Software**: $0 (fully open-source stack)
-- **Scalability**: Linear cost scaling with infrastructure needs
+- **Memory**: 2GB RAM minimum (optimized for Synology NAS, typical usage ~900MB after Prefect removal)
+- **Storage**: 1GB+ for Docker images and data files
+- **CPU**: 2+ cores recommended for smooth operation
+- **Network**: Local LAN access only (no external/internet exposure required)
+- **Internet**: Required for API calls to Spotify and MusicBrainz during data processing
 
 ## Contributing
 
@@ -258,3 +327,10 @@ This project follows standard Python development practices:
 - **Testing**: pytest with async support
 - **Documentation**: Comprehensive inline documentation
 - **Configuration**: Environment-based settings management
+
+## Notes
+
+```bash
+docker exec -it music-tracker-streamlit bash # bash in container
+sudo grep -R "8501" /volume1/@appconf/ # check for orphaned port refs
+```

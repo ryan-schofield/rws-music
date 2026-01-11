@@ -1,0 +1,138 @@
+{
+  "name": "Geography Coordinate Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e603e254-9487-4895-b7d9-ecd6a62d7228",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import IdentifyCitiesNeedingCoordinatesCLI\nreturn IdentifyCitiesNeedingCoordinatesCLI().execute(limit=100, batch_size=10)"
+      },
+      "name": "Identify Cities Needing Coordinates",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "575360f9-232d-4687-bc08-2907943b59a8",
+      "notes": "Uses DuckDB to efficiently identify cities needing coordinate lookup and create batch plan"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.batches",
+        "options": {}
+      },
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        448,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "2b4708da-bef3-438b-9c3a-7526c100ab48",
+      "notes": "Splits the batch plan into individual batch items for parallel processing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import FetchCoordinateBatchCLI\n\nbatch_index = _item[\"json\"][\"batch_index\"]\nbatch_size = _item[\"json\"][\"batch_size\"]\noffset = _item[\"json\"][\"offset\"]\n\nreturn FetchCoordinateBatchCLI().execute(\n    batch_index=batch_index,\n    batch_size=batch_size,\n    offset=offset\n)"
+      },
+      "name": "Fetch Coordinate Batch",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        672,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "4fc396be-4b24-496f-9982-05001d6cb359",
+      "notes": "Fetches coordinates from OpenWeather API for this specific batch"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import WriteCoordinateDataCLI\n\ncoordinate_data = _item[\"json\"][\"data\"][\"coordinate_data\"]\n\nreturn WriteCoordinateDataCLI().execute(coordinate_data=coordinate_data)"
+      },
+      "name": "Write Coordinate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        896,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "d906e031-c93a-4b83-b5da-568ba01f323a",
+      "notes": "Writes coordinate data to cities_with_lat_long parquet table using merge mode"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Identify Cities Needing Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Cities Needing Coordinates": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch Coordinate Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Coordinate Batch": {
+      "main": [
+        [
+          {
+            "node": "Write Coordinate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2e28bdf0-e301-4acf-9ae0-a9f32ce913dd",
+  "meta": {
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+  },
+  "id": "NaayjsvwwAzeVCvYpv_MH",
+  "tags": []
+}

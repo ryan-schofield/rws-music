@@ -42,7 +42,7 @@ class SpotifyAPIClient:
         self._access_token = None
         self._token_expires_at = None
 
-        if not all([self.client_id, self.client_secret, self.refresh_token]):
+        if not self.client_id or not self.client_secret or not self.refresh_token:
             raise ValueError("Spotify credentials not found")
 
     def _get_access_token(self) -> str:
@@ -69,18 +69,23 @@ class SpotifyAPIClient:
 
         data = {"grant_type": "refresh_token", "refresh_token": self.refresh_token}
 
-        response = requests.post(self.TOKEN_URL, headers=headers, data=data)
-        response.raise_for_status()
+        try:
+            response = requests.post(self.TOKEN_URL, headers=headers, data=data)
+            response.raise_for_status()
 
-        token_data = response.json()
-        self._access_token = token_data["access_token"]
-        expires_in = token_data["expires_in"]
+            token_data = response.json()
+            self._access_token = token_data["access_token"]
+            expires_in = token_data["expires_in"]
 
-        # Set expiration time (with 5 minute buffer)
-        self._token_expires_at = now + timedelta(seconds=expires_in - 300)
+            # Set expiration time (with 5 minute buffer)
+            self._token_expires_at = now + timedelta(seconds=expires_in - 300)
 
-        logger.info("Successfully obtained Spotify access token")
-        return self._access_token
+            logger.info("Successfully obtained Spotify access token")
+            return self._access_token
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to get access token: {e}")
+            raise
 
     def _make_request(
         self, endpoint: str, params: Dict[str, Any] = None
@@ -90,9 +95,24 @@ class SpotifyAPIClient:
         headers = {"Authorization": f"Bearer {token}"}
         url = f"{self.BASE_URL}{endpoint}"
 
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            logger.debug(f"Spotify API response status: {response.status_code}")
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Spotify API request failed: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                logger.error(f"Response status code: {e.response.status_code}")
+                logger.error(f"Response body: {e.response.text}")
+            raise
+
+    def get_recently_played(self, after: str = None) -> Dict[str, Any]:
+        """Get recently played tracks."""
+        params = {"limit": 50}
+        if after:
+            params["after"] = after
+        return self._make_request("/me/player/recently-played", params)
 
     def get_artist(self, artist_id: str) -> Dict[str, Any]:
         """Get artist information by Spotify ID."""
@@ -123,7 +143,7 @@ class SpotifyAPIClient:
                     sleep(60)  # Longer pause every 10 batches
 
             except Exception as e:
-                logger.error(f"Error fetching artists batch {i}-{i+len(batch)}: {e}")
+                logger.error(f"Error fetching artists batch {i}-{i + len(batch)}: {e}")
                 continue
 
         return results
@@ -149,7 +169,7 @@ class SpotifyAPIClient:
                     sleep(60)  # Longer pause every 5 batches
 
             except Exception as e:
-                logger.error(f"Error fetching albums batch {i}-{i+len(batch)}: {e}")
+                logger.error(f"Error fetching albums batch {i}-{i + len(batch)}: {e}")
                 continue
 
         return results
@@ -165,7 +185,13 @@ class MusicBrainzClient:
         self, user_agent: str = "fffv_tracks_history/0.1", cache_dir: str = None
     ):
         mbz.set_useragent(user_agent, "0.1")
-        self.cache_dir = Path(cache_dir) if cache_dir else Path("data/cache/mbz")
+        if cache_dir:
+            self.cache_dir = Path(cache_dir)
+        else:
+            workspace_dir = Path("/home/runner/workspace")
+            if not workspace_dir.exists():
+                workspace_dir = Path.cwd()
+            self.cache_dir = workspace_dir / "data" / "cache" / "mbz"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def get_artist_by_isrc(self, isrc: str) -> Optional[str]:
