@@ -1,5 +1,5 @@
 {
-  "name": "Spotify Ingestion",
+  "name": "Track Ingestion",
   "nodes": [
     {
       "parameters": {
@@ -16,11 +16,25 @@
       "name": "Trigger - Every 30min",
       "type": "n8n-nodes-base.cron",
       "position": [
-        0,
+        -320,
         0
       ],
       "id": "ae9a6108-7c36-485e-b378-a86e2bde6222",
       "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_navidrome import NavidromeIngestionCLI\nimport os\nfrom pathlib import Path\n\n# Diagnostic output\nprint(f\"Current working directory: {os.getcwd()}\")\nprint(f\"Files in current dir: {os.listdir('.')}\")\nprint(f\"Absolute path of 'data': {Path('data').absolute()}\")\nprint(f\"Exists? {Path('data').exists()}\")\nprint(f\"PYTHONPATH: {os.getenv('PYTHONPATH')}\")\n\nreturn NavidromeIngestionCLI().execute()"
+      },
+      "name": "Ingest Navidrome Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "navidrome-1"
     },
     {
       "parameters": {
@@ -39,12 +53,26 @@
     {
       "parameters": {
         "language": "pythonNative",
+        "pythonCode": "from flows.cli.consolidate_tracks import ConsolidateTracksCLI\nreturn ConsolidateTracksCLI().execute()"
+      },
+      "name": "Consolidate Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        608,
+        0
+      ],
+      "typeVersion": 2,
+      "id": "consolidate-1"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
         "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
       },
       "name": "Load Raw Tracks",
       "type": "n8n-nodes-base.code",
       "position": [
-        608,
+        912,
         0
       ],
       "typeVersion": 2,
@@ -58,7 +86,7 @@
       "name": "Validate Data",
       "type": "n8n-nodes-base.code",
       "position": [
-        912,
+        1216,
         0
       ],
       "typeVersion": 2,
@@ -71,6 +99,17 @@
       "main": [
         [
           {
+            "node": "Ingest Navidrome Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest Navidrome Tracks": {
+      "main": [
+        [
+          {
             "node": "Ingest Spotify Tracks",
             "type": "main",
             "index": 0
@@ -79,6 +118,17 @@
       ]
     },
     "Ingest Spotify Tracks": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Tracks": {
       "main": [
         [
           {

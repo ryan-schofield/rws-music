@@ -5,6 +5,7 @@ Batch processing utilities for n8n workflows.
 Provides utilities for splitting large datasets into manageable batches
 with state tracking and resumption capabilities.
 """
+
 import json
 import logging
 from pathlib import Path

@@ -36,7 +36,9 @@ class IdentifyMissingMBZArtistsCLI(CLICommand):
         self.duckdb_engine = DuckDBQueryEngine()
         self.batch_size = 10  # Conservative size for MBZ rate limiting
 
-    def execute(self, limit: Optional[int] = None, batch_size: Optional[int] = None, **kwargs) -> Dict[str, Any]:
+    def execute(
+        self, limit: Optional[int] = None, batch_size: Optional[int] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Identify missing MBZ artists and return batching information.
 
@@ -77,11 +79,13 @@ class IdentifyMissingMBZArtistsCLI(CLICommand):
             batch_plan = []
             for batch_index in range(num_batches):
                 offset = batch_index * self.batch_size
-                batch_plan.append({
-                    "batch_index": batch_index,
-                    "batch_size": self.batch_size,
-                    "offset": offset,
-                })
+                batch_plan.append(
+                    {
+                        "batch_index": batch_index,
+                        "batch_size": self.batch_size,
+                        "offset": offset,
+                    }
+                )
 
             return self.success_result(
                 message=f"Identified {total_count} artists across {num_batches} batches",
@@ -118,7 +122,7 @@ class FetchMBZArtistBatchCLI(CLICommand):
         batch_index: int = 0,
         batch_size: int = 10,
         offset: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Fetch MBZ data for a specific batch of artists.
@@ -169,27 +173,37 @@ class FetchMBZArtistBatchCLI(CLICommand):
                     self.logger.debug(f"Processing artist: {artist_name} ({artist_id})")
 
                     # Attempt MBZ lookup using ISRC
-                    result = self.processor.fetch_artist_by_isrc(isrc, artist_id, artist_name)
+                    result = self.processor.fetch_artist_by_isrc(
+                        isrc, artist_id, artist_name
+                    )
 
                     if result.get("status") == "success":
                         fetched += 1
-                        self.logger.debug(f"Successfully fetched MBZ data for {artist_name}")
+                        self.logger.debug(
+                            f"Successfully fetched MBZ data for {artist_name}"
+                        )
                     else:
-                        failed_artists.append({
-                            "artist_id": artist_id,
-                            "artist": artist_name,
-                            "track_isrc": isrc,
-                            "reason": result.get("message", "Unknown error"),
-                        })
-                        self.logger.debug(f"Failed to fetch MBZ data for {artist_name}: {result.get('message')}")
+                        failed_artists.append(
+                            {
+                                "artist_id": artist_id,
+                                "artist": artist_name,
+                                "track_isrc": isrc,
+                                "reason": result.get("message", "Unknown error"),
+                            }
+                        )
+                        self.logger.debug(
+                            f"Failed to fetch MBZ data for {artist_name}: {result.get('message')}"
+                        )
 
                 except Exception as e:
-                    failed_artists.append({
-                        "artist_id": row["artist_id"],
-                        "artist": row["artist"],
-                        "track_isrc": row.get("track_isrc"),
-                        "reason": str(e),
-                    })
+                    failed_artists.append(
+                        {
+                            "artist_id": row["artist_id"],
+                            "artist": row["artist"],
+                            "track_isrc": row.get("track_isrc"),
+                            "reason": str(e),
+                        }
+                    )
                     self.logger.error(f"Error processing artist in batch: {str(e)}")
 
             self.logger.info(
@@ -238,9 +252,7 @@ class TrackMBZFailuresCLI(CLICommand):
         try:
             if not failed_artists:
                 self.logger.info("No failed artists to track")
-                return self.no_updates_result(
-                    message="No failed artists to track"
-                )
+                return self.no_updates_result(message="No failed artists to track")
 
             self.logger.info(f"Tracking {len(failed_artists)} failed artists")
 
@@ -249,10 +261,7 @@ class TrackMBZFailuresCLI(CLICommand):
 
             if result.get("status") == "success":
                 # Include the list of failed artists in the output data
-                data = {
-                    "summary": result,
-                    "failed_artists": failed_artists
-                }
+                data = {"summary": result, "failed_artists": failed_artists}
                 return self.success_result(
                     message=f"Tracked {len(failed_artists)} failed artists",
                     data=data,
