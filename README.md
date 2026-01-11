@@ -111,7 +111,7 @@ TIMEZONE=UTC
 
 # Optional Configuration
 ENVIRONMENT=development  # or production
-DUCKDB_PATH=/app/data/music_tracker.duckdb
+DUCKDB_PATH=//home/runner/workspace/data/music_tracker.duckdb
 LOG_LEVEL=INFO
 ```
 
@@ -315,3 +315,10 @@ This project follows standard Python development practices:
 - **Testing**: pytest with async support
 - **Documentation**: Comprehensive inline documentation
 - **Configuration**: Environment-based settings management
+
+## Notes
+
+```bash
+docker exec -it music-tracker-streamlit bash # bash in container
+sudo grep -R "8501" /volume1/@appconf/ # check for orphaned port refs
+```

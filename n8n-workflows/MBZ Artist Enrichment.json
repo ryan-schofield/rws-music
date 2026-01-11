@@ -11,13 +11,13 @@
         0,
         0
       ],
-      "id": "730ccf3f-5e42-443a-a6a6-531491760709",
+      "id": "b46c1fa7-134e-47d7-a5f6-bd6471a7138d",
       "name": "When Executed by Another Workflow"
     },
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_mbz_artists_granular import IdentifyMissingMBZArtistsCLI\nreturn IdentifyMissingMBZArtistsCLI().execute(limit=500, batch_size=10)"
+        "pythonCode": "from flows.cli.enrich_mbz_artists_granular import IdentifyMissingMBZArtistsCLI\nreturn IdentifyMissingMBZArtistsCLI().execute(limit=100, batch_size=10)"
       },
       "name": "Identify Missing MBZ Artists",
       "type": "n8n-nodes-base.code",
@@ -26,7 +26,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "aa4965a0-9c1e-4d6f-a6e5-4955f764e07e",
+      "id": "d61262f1-5df2-46cf-9830-1c20c6971e4b",
       "notes": "Uses DuckDB to efficiently identify missing MBZ artists and create batch plan"
     },
     {
@@ -41,7 +41,7 @@
         0
       ],
       "typeVersion": 1,
-      "id": "1c093af7-b08b-49f4-8193-752805c2561d",
+      "id": "3087dbb6-f8f0-49ce-9f73-4c0bfde22ffb",
       "notes": "Splits the batch plan into individual batch items for parallel processing"
     },
     {
@@ -57,7 +57,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "ccad4361-aed8-4eae-a30f-1dd711209e6f",
+      "id": "4a61bc05-c02d-4eda-b276-8cdc5aedf0f6",
       "notes": "Fetches artist data from MusicBrainz API for this specific batch"
     },
     {
@@ -73,7 +73,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "eab01757-9ab5-4b02-85ed-6e490f445ae0",
+      "id": "77001853-0c51-457c-82d1-ec408cba08b7",
       "notes": "Tracks artists that failed MusicBrainz lookup to the tracking table"
     }
   ],
@@ -129,10 +129,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "d22648b3-dea8-457b-be17-43cbfc53d1a4",
+  "versionId": "6a3cf9c1-e323-44c9-8347-8a4604afa924",
   "meta": {
-    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
   },
-  "id": "uG8gCQZ7rkAdczCmSvKCC",
+  "id": "jZkVWDPhN2rMCAk9VCaQ9",
   "tags": []
 }

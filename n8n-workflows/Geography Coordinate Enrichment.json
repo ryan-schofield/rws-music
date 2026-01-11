@@ -11,13 +11,13 @@
         0,
         0
       ],
-      "id": "2ebfee0d-d78d-49a5-a47e-a6cff577c58b",
+      "id": "e603e254-9487-4895-b7d9-ecd6a62d7228",
       "name": "When Executed by Another Workflow"
     },
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import IdentifyCitiesNeedingCoordinatesCLI\nreturn IdentifyCitiesNeedingCoordinatesCLI().execute(limit=500, batch_size=50)"
+        "pythonCode": "from flows.cli.enrich_geography_coordinates_granular import IdentifyCitiesNeedingCoordinatesCLI\nreturn IdentifyCitiesNeedingCoordinatesCLI().execute(limit=100, batch_size=10)"
       },
       "name": "Identify Cities Needing Coordinates",
       "type": "n8n-nodes-base.code",
@@ -26,7 +26,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "0d0b0365-be7c-4ff9-9002-6770ecc5240a",
+      "id": "575360f9-232d-4687-bc08-2907943b59a8",
       "notes": "Uses DuckDB to efficiently identify cities needing coordinate lookup and create batch plan"
     },
     {
@@ -41,7 +41,7 @@
         0
       ],
       "typeVersion": 1,
-      "id": "90cd6f67-92fe-41ae-a0b5-abe5332df4c0",
+      "id": "2b4708da-bef3-438b-9c3a-7526c100ab48",
       "notes": "Splits the batch plan into individual batch items for parallel processing"
     },
     {
@@ -57,7 +57,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "73f848dd-2601-41a0-aac3-30f095a1e2f0",
+      "id": "4fc396be-4b24-496f-9982-05001d6cb359",
       "notes": "Fetches coordinates from OpenWeather API for this specific batch"
     },
     {
@@ -73,7 +73,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "3194ac07-17d7-4aa5-ad13-d87e291b0e91",
+      "id": "d906e031-c93a-4b83-b5da-568ba01f323a",
       "notes": "Writes coordinate data to cities_with_lat_long parquet table using merge mode"
     }
   ],
@@ -129,10 +129,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "8ae3af44-6a8b-4f3d-8e0f-8ad8c8aebded",
+  "versionId": "2e28bdf0-e301-4acf-9ae0-a9f32ce913dd",
   "meta": {
-    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
   },
-  "id": "JSwOOALUm8EQcFveF-kKw",
+  "id": "NaayjsvwwAzeVCvYpv_MH",
   "tags": []
 }

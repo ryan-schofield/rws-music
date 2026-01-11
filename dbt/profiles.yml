@@ -1,14 +1,7 @@
 music-tracker:
    target: local
+
    outputs:
-     dev:
-       type: duckdb
-       path: "/app/data/music_tracker.duckdb"
-       threads: 1
-       settings:
-         memory_limit: 256MB
-         threads: 1
-         max_memory: 256MB
 
      local:
        type: duckdb
@@ -20,3 +13,12 @@ music-tracker:
        settings:
          memory_limit: 4GB
          threads: 4
+
+     dev:
+       type: duckdb
+       path: "/home/runner/workspace/data/music_tracker.duckdb"
+       threads: 1
+       settings:
+         memory_limit: 256MB
+         threads: 1
+         max_memory: 256MB

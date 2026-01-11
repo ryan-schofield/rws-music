@@ -2,14 +2,24 @@
   "name": "Spotify Ingestion",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 30,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
       "name": "Trigger - Every 30min",
       "type": "n8n-nodes-base.cron",
       "position": [
         0,
         0
       ],
-      "id": "183e3039-e7e3-4cf0-9341-0ddfa7dd3a8a",
+      "id": "ae9a6108-7c36-485e-b378-a86e2bde6222",
       "typeVersion": 1
     },
     {
@@ -24,7 +34,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "70205a37-2d4d-4e23-bcc1-8f8da705de50"
+      "id": "9ba9176e-2687-4d91-a3d9-5fe38d2f86f1"
     },
     {
       "parameters": {
@@ -38,7 +48,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "dbf5ba91-6c7f-4151-98e3-e37de3771cfb"
+      "id": "5c68f21b-1fa5-427a-a268-d561ec12e4dc"
     },
     {
       "parameters": {
@@ -52,7 +62,7 @@
         0
       ],
       "typeVersion": 2,
-      "id": "e35cad8d-bfec-4718-98b7-c2c6698f53ad"
+      "id": "13fb8dcb-78d2-4a09-8219-2c3f25a00905"
     }
   ],
   "pinData": {},
@@ -96,10 +106,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "17a453a4-b256-4403-aec5-d0b64ce3a053",
+  "versionId": "d575ba87-851c-4dbe-ab3a-55bfd72c6139",
   "meta": {
-    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
   },
-  "id": "oF0EgDuOnQ5IWIKp",
+  "id": "dk9jQHRcOELyU2mcpzEad",
   "tags": []
 }

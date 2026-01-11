@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        896,
+        0,
         192
       ],
-      "id": "96867cde-2cb1-4dd4-ac07-d386b1c59333",
+      "id": "cf6d9b6e-0b65-429f-817e-5bbad0139a19",
       "name": "Extract Album Genre"
     },
     {
@@ -25,11 +25,11 @@
       "name": "Extract Album",
       "type": "n8n-nodes-base.code",
       "position": [
-        896,
+        0,
         0
       ],
       "typeVersion": 2,
-      "id": "097acd1d-3ed8-4e8c-a8c4-fb8135f49865"
+      "id": "d6d399e7-e2f3-402f-b046-7db7eda85157"
     },
     {
       "parameters": {
@@ -40,11 +40,11 @@
       "name": "Fetch Album Batch",
       "type": "n8n-nodes-base.code",
       "position": [
-        672,
+        -224,
         96
       ],
       "typeVersion": 2,
-      "id": "529499b1-5d29-4a52-8067-512c232491ea"
+      "id": "5f7a5bb1-7e54-40a8-b846-a9edc586c707"
     },
     {
       "parameters": {
@@ -54,25 +54,25 @@
       "name": "Split Into Batches",
       "type": "n8n-nodes-base.splitOut",
       "position": [
-        448,
+        -448,
         96
       ],
       "typeVersion": 1,
-      "id": "b0d8ec52-812b-4784-b5d6-5ca24941e818"
+      "id": "43731035-662d-421e-bf28-a753ad5091ba"
     },
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import IdentifyMissingAlbumsCLI\nreturn IdentifyMissingAlbumsCLI().execute(limit=500, batch_size=20)"
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import IdentifyMissingAlbumsCLI\nreturn IdentifyMissingAlbumsCLI().execute(limit=25, batch_size=5)"
       },
       "name": "Identify Missing Albums",
       "type": "n8n-nodes-base.code",
       "position": [
-        224,
+        -672,
         96
       ],
       "typeVersion": 2,
-      "id": "131640e7-87cc-4682-871b-78f09913980f",
+      "id": "b3e8f910-85c3-4daf-9fd9-414be25fc297",
       "notes": "Uses DuckDB to efficiently identify missing albums"
     },
     {
@@ -82,20 +82,15 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        0,
+        -896,
         96
       ],
-      "id": "d7adb7d5-d182-4276-aadc-c3661bb9fcc9",
+      "id": "12a91562-bf3a-44a7-bf15-47a37cc905d4",
       "name": "When Executed by Another Workflow"
     }
   ],
   "pinData": {},
   "connections": {
-    "Extract Album": {
-      "main": [
-        []
-      ]
-    },
     "Fetch Album Batch": {
       "main": [
         [
@@ -151,10 +146,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "22459930-9fdb-4b1c-8e8d-6af3b2c6f776",
+  "versionId": "0bb21151-6a89-41a3-ac34-783176efa068",
   "meta": {
-    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
   },
-  "id": "BZ_oK8XJlA4WMhQE9b6IB",
+  "id": "RoTUHjfSlRPrq_3oGZUlN",
   "tags": []
 }

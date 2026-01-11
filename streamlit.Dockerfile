@@ -1,6 +1,6 @@
 FROM python:3.11-slim-bullseye
 
-WORKDIR /app
+WORKDIR /home/runner/workspace
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -23,7 +23,7 @@ COPY streamlit/ streamlit/
 COPY .env ./
 
 # Add uv's virtual environment bin directory to PATH
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/home/runner/workspace/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Streamlit configuration

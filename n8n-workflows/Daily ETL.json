@@ -5,9 +5,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "uG8gCQZ7rkAdczCmSvKCC",
+          "value": "jZkVWDPhN2rMCAk9VCaQ9",
           "mode": "list",
-          "cachedResultUrl": "/workflow/uG8gCQZ7rkAdczCmSvKCC",
+          "cachedResultUrl": "/workflow/jZkVWDPhN2rMCAk9VCaQ9",
           "cachedResultName": "MBZ Artist Enrichment"
         },
         "workflowInputs": {
@@ -24,18 +24,18 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1200,
-        624
+        672,
+        96
       ],
-      "id": "a9e9e390-237d-4823-ae83-e3b53631a23d"
+      "id": "026ac1d9-bb86-40b3-b6da-82e06741b3b4"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "JSwOOALUm8EQcFveF-kKw",
+          "value": "NaayjsvwwAzeVCvYpv_MH",
           "mode": "list",
-          "cachedResultUrl": "/workflow/JSwOOALUm8EQcFveF-kKw",
+          "cachedResultUrl": "/workflow/NaayjsvwwAzeVCvYpv_MH",
           "cachedResultName": "Geography Coordinate Enrichment"
         },
         "workflowInputs": {
@@ -52,10 +52,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2096,
-        624
+        1568,
+        96
       ],
-      "id": "ffd4f7e6-a417-4bc3-a920-f974e3e3fff0",
+      "id": "17459df7-771a-4fdd-9387-671a97603841",
       "alwaysOutputData": true
     },
     {
@@ -67,12 +67,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2320,
-        624
+        1792,
+        96
       ],
-      "id": "ebcb8fcf-0d9e-4e4d-8b29-653c87e93051",
+      "id": "c7811274-ce37-4f96-9ab6-db796945af37",
       "executeOnce": true,
-      "alwaysOutputData": true
+      "alwaysOutputData": false
     },
     {
       "parameters": {
@@ -83,10 +83,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2544,
-        624
+        2016,
+        96
       ],
-      "id": "d23405cc-00ae-4daa-ab5b-82d1f15c67b1",
+      "id": "8cb79225-79c2-4770-a1fd-3b6ed1b9206d",
       "executeOnce": true
     },
     {
@@ -97,11 +97,12 @@
       "name": "Discover MBZ Artists",
       "type": "n8n-nodes-base.code",
       "position": [
-        976,
-        624
+        448,
+        96
       ],
       "typeVersion": 2,
-      "id": "7dc3f86e-305a-4948-9d34-fd90aeb2c79b",
+      "id": "826214a2-9662-4e73-aaf3-b89861cbccdc",
+      "executeOnce": true,
       "notes": "Identifies artists from tracks that need MusicBrainz lookup"
     },
     {
@@ -112,11 +113,11 @@
       "name": "Parse MBZ Data",
       "type": "n8n-nodes-base.code",
       "position": [
-        1424,
-        624
+        896,
+        96
       ],
       "typeVersion": 2,
-      "id": "86ec7fab-a654-48f7-b0d1-9542f86385f2",
+      "id": "1dbc46fe-2bde-4b40-8a42-a3a9d7c8a82b",
       "notes": "Processes cached MusicBrainz JSON files and writes to parquet tables"
     },
     {
@@ -127,11 +128,11 @@
       "name": "Process MBZ Hierarchy",
       "type": "n8n-nodes-base.code",
       "position": [
-        1648,
-        624
+        1120,
+        96
       ],
       "typeVersion": 2,
-      "id": "b81b87e0-20e0-4f4e-aa8e-b00787ad5f94",
+      "id": "2a983277-00bc-47f2-a808-3a4607f9dc61",
       "notes": "Processes MusicBrainz area hierarchy and builds parent relationships"
     },
     {
@@ -142,11 +143,11 @@
       "name": "Enrich Geography Base",
       "type": "n8n-nodes-base.code",
       "position": [
-        1872,
-        624
+        1344,
+        96
       ],
       "typeVersion": 2,
-      "id": "46f48316-6f02-4bcb-bcf0-6b320a69a4f9",
+      "id": "2c35faed-729d-46d4-9780-70790920ad69",
       "notes": "Adds continent information and geocoding parameters to area hierarchy"
     },
     {
@@ -154,7 +155,8 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 2
+              "triggerAtHour": 9,
+              "triggerAtMinute": 15
             }
           ]
         }
@@ -162,19 +164,19 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        304,
-        624
+        -224,
+        96
       ],
-      "id": "ca28c528-6a27-44fa-a704-face0be944ae",
+      "id": "240ee2d7-6051-413e-8dea-f56c5309a9e4",
       "name": "Run Daily"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "W1j31on099RSbipqouRVm",
+          "value": "8xDECCWUlCDeLBejBCrYN",
           "mode": "list",
-          "cachedResultUrl": "/workflow/W1j31on099RSbipqouRVm",
+          "cachedResultUrl": "/workflow/8xDECCWUlCDeLBejBCrYN",
           "cachedResultName": "Spotify Artist Enrichment"
         },
         "workflowInputs": {
@@ -190,10 +192,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        528,
-        528
+        0,
+        0
       ],
-      "id": "5d22410b-075d-40f7-9a7a-b40abf28c5a4",
+      "id": "d085bed3-5966-448a-85af-a7ba9672e344",
       "name": "Call 'Spotify Artist Enrichment",
       "alwaysOutputData": false
     },
@@ -201,9 +203,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "BZ_oK8XJlA4WMhQE9b6IB",
+          "value": "RoTUHjfSlRPrq_3oGZUlN",
           "mode": "list",
-          "cachedResultUrl": "/workflow/BZ_oK8XJlA4WMhQE9b6IB",
+          "cachedResultUrl": "/workflow/RoTUHjfSlRPrq_3oGZUlN",
           "cachedResultName": "Spotify Album Enrichment"
         },
         "workflowInputs": {
@@ -219,22 +221,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        528,
-        720
+        0,
+        192
       ],
-      "id": "270016fd-3745-406e-8605-f5870d7b2d65",
+      "id": "2a4e16b1-17a5-4466-804a-ed67e1f33c5d",
       "name": "Call 'Spotify Album Enrichment'"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        752,
-        624
-      ],
-      "id": "32a1b83a-6109-45fd-9b51-477610a6e2fb",
-      "name": "Merge Spotify Outputs"
     }
   ],
   "pinData": {},
@@ -336,7 +327,7 @@
       "main": [
         [
           {
-            "node": "Merge Spotify Outputs",
+            "node": "Discover MBZ Artists",
             "type": "main",
             "index": 0
           }
@@ -344,17 +335,6 @@
       ]
     },
     "Call 'Spotify Album Enrichment'": {
-      "main": [
-        [
-          {
-            "node": "Merge Spotify Outputs",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Spotify Outputs": {
       "main": [
         [
           {
@@ -371,10 +351,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "4e2d2372-b988-40f5-99d6-e14c5a48d123",
+  "versionId": "acc7c287-0c13-402b-8309-c1bad3b3f04d",
   "meta": {
-    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
   },
-  "id": "98lSkDAYkaO4Jcvc",
+  "id": "ksDIaNrxoBVpsWSKiNKzG",
   "tags": []
 }

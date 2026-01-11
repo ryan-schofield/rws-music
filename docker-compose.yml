@@ -20,7 +20,7 @@ services:
       - ./logs:/app/logs
     env_file: .env
     environment:
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - DUCKDB_PATH=//home/runner/workspace/data/music_tracker.duckdb
       - LOG_LEVEL=INFO
     networks:
       - music-tracker
@@ -125,14 +125,14 @@ services:
       - "8501:8501"
     env_file: .env
     environment:
-      - DUCKDB_PATH=/app/data/music_tracker.duckdb
+      - DUCKDB_PATH=/home/runner/workspace/data/music_tracker.duckdb
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_HEADLESS=true
       - STREAMLIT_SERVER_RUNONSAVE=false
       - STREAMLIT_CLIENT_TOOLBAR_MODE=viewer
     volumes:
-      - ./data:/app/data:ro
-      - ./streamlit:/app/streamlit
+      - ./data:/home/runner/workspace/data:ro
+      - ./streamlit:/home/runner/workspace/streamlit
     networks:
       - music-tracker
     restart: unless-stopped
