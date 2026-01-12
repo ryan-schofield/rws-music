@@ -41,27 +41,27 @@ class RunDBTCLI(CLICommand):
         self.dbt_dir = workspace_dir / "dbt"
 
     def execute(
-        self, 
-        select: str = None, 
+        self,
+        select: str = None,
         exclude: str = None,
         full_refresh: bool = False,
         command: str = "build",
         target: str = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Execute dbt transformations using dbt build (default) or dbt run.
-        
+
         dbt build runs tests, freshness checks, and models in the correct order,
         providing comprehensive transformation and validation.
-        
+
         Args:
             select: dbt selector for models to run
             exclude: dbt models to exclude
             full_refresh: Force full refresh of all models
             command: dbt command to run ('build' or 'run', default: 'build')
             target: dbt target to use (optional, e.g., 'dev', 'prod')
-            
+
         Returns:
             Result dictionary with status and metrics
         """
@@ -69,14 +69,16 @@ class RunDBTCLI(CLICommand):
             self.logger.info("Starting dbt transformations")
             self.logger.info(f"dbt directory: {self.dbt_dir}")
             self.logger.info(f"dbt command: {command}")
-            
+
             if not self.dbt_dir.exists():
                 raise FileNotFoundError(f"dbt directory not found: {self.dbt_dir}")
-            
+
             # Validate command
             if command not in ("build", "run"):
-                raise ValueError(f"Invalid dbt command: {command}. Must be 'build' or 'run'")
-            
+                raise ValueError(
+                    f"Invalid dbt command: {command}. Must be 'build' or 'run'"
+                )
+
             # Determine how to invoke dbt
             # First check if dbt is in PATH
             dbt_cmd = shutil.which("dbt")
@@ -87,7 +89,7 @@ class RunDBTCLI(CLICommand):
                     Path("/opt/runners/task-runner-python/.venv/bin/dbt"),
                     Path("/usr/bin/dbt"),
                 ]
-                
+
                 found = False
                 for dbt_path in common_paths:
                     if dbt_path.exists():
@@ -95,11 +97,12 @@ class RunDBTCLI(CLICommand):
                         self.logger.info(f"Found dbt at: {dbt_cmd}")
                         found = True
                         break
-                
+
                 if not found:
                     # Last resort: try to import and run as Python module
                     try:
                         import dbt
+
                         dbt_cmd = "dbt"  # Will work via 'python -m dbt'
                         self.logger.info("dbt found as Python module")
                     except ImportError:
@@ -107,7 +110,7 @@ class RunDBTCLI(CLICommand):
                             "dbt executable not found in PATH, /usr/local/bin, /opt/runners/task-runner-python/.venv/bin/, "
                             "or as a Python module. Please ensure dbt-core is installed."
                         )
-            
+
             # Build dbt command as a shell string for simpler execution
             # Use 'python -m dbt' as fallback if dbt executable isn't found
             if dbt_cmd and dbt_cmd != "dbt":
@@ -115,7 +118,7 @@ class RunDBTCLI(CLICommand):
             else:
                 # Use python module syntax which works regardless of installation method
                 shell_cmd = f"python -m dbt clean && python -m dbt deps"
-            
+
             # For 'run' command, need to seed first; 'build' does it automatically
             if command == "run":
                 if dbt_cmd and dbt_cmd != "dbt":
@@ -127,7 +130,7 @@ class RunDBTCLI(CLICommand):
                     shell_cmd += f" && {dbt_cmd} {command}"
                 else:
                     shell_cmd += f" && python -m dbt {command}"
-            
+
             if select:
                 shell_cmd += f" --select {select}"
             if exclude:
@@ -136,18 +139,18 @@ class RunDBTCLI(CLICommand):
                 shell_cmd += " --full-refresh"
             if target:
                 shell_cmd += f" --target {target}"
-            
+
             # Prepare environment for subprocess, ensuring HOME is set for DuckDB
             env = os.environ.copy()
             if not env.get("HOME"):
                 env["HOME"] = "/workspace"
-            
+
             # Add environment variables to help with multiprocessing in containers
             env["PYTHONUNBUFFERED"] = "1"
             env["OMP_NUM_THREADS"] = "1"  # Limit OpenMP threads for DuckDB
-            
+
             self.logger.info(f"Running shell command: {shell_cmd}")
-            
+
             # Execute dbt command via shell for simpler environment handling
             result = subprocess.run(
                 shell_cmd,
@@ -158,14 +161,14 @@ class RunDBTCLI(CLICommand):
                 timeout=self.timeout,
                 env=env,
             )
-            
+
             # Parse dbt output for metrics
             output = result.stdout + result.stderr
             self.logger.info("dbt output:")
             for line in output.split("\n"):
                 if line.strip():
                     self.logger.info(line)
-            
+
             if result.returncode == 0:
                 return self.success_result(
                     message="dbt transformations completed successfully",
@@ -177,16 +180,16 @@ class RunDBTCLI(CLICommand):
             else:
                 return self.error_result(
                     message="dbt transformations failed",
-                    errors= result.stdout,
+                    errors=result.stdout,
                 )
-        
+
         except subprocess.TimeoutExpired:
             self.logger.error("dbt transformations timed out")
             return self.error_result(
                 message="dbt transformations timed out",
                 errors=[f"Timeout after {self.timeout} seconds"],
             )
-        
+
         except Exception as e:
             self.logger.error(f"dbt transformations error: {str(e)}")
             return self.error_result(
@@ -227,9 +230,9 @@ def main():
         default=None,
         help="dbt target to use (optional, e.g., 'dev', 'prod')",
     )
-    
+
     args = parser.parse_args()
-    
+
     cli = RunDBTCLI()
     exit_code = cli.run(
         select=args.select,

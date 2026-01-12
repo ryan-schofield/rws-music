@@ -36,7 +36,9 @@ class IdentifyMissingAlbumsCLI(CLICommand):
         )
         self.query_engine = DuckDBQueryEngine()
 
-    def execute(self, limit: int = None, batch_size: int = 20, **kwargs) -> Dict[str, Any]:
+    def execute(
+        self, limit: int = None, batch_size: int = 20, **kwargs
+    ) -> Dict[str, Any]:
         """
         Identify missing albums and return batching information.
 
@@ -136,7 +138,9 @@ class FetchAlbumBatchCLI(CLICommand):
             if not album_ids:
                 return self.no_updates_result(f"No albums in range")
 
-            self.logger.info(f"Fetching data for {len(album_ids)} albums from Spotify API")
+            self.logger.info(
+                f"Fetching data for {len(album_ids)} albums from Spotify API"
+            )
 
             # Fetch from Spotify API (max 20 per request)
             album_data = self.spotify_client.get_albums_batch(album_ids, batch_size=20)
@@ -301,7 +305,9 @@ class ExtractAlbumGenresCLI(CLICommand):
                 genre_df, "spotify_album_genre", mode="merge"
             )
 
-            self.logger.info(f"Successfully extracted {len(genre_records)} genre records")
+            self.logger.info(
+                f"Successfully extracted {len(genre_records)} genre records"
+            )
 
             return self.success_result(
                 message=f"Extracted {len(genre_records)} genre records",
@@ -323,7 +329,9 @@ class ExtractAlbumGenresCLI(CLICommand):
 # Main entry points
 def identify_missing_albums_main():
     parser = argparse.ArgumentParser(description="Identify missing Spotify albums")
-    parser.add_argument("--limit", type=int, default=None, help="Maximum albums to process")
+    parser.add_argument(
+        "--limit", type=int, default=None, help="Maximum albums to process"
+    )
     parser.add_argument("--batch-size", type=int, default=20, help="Batch size")
     args = parser.parse_args()
 
