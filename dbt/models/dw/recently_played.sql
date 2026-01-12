@@ -17,9 +17,13 @@ SELECT
     , artist_mbid
     , artist
     , duration_ms
-    , ROUND(CAST(duration_ms AS FLOAT) / 60000.0, 2) AS minutes_played
     , played_at
-    , CONCAT(CAST(popularity AS VARCHAR(3)), '/', '100') AS popularity
     , request_after
     , play_source
-FROM read_csv('{% if target.name == 'dev' %}/home/runner/workspace/data/recently_played.csv{% else %}../data/recently_played.csv{% endif %}')
+    , ROUND(CAST(duration_ms AS FLOAT) / 60000.0, 2) AS minutes_played
+    , CASE
+        WHEN COALESCE(popularity, 0) = 0 THEN '--' ELSE
+            CONCAT(CAST(ROUND(popularity) AS VARCHAR(3)), '/', '100')
+    END AS popularity
+FROM
+    READ_CSV('{% if target.name == "dev" %}/home/runner/workspace/data/recently_played.csv{% else %}../data/recently_played.csv{% endif %}') -- noqa: L016
