@@ -42,7 +42,9 @@ class IdentifyMissingArtistsCLI(CLICommand):
         )
         self.query_engine = DuckDBQueryEngine()
 
-    def execute(self, limit: int = None, batch_size: int = 50, **kwargs) -> Dict[str, Any]:
+    def execute(
+        self, limit: int = None, batch_size: int = 50, **kwargs
+    ) -> Dict[str, Any]:
         """
         Identify missing artists and return batching information.
 
@@ -135,12 +137,12 @@ class FetchArtistBatchCLI(CLICommand):
             )
 
             if missing_artists_df.is_empty():
-                return self.no_updates_result(
-                    f"No artists found at offset {offset}"
-                )
+                return self.no_updates_result(f"No artists found at offset {offset}")
 
             artist_ids = missing_artists_df["artist_id"].to_list()
-            self.logger.info(f"Fetching data for {len(artist_ids)} artists from Spotify API")
+            self.logger.info(
+                f"Fetching data for {len(artist_ids)} artists from Spotify API"
+            )
 
             # Fetch from Spotify API
             artist_data = self.spotify_client.get_artists_batch(
@@ -228,7 +230,9 @@ class WriteArtistDataCLI(CLICommand):
             ]
 
             # Only select columns that exist
-            available_columns = [col for col in expected_columns if col in artist_df.columns]
+            available_columns = [
+                col for col in expected_columns if col in artist_df.columns
+            ]
             artist_df = artist_df.select(available_columns)
 
             # Ensure data types match expected schema
@@ -242,9 +246,7 @@ class WriteArtistDataCLI(CLICommand):
                 artist_df, "spotify_artists", mode="merge"
             )
 
-            self.logger.info(
-                f"Successfully wrote {len(artist_data)} artists"
-            )
+            self.logger.info(f"Successfully wrote {len(artist_data)} artists")
 
             return self.success_result(
                 message=f"Wrote {len(artist_data)} artists to parquet",
@@ -349,7 +351,9 @@ class ExtractArtistGenresCLI(CLICommand):
 # Main entry points for each command
 def identify_missing_artists_main():
     parser = argparse.ArgumentParser(description="Identify missing Spotify artists")
-    parser.add_argument("--limit", type=int, default=None, help="Maximum artists to process")
+    parser.add_argument(
+        "--limit", type=int, default=None, help="Maximum artists to process"
+    )
     parser.add_argument("--batch-size", type=int, default=50, help="Batch size")
     args = parser.parse_args()
 

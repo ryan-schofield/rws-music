@@ -60,10 +60,37 @@ def main():
     json_files = list(detail_path.glob("*.json"))
     new_data_frames = []
 
+    # Define explicit schema for the DataFrame to handle mixed types
+    # Use Float64 for numeric columns first (handles None gracefully), then cast to Int64
+    schema = {
+        "user_id": pl.Utf8,
+        "track_id": pl.Utf8,
+        "uri": pl.Utf8,
+        "track_isrc": pl.Utf8,
+        "track_name": pl.Utf8,
+        "album_id": pl.Utf8,
+        "album_uri": pl.Utf8,
+        "album": pl.Utf8,
+        "artist_id": pl.Utf8,
+        "artist_mbid": pl.Utf8,
+        "artist": pl.Utf8,
+        "duration_ms": pl.Float64,
+        "played_at": pl.Utf8,
+        "popularity": pl.Float64,
+        "request_after": pl.Utf8,
+        "play_source": pl.Utf8,
+    }
+
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        df = pl.DataFrame(data)
+        df = pl.DataFrame(data, schema=schema)
+
+        # Cast numeric columns to Int64 to match parquet schema (None becomes null)
+        df = df.with_columns(
+            pl.col("duration_ms").cast(pl.Int64),
+            pl.col("popularity").cast(pl.Int64),
+        )
 
         # Rename columns to match existing schema (only if they exist)
         rename_mapping = {}
@@ -75,10 +102,12 @@ def main():
             df = df.rename(rename_mapping)
 
         # Cast played_at to datetime (only if it exists)
+        # Handle both formats: "2026-01-04T02:55:58.123Z" (Spotify) and "2026-01-04T02:55:58+00:00Z" (Navidrome)
         if "played_at" in df.columns:
             df = df.with_columns(
                 pl.col("played_at")
-                .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.3fZ")
+                .str.strip_chars("Z")  # Remove trailing Z to handle both formats
+                .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%z", strict=False)
                 .dt.replace_time_zone("UTC")
                 .dt.cast_time_unit("us")
             )

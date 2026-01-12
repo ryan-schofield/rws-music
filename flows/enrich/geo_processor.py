@@ -418,10 +418,10 @@ class GeographicProcessor:
     def enrich_base(self) -> Dict[str, Any]:
         """
         Add continent and geocoding params only (no API calls).
-        
+
         This is a lightweight enrichment that doesn't require external API access.
         Designed for use in a separate workflow step.
-        
+
         Returns:
             Combined result from continent enrichment and parameter addition
         """
@@ -484,28 +484,38 @@ class GeographicProcessor:
     def enrich_coordinates_batch(self, city_params: List[str]) -> Dict[str, Any]:
         """
         Enrich coordinates for a specific batch of cities.
-        
+
         This is designed to be called by granular workflow batching logic,
         processing only the provided city parameters.
-        
+
         Args:
             city_params: List of geocoding param strings to process
-            
+
         Returns:
             Result with coordinate data ready for writing
         """
-        logger.info(f"Starting coordinate enrichment for batch of {len(city_params)} cities")
+        logger.info(
+            f"Starting coordinate enrichment for batch of {len(city_params)} cities"
+        )
 
         # Check if API key is available
         if not self.has_api_key:
             logger.info(
                 "OpenWeather API key not available - skipping coordinate enrichment"
             )
-            return {"status": "skipped", "message": "OpenWeather API key not available", "coordinate_data": []}
+            return {
+                "status": "skipped",
+                "message": "OpenWeather API key not available",
+                "coordinate_data": [],
+            }
 
         if not city_params:
             logger.info("No city parameters provided for coordinate enrichment")
-            return {"status": "no_updates", "message": "No city parameters provided", "coordinate_data": []}
+            return {
+                "status": "no_updates",
+                "message": "No city parameters provided",
+                "coordinate_data": [],
+            }
 
         logger.info(f"Looking up coordinates for {len(city_params)} locations")
 

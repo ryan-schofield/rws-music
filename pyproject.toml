@@ -28,8 +28,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ruff>=0.14.10",
-    "black>=25.1.0",
     "sqlfluff>=3.4.2",
+    "ipykernel>=7.1.0",
 ]
 
 test = [

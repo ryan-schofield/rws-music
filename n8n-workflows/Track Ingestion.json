@@ -1,0 +1,195 @@
+{
+  "name": "Track Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 30,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
+      "name": "Trigger - Every 30min",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        0,
+        16
+      ],
+      "id": "12f48db4-7ffb-4434-a73e-2d956d2e26a3",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_navidrome import NavidromeIngestionCLI\nimport os\nfrom pathlib import Path\n\n# Diagnostic output\nprint(f\"Current working directory: {os.getcwd()}\")\nprint(f\"Files in current dir: {os.listdir('.')}\")\nprint(f\"Absolute path of 'data': {Path('data').absolute()}\")\nprint(f\"Exists? {Path('data').exists()}\")\nprint(f\"PYTHONPATH: {os.getenv('PYTHONPATH')}\")\n\nreturn NavidromeIngestionCLI().execute()"
+      },
+      "name": "Ingest Navidrome Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        112
+      ],
+      "typeVersion": 2,
+      "id": "72a533a0-42fc-4c80-9a50-4379b0bb6988"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.ingest_spotify import SpotifyIngestionCLI\nimport os\nfrom pathlib import Path\n\n# Diagnostic output\nprint(f\"Current working directory: {os.getcwd()}\")\nprint(f\"Files in current dir: {os.listdir('.')}\")\nprint(f\"Absolute path of 'data': {Path('data').absolute()}\")\nprint(f\"Exists? {Path('data').exists()}\")\nprint(f\"PYTHONPATH: {os.getenv('PYTHONPATH')}\")\n\nreturn SpotifyIngestionCLI().execute()"
+      },
+      "name": "Ingest Spotify Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        -80
+      ],
+      "typeVersion": 2,
+      "id": "1006b3fe-2a57-4b5c-be39-cb540b6201bd"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.consolidate_tracks import ConsolidateTracksCLI\nreturn ConsolidateTracksCLI().execute()"
+      },
+      "name": "Consolidate Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        672,
+        16
+      ],
+      "typeVersion": 2,
+      "id": "a547b4b5-059b-4e8e-b98f-e2497fac2ad8",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.load_raw_tracks import LoadRawTracksCLI\nreturn LoadRawTracksCLI().execute()"
+      },
+      "name": "Load Raw Tracks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        896,
+        16
+      ],
+      "typeVersion": 2,
+      "id": "84ad8a27-2ab8-4e7d-a981-107e4a12e1c4",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "from flows.cli.validate_data import ValidateDataCLI\nreturn ValidateDataCLI().execute()"
+      },
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        16
+      ],
+      "typeVersion": 2,
+      "id": "acc0667d-1545-4b81-8e62-6ba79c78fda8",
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        16
+      ],
+      "id": "5ed49929-1e0d-4ed6-b27c-5f41ea1c6a1f",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger - Every 30min": {
+      "main": [
+        [
+          {
+            "node": "Ingest Navidrome Tracks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ingest Spotify Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest Navidrome Tracks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Ingest Spotify Tracks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Tracks": {
+      "main": [
+        [
+          {
+            "node": "Load Raw Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Raw Tracks": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "57c131c6-5bab-44fa-803a-4239537e4e22",
+  "meta": {
+    "instanceId": "fe0cdcb4af99c360c90455b1f1007a24ba2abc365db532c71df5662d52925885"
+  },
+  "id": "H1g77L8RQsIDqVOk_3Igk",
+  "tags": []
+}
