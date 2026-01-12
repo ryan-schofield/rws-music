@@ -37,7 +37,9 @@ class IdentifyCitiesNeedingCoordinatesCLI(CLICommand):
         self.duckdb_engine = DuckDBQueryEngine()
         self.batch_size = 50  # Larger batch size for coordinates (no strict rate limit)
 
-    def execute(self, limit: Optional[int] = None, batch_size: Optional[int] = None, **kwargs) -> Dict[str, Any]:
+    def execute(
+        self, limit: Optional[int] = None, batch_size: Optional[int] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Identify cities needing coordinates and return batch plan.
 
@@ -80,11 +82,13 @@ class IdentifyCitiesNeedingCoordinatesCLI(CLICommand):
             batch_plan = []
             for batch_index in range(num_batches):
                 offset = batch_index * self.batch_size
-                batch_plan.append({
-                    "batch_index": batch_index,
-                    "batch_size": self.batch_size,
-                    "offset": offset,
-                })
+                batch_plan.append(
+                    {
+                        "batch_index": batch_index,
+                        "batch_size": self.batch_size,
+                        "offset": offset,
+                    }
+                )
 
             return self.success_result(
                 message=f"Identified {total_count} cities across {num_batches} batches",
@@ -121,7 +125,7 @@ class FetchCoordinateBatchCLI(CLICommand):
         batch_index: int = 0,
         batch_size: int = 50,
         offset: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Fetch coordinates from OpenWeather API for a batch.
@@ -196,6 +200,7 @@ class WriteCoordinateDataCLI(CLICommand):
             retries=2,
         )
         from flows.enrich.utils.data_writer import ParquetDataWriter
+
         self.data_writer = ParquetDataWriter()
 
     def execute(self, coordinate_data: List[Dict], **kwargs) -> Dict[str, Any]:
@@ -211,14 +216,13 @@ class WriteCoordinateDataCLI(CLICommand):
         try:
             if not coordinate_data:
                 self.logger.info("No coordinate data to write")
-                return self.no_updates_result(
-                    message="No coordinate data to write"
-                )
+                return self.no_updates_result(message="No coordinate data to write")
 
             self.logger.info(f"Writing {len(coordinate_data)} coordinates to table")
 
             # Convert to Polars DataFrame
             import polars as pl
+
             df = pl.DataFrame(coordinate_data)
 
             # Write using merge mode to preserve existing data

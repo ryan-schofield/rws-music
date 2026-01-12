@@ -187,15 +187,37 @@ class SpotifyDataIngestion:
 
         # Convert to Polars DataFrame and remove duplicates
         try:
+            # Define explicit schema to handle mixed types (e.g., None from Navidrome, strings from Spotify)
+            schema = {
+                "user_id": pl.Utf8,
+                "track_id": pl.Utf8,
+                "uri": pl.Utf8,
+                "track_isrc": pl.Utf8,
+                "track_name": pl.Utf8,
+                "album_id": pl.Utf8,
+                "album_uri": pl.Utf8,
+                "album": pl.Utf8,
+                "artist_id": pl.Utf8,
+                "artist_mbid": pl.Utf8,
+                "artist": pl.Utf8,
+                "duration_ms": pl.Float64,  # Use Float64 to handle None values
+                "played_at": pl.Utf8,
+                "popularity": pl.Float64,  # Use Float64 to handle None values
+                "request_after": pl.Utf8,
+                "play_source": pl.Utf8,
+            }
+
             logger.info(f"Converting {len(all_data)} records to DataFrame")
-            df = pl.DataFrame(all_data)
+            df = pl.DataFrame(all_data, schema=schema)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
-            # Use strict=False to handle parsing errors gracefully
+            # Normalize both Spotify (Z) and Navidrome (+HH:MM) formats to +00:00 for consistent parsing
             df = df.with_columns(
                 [
                     pl.col("played_at")
-                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
+                    .str.replace(r"Z$", "+00:00", literal=False)  # Replace Z with +00:00
+                    .str.to_datetime(format="%Y-%m-%dT%H:%M:%S%.f%z", time_unit="us", time_zone=None)
+                    .dt.replace_time_zone(None)
                     .alias("played_at_dt"),
                     (pl.col("duration_ms") / 1000).alias("duration_sec"),
                 ]
@@ -217,25 +239,27 @@ class SpotifyDataIngestion:
             step1_count = len(df_step1)
             step1_removed = len(df) - step1_count
 
-            # Step 2: Remove duplicates where same track_id have plays within track duration
+            # Step 2: Remove duplicates where same track (identified by track_name + artist) have plays within track duration
             # Filter out rows with null values in critical columns before sorting
+            # Note: Navidrome entries may not have track_id - using track_name and artist as identifiers
             # Note: request_after may be null, which is expected - don't filter on it
             df_filtered = df_step1.filter(
-                (pl.col("track_id").is_not_null())
+                (pl.col("track_name").is_not_null())
+                & (pl.col("artist").is_not_null())
                 & (pl.col("played_at_dt").is_not_null())
             )
 
             df_unique = (
-                df_filtered.sort(["track_id", "played_at_dt"])
+                df_filtered.sort(["track_name", "artist", "played_at_dt"])
                 .with_columns(
                     [
                         pl.col("played_at_dt")
                         .shift(1)
-                        .over(["track_id"])
+                        .over(["track_name", "artist"])
                         .alias("prev_played_at"),
                         pl.col("duration_sec")
                         .shift(1)
-                        .over(["track_id"])
+                        .over(["track_name", "artist"])
                         .alias("prev_duration_sec"),
                     ]
                 )
@@ -250,6 +274,7 @@ class SpotifyDataIngestion:
                 )
                 .filter(
                     (pl.col("time_diff_sec").is_null())  # Keep first occurrence
+                    | (pl.col("prev_duration_sec").is_null())  # Keep if previous duration unknown (can't compare)
                     | (
                         pl.col("time_diff_sec") > pl.col("prev_duration_sec")
                     )  # Keep if gap > previous track duration
