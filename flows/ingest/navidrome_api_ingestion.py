@@ -48,14 +48,14 @@ class NavidromeDataIngestion:
         # Note: LB_API_ROOT should be the full API root, e.g., "https://api.listenbrainz.org/1"
         raw_api_root = os.getenv("LB_API_ROOT", "")
         logger.info(f"LB_API_ROOT env var: {raw_api_root}")
-        
+
         if raw_api_root:
             self.lb_api_root = raw_api_root.rstrip("/")
         else:
             # Fallback - but this shouldn't happen if .env is loaded
             self.lb_api_root = "https://api.listenbrainz.org/1"
             logger.warning("LB_API_ROOT not set, using default")
-        
+
         self.lb_user = os.getenv("LB_USER")
         self.lb_token = os.getenv("LB_TOKEN")
         self.max_items_per_request = int(os.getenv("MAX_ITEMS_PER_REQUEST", "1000"))
@@ -101,7 +101,9 @@ class NavidromeDataIngestion:
 
         logger.info(f"Fetching listens for user: {self.lb_user}")
         logger.info(f"API URL: {listens_url}")
-        logger.info(f"API params: count={self.max_items_per_request}, min_ts={self.min_ts}")
+        logger.info(
+            f"API params: count={self.max_items_per_request}, min_ts={self.min_ts}"
+        )
         logger.info(f"TEST_MODE: {self.test_mode}")
         logger.info(f"DEBUG_MODE: {self.debug_mode}")
 
@@ -140,11 +142,13 @@ class NavidromeDataIngestion:
 
             data = r.json()
             listens = data.get("payload", {}).get("listens", [])
-            
+
             logger.info(f"API response: {len(listens)} listens in payload")
-            
+
             if not listens:
-                logger.warning(f"No listens in API response. Full response: {json.dumps(data, indent=2)[:2000]}")
+                logger.warning(
+                    f"No listens in API response. Full response: {json.dumps(data, indent=2)[:2000]}"
+                )
                 break
 
             # Track submission client types for debugging
@@ -156,10 +160,14 @@ class NavidromeDataIngestion:
                 submission_client = additional_info.get("submission_client", "")
 
                 # Track client types
-                client_types[submission_client] = client_types.get(submission_client, 0) + 1
+                client_types[submission_client] = (
+                    client_types.get(submission_client, 0) + 1
+                )
 
                 # Only include navidrome submissions (case-insensitive, prefix match)
-                if submission_client and not submission_client.lower().startswith("navidrome"):
+                if submission_client and not submission_client.lower().startswith(
+                    "navidrome"
+                ):
                     continue
 
                 ts = item.get("listened_at")
@@ -169,7 +177,9 @@ class NavidromeDataIngestion:
                 mbid_mapping = track_metadata.get("mbid_mapping", {})
 
                 # Convert Unix timestamp to ISO 8601 format
-                played_at = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() + "Z"
+                played_at = (
+                    datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() + "Z"
+                )
 
                 # Get artist MBID (first one if multiple)
                 artist_mbids = mbid_mapping.get("artist_mbids", [])
@@ -272,7 +282,9 @@ class NavidromeDataIngestion:
 
             # Update cursor with the last Navidrome track's timestamp
             if data:
-                last_ts = int(data[-1]["request_after"]) // 1000  # Convert from milliseconds to Unix timestamp
+                last_ts = (
+                    int(data[-1]["request_after"]) // 1000
+                )  # Convert from milliseconds to Unix timestamp
                 self.save_cursor(last_ts)
 
             end_time = datetime.now(timezone.utc)

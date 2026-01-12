@@ -237,25 +237,27 @@ class SpotifyDataIngestion:
             step1_count = len(df_step1)
             step1_removed = len(df) - step1_count
 
-            # Step 2: Remove duplicates where same track_id have plays within track duration
+            # Step 2: Remove duplicates where same track (identified by track_name + artist) have plays within track duration
             # Filter out rows with null values in critical columns before sorting
+            # Note: Navidrome entries may not have track_id - using track_name and artist as identifiers
             # Note: request_after may be null, which is expected - don't filter on it
             df_filtered = df_step1.filter(
-                (pl.col("track_id").is_not_null())
+                (pl.col("track_name").is_not_null())
+                & (pl.col("artist").is_not_null())
                 & (pl.col("played_at_dt").is_not_null())
             )
 
             df_unique = (
-                df_filtered.sort(["track_id", "played_at_dt"])
+                df_filtered.sort(["track_name", "artist", "played_at_dt"])
                 .with_columns(
                     [
                         pl.col("played_at_dt")
                         .shift(1)
-                        .over(["track_id"])
+                        .over(["track_name", "artist"])
                         .alias("prev_played_at"),
                         pl.col("duration_sec")
                         .shift(1)
-                        .over(["track_id"])
+                        .over(["track_name", "artist"])
                         .alias("prev_duration_sec"),
                     ]
                 )
