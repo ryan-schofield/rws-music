@@ -211,11 +211,14 @@ class SpotifyDataIngestion:
             df = pl.DataFrame(all_data, schema=schema)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
-            # Handle both Spotify (with Z) and Navidrome (with timezone offset) formats
-            # Use str.to_datetime with ISO parsing for maximum flexibility
+            # Normalize both Spotify (Z) and Navidrome (+HH:MM) formats to +00:00 for consistent parsing
             df = df.with_columns(
                 [
-                    pl.col("played_at").str.to_datetime(format="%Y-%m-%dT%H:%M:%S%.f%z", time_unit="us", time_zone=None).dt.replace_time_zone(None).alias("played_at_dt"),
+                    pl.col("played_at")
+                    .str.replace(r"Z$", "+00:00", literal=False)  # Replace Z with +00:00
+                    .str.to_datetime(format="%Y-%m-%dT%H:%M:%S%.f%z", time_unit="us", time_zone=None)
+                    .dt.replace_time_zone(None)
+                    .alias("played_at_dt"),
                     (pl.col("duration_ms") / 1000).alias("duration_sec"),
                 ]
             )
@@ -271,6 +274,7 @@ class SpotifyDataIngestion:
                 )
                 .filter(
                     (pl.col("time_diff_sec").is_null())  # Keep first occurrence
+                    | (pl.col("prev_duration_sec").is_null())  # Keep if previous duration unknown (can't compare)
                     | (
                         pl.col("time_diff_sec") > pl.col("prev_duration_sec")
                     )  # Keep if gap > previous track duration
