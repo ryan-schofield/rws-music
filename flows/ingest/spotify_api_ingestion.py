@@ -211,12 +211,11 @@ class SpotifyDataIngestion:
             df = pl.DataFrame(all_data, schema=schema)
 
             # Convert played_at to datetime and duration_ms to seconds for calculations
-            # Use strict=False to handle parsing errors gracefully
+            # Handle both Spotify (with Z) and Navidrome (with timezone offset) formats
+            # Use str.to_datetime with ISO parsing for maximum flexibility
             df = df.with_columns(
                 [
-                    pl.col("played_at")
-                    .str.strptime(pl.Datetime, "%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
-                    .alias("played_at_dt"),
+                    pl.col("played_at").str.to_datetime(format="%Y-%m-%dT%H:%M:%S%.f%z", time_unit="us", time_zone=None).dt.replace_time_zone(None).alias("played_at_dt"),
                     (pl.col("duration_ms") / 1000).alias("duration_sec"),
                 ]
             )

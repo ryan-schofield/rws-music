@@ -176,10 +176,8 @@ class NavidromeDataIngestion:
 
                 mbid_mapping = track_metadata.get("mbid_mapping", {})
 
-                # Convert Unix timestamp to ISO 8601 format
-                played_at = (
-                    datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() + "Z"
-                )
+                # Convert Unix timestamp to ISO 8601 format with timezone offset
+                played_at = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
 
                 # Get artist MBID (first one if multiple)
                 artist_mbids = mbid_mapping.get("artist_mbids", [])
