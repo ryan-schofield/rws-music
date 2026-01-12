@@ -99,10 +99,10 @@ def get_artist_aggregates(df):
 
     try:
         result = (
-            df.group_by(["artist", "artist_id"])
+            df.group_by(["artist"])
             .agg(
                 pl.col("minutes_played").sum().alias("total_minutes"),
-                pl.col("track_id").count().alias("track_count"),
+                pl.col("artist").count().alias("track_count"),
             )
             .sort("total_minutes", descending=True)
         )

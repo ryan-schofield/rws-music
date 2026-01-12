@@ -21,6 +21,8 @@
 		"sqlfluff.dialect": "duckdb",
 		"sqlfluff.executablePath": "C:\\Users\\fffv2\\repos\\rws-music\\.venv\\Scripts\\sqlfluff.exe",
 		"sqlfluff.env.useDotEnvFile": true,
-		"sqlfluff.linter.run": "off"
+		"sqlfluff.linter.run": "off",
+		"sqlfluff.config": ".sqlfluff",
+		"sqlfluff.experimental.format.executeInTerminal": true
 	}
 }
