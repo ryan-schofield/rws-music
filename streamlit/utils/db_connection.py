@@ -718,15 +718,16 @@ def get_artists_by_genre(
                 query += f" AND dd.year_num IN ({placeholders})"
                 params.extend(selected_years)
 
-            query += """ 
+            query += """
             GROUP BY da.artist_sid, da.artist_name, dag.genre
             )
-            SELECT 
-                artist_name, 
+            SELECT
+                artist_name,
                 MAX(track_count) as track_count
             FROM filtered_data
             GROUP BY artist_name
             ORDER BY track_count DESC
+            LIMIT 15
             """
 
             result = conn.execute(query, params).pl()
