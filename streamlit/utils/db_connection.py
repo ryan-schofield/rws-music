@@ -692,13 +692,15 @@ def get_artists_by_genre(
     try:
         with get_duckdb_connection() as conn:
             query = """
+                WITH filtered_data AS (
                 SELECT
                     da.artist_name,
+                    dag.genre,
                     COUNT(fag.track_sid) as track_count
-                FROM main_dw.fact_artist_genre fag
-                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
-                JOIN main_dw.dim_artist da ON fag.artist_sid = da.artist_sid
-                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                FROM main_dw.fact_artist_genre fg
+                JOIN main_dw.dim_artist_genre dag ON fg.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_artist da ON fg.artist_sid = da.artist_sid
+                JOIN main_dw.dim_date dd ON fg.date_sid = dd.date_sid
                 WHERE dd."date" >= ?
                     AND dd."date" <= ?
                     AND dag.genre IS NOT NULL
@@ -716,7 +718,16 @@ def get_artists_by_genre(
                 query += f" AND dd.year_num IN ({placeholders})"
                 params.extend(selected_years)
 
-            query += " GROUP BY da.artist_sid, da.artist_name ORDER BY track_count DESC LIMIT 25"
+            query += """ 
+            GROUP BY da.artist_sid, da.artist_name, dag.genre
+            ) 
+            SELECT 
+                artist_name, 
+                MAX(track_count) as track_count
+            FROM filtered_data
+            GROUP BY artist_name
+            ORDER BY track_count DESC
+            """
 
             result = conn.execute(query, params).pl()
             return result
