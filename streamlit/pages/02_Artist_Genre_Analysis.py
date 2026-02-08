@@ -260,7 +260,7 @@ def display_artists_chart(start_date, end_date, genres, years):
             title="Artists in Selected Genres",
             xaxis_title="",
             yaxis_title="",
-            height=350,
+            height=500,
             margin=dict(l=200, r=10, t=30, b=30),
             showlegend=False,
             hovermode="closest",
