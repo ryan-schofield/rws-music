@@ -9,9 +9,9 @@
       "typeVersion": 1.1,
       "position": [
         -896,
-        96
+        -64
       ],
-      "id": "520b13aa-bf1b-4b1d-b450-649ce0ee9306",
+      "id": "4c7a3a79-0d9c-444d-a135-c1817980dad2",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -23,10 +23,10 @@
       "type": "n8n-nodes-base.code",
       "position": [
         -672,
-        96
+        -64
       ],
       "typeVersion": 2,
-      "id": "8cde2048-17ed-43c6-96e6-97a1046c7938",
+      "id": "acbbce4a-810b-442c-a7b5-dd26db603732",
       "notes": "Uses DuckDB to efficiently identify missing artists and create batch plan"
     },
     {
@@ -38,10 +38,10 @@
       "type": "n8n-nodes-base.splitOut",
       "position": [
         -448,
-        96
+        -64
       ],
       "typeVersion": 1,
-      "id": "b16ecc84-9a5c-47c0-9622-2e22a6ab3606",
+      "id": "f3d08354-69c8-4254-9ace-d8ad5e8cc25c",
       "notes": "Splits the batch plan into individual batch items for parallel processing"
     },
     {
@@ -54,42 +54,42 @@
       "type": "n8n-nodes-base.code",
       "position": [
         -224,
-        96
+        -64
       ],
       "typeVersion": 2,
-      "id": "e936a40d-c1c2-45cb-ac36-adb2bb501538",
+      "id": "bb459d97-6ef2-4c16-bcc1-aaff4ffdeafc",
       "notes": "Fetches artist data from Spotify API for this specific batch"
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import WriteArtistDataCLI\n\nartist_data = _item[\"json\"][\"data\"][\"artist_data\"]\n\nreturn WriteArtistDataCLI().execute(artist_data=artist_data)"
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import WriteArtistDataCLI\n\nartist_data = _item[\"json\"][\"data\"][\"artist_data\"]\n\nartist_out = WriteArtistDataCLI().execute(artist_data=artist_data)\nartist_out[\"artist_data\"] = artist_data\n\nreturn artist_out"
       },
       "name": "Write Artist Data",
       "type": "n8n-nodes-base.code",
       "position": [
         0,
-        0
+        -64
       ],
       "typeVersion": 2,
-      "id": "25b0de67-8a1f-4aad-a0ad-c88553e5d269",
+      "id": "06996611-fa13-4377-a2ea-cb09e30f9bcd",
       "notes": "Writes artist data to spotify_artists parquet table using merge mode"
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import ExtractArtistGenresCLI\n\nartist_data = _item[\"json\"][\"data\"][\"artist_data\"]\n\nreturn ExtractArtistGenresCLI().execute(artist_data=artist_data)"
+        "pythonCode": "from flows.cli.enrich_spotify_artists_granular import ExtractArtistGenresCLI\n\nartist_data = _item[\"json\"][\"artist_data\"]\n\nreturn ExtractArtistGenresCLI().execute(artist_data=artist_data)"
       },
       "name": "Extract Artist Genres",
       "type": "n8n-nodes-base.code",
       "position": [
-        0,
-        192
+        224,
+        -64
       ],
       "typeVersion": 2,
-      "id": "84fbc1e5-4254-4589-838e-c4a95a1c5aeb",
+      "id": "407c858a-b959-4fdd-9eac-84e332949f8f",
       "notes": "Extracts genre data and writes to spotify_artist_genre parquet table"
     }
   ],
@@ -135,7 +135,13 @@
             "node": "Write Artist Data",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Write Artist Data": {
+      "main": [
+        [
           {
             "node": "Extract Artist Genres",
             "type": "main",
@@ -150,10 +156,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "d6ce7ba5-c42d-4488-bbb5-9275273c490f",
+  "versionId": "85071731-4e07-4b84-a2ff-d800138be8e0",
   "meta": {
-    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+    "instanceId": "03f02996677a6277d4986d4c62e9b1f4a2889034d3039e11223e4a810823d82a"
   },
-  "id": "8xDECCWUlCDeLBejBCrYN",
+  "id": "spvwtVRX_wv7aLJrTkxqJ",
   "tags": []
 }

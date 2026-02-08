@@ -5,22 +5,22 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import ExtractAlbumGenresCLI\n\nalbum_data = _item[\"json\"][\"data\"][\"album_data\"]\n\nreturn ExtractAlbumGenresCLI().execute(album_data=album_data)"
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import ExtractAlbumGenresCLI\n\nalbum_data = _item[\"json\"][\"album_data\"]\n\nreturn ExtractAlbumGenresCLI().execute(album_data=album_data)"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
-        192
+        224,
+        0
       ],
-      "id": "cf6d9b6e-0b65-429f-817e-5bbad0139a19",
+      "id": "2890ea17-42d4-4ba5-9bcc-623b033cdd18",
       "name": "Extract Album Genre"
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "pythonNative",
-        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import WriteAlbumDataCLI\n\nalbum_data = _item[\"json\"][\"data\"][\"album_data\"]\n\nreturn WriteAlbumDataCLI().execute(album_data=album_data)"
+        "pythonCode": "from flows.cli.enrich_spotify_albums_granular import WriteAlbumDataCLI\n\nalbum_data = _item[\"json\"][\"data\"][\"album_data\"]\nalbum_out = WriteAlbumDataCLI().execute(album_data=album_data)\nalbum_out[\"album_data\"] = album_data\n\nreturn album_out "
       },
       "name": "Extract Album",
       "type": "n8n-nodes-base.code",
@@ -29,7 +29,9 @@
         0
       ],
       "typeVersion": 2,
-      "id": "d6d399e7-e2f3-402f-b046-7db7eda85157"
+      "id": "ce8ce976-50b8-4915-aeac-18866e042158",
+      "retryOnFail": true,
+      "maxTries": 2
     },
     {
       "parameters": {
@@ -41,10 +43,10 @@
       "type": "n8n-nodes-base.code",
       "position": [
         -224,
-        96
+        0
       ],
       "typeVersion": 2,
-      "id": "5f7a5bb1-7e54-40a8-b846-a9edc586c707"
+      "id": "4218663e-757d-4b4f-be0e-f33498dd74ea"
     },
     {
       "parameters": {
@@ -55,10 +57,10 @@
       "type": "n8n-nodes-base.splitOut",
       "position": [
         -448,
-        96
+        0
       ],
       "typeVersion": 1,
-      "id": "43731035-662d-421e-bf28-a753ad5091ba"
+      "id": "1d231308-1393-4916-9634-1797e3c483c5"
     },
     {
       "parameters": {
@@ -69,10 +71,10 @@
       "type": "n8n-nodes-base.code",
       "position": [
         -672,
-        96
+        0
       ],
       "typeVersion": 2,
-      "id": "b3e8f910-85c3-4daf-9fd9-414be25fc297",
+      "id": "9822d8a9-c693-450d-a3c1-91d9a7211f1e",
       "notes": "Uses DuckDB to efficiently identify missing albums"
     },
     {
@@ -83,9 +85,9 @@
       "typeVersion": 1.1,
       "position": [
         -896,
-        96
+        0
       ],
-      "id": "12a91562-bf3a-44a7-bf15-47a37cc905d4",
+      "id": "ef751acc-36fc-4387-bc9c-e45cb5271cd0",
       "name": "When Executed by Another Workflow"
     }
   ],
@@ -96,11 +98,6 @@
         [
           {
             "node": "Extract Album",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Extract Album Genre",
             "type": "main",
             "index": 0
           }
@@ -139,6 +136,17 @@
           }
         ]
       ]
+    },
+    "Extract Album": {
+      "main": [
+        [
+          {
+            "node": "Extract Album Genre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -146,10 +154,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "0bb21151-6a89-41a3-ac34-783176efa068",
+  "versionId": "d5555c51-6dad-4096-a3a4-3d414424e0a7",
   "meta": {
-    "instanceId": "54c0cf3cf25339f8983f7849ce732761c1e918b158f178f5df591113703c6575"
+    "instanceId": "03f02996677a6277d4986d4c62e9b1f4a2889034d3039e11223e4a810823d82a"
   },
-  "id": "RoTUHjfSlRPrq_3oGZUlN",
+  "id": "uHunxdb3D2leHWjVPOPA0",
   "tags": []
 }
