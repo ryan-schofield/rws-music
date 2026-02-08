@@ -1,6 +1,6 @@
 {%- set convert_played_at = "played_at::TIMESTAMPTZ AT TIME ZONE 'America/Denver'" -%}
 
-SELECT
+SELECT DISTINCT
     user_id
     , track_id
     , track_uri
