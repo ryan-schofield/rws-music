@@ -588,10 +588,10 @@ def get_tracks_by_year_and_genre(start_date, end_date, genres=None):
             query = """
                 SELECT
                     dd.year_num,
-                    COUNT(fag.track_sid) as track_count
-                FROM main_dw.fact_artist_genre fag
-                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
-                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                    COUNT(fg.track_sid) as track_count
+                FROM main_dw.fact_artist_genre fg
+                JOIN main_dw.dim_artist_genre dag ON fg.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_date dd ON fg.date_sid = dd.date_sid
                 WHERE dd."date" >= ?
                     AND dd."date" <= ?
                     AND dag.genre IS NOT NULL
@@ -632,12 +632,12 @@ def get_genre_distribution_for_analysis(start_date, end_date, genres=None):
             query = """
                 SELECT
                     dag.genre,
-                    COUNT(fag.track_sid) as track_count,
+                    COUNT(fg.track_sid) as track_count,
                     dag.top_artist_in_genre as top_artist,
                     dag.most_popular_artist_in_genre as most_popular_artist
-                FROM main_dw.fact_artist_genre fag
-                JOIN main_dw.dim_artist_genre dag ON fag.genre_sid = dag.genre_sid
-                JOIN main_dw.dim_date dd ON fag.date_sid = dd.date_sid
+                FROM main_dw.fact_artist_genre fg
+                JOIN main_dw.dim_artist_genre dag ON fg.genre_sid = dag.genre_sid
+                JOIN main_dw.dim_date dd ON fg.date_sid = dd.date_sid
                 WHERE dd."date" >= ?
                     AND dd."date" <= ?
                     AND dag.genre IS NOT NULL
@@ -696,7 +696,7 @@ def get_artists_by_genre(
                 SELECT
                     da.artist_name,
                     dag.genre,
-                    COUNT(fag.track_sid) as track_count
+                    COUNT(fg.track_sid) as track_count
                 FROM main_dw.fact_artist_genre fg
                 JOIN main_dw.dim_artist_genre dag ON fg.genre_sid = dag.genre_sid
                 JOIN main_dw.dim_artist da ON fg.artist_sid = da.artist_sid
@@ -720,7 +720,7 @@ def get_artists_by_genre(
 
             query += """ 
             GROUP BY da.artist_sid, da.artist_name, dag.genre
-            ) 
+            )
             SELECT 
                 artist_name, 
                 MAX(track_count) as track_count
